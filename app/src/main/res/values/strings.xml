@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Scoot Media Streamer</string>
+    <string name="launcher_name">Media Streamer</string>
+
+    <string name="login_title">Login</string>
+    <string name="login_progress_dialog">Logging In</string>
+    <string name="login_initialise">Initialising</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_server">Server</string>
+    <string name="login_button">Login</string>
+    <string name="login_no_username">Please enter a username</string>
+    <string name="login_no_password">Please enter a password</string>
+    <string name="login_no_server">Please enter a server address</string>
+    <string name="login_remember_me">Remember Me</string>
+    <string name="login_url_default">http://</string>
+
+    <string name="error_server">Operation failed with status code: </string>
+    <string name="error_server_not_found">Unable to contact server</string>
+    <string name="error_unauthenticated">Username or Password is incorrect</string>
+
+    <string name="media_title">Media Browser</string>
+    <string name="media_retrieving_folders">Retrieving Media Folders</string>
+    <string name="media_retrieving_elements">Retrieving Media</string>
+    <string name="media_error_parsing_json">Error parsing result from server</string>
+    <string name="media_not_found">No Media Found!</string>
+
+    <string name="playlist_title">Playlist</string>
+    <string name="playlist_empty">Playlist is empty!</string>
+
+    <string name="action_bar_play_all">Play All</string>
+    <string name="action_bar_add_all_to_queue">Add All To Queue</string>
+    <string name="action_bar_clear_all">Clear All</string>
+
+    <string name="notification_please_wait">Please Wait...</string>
+
+    <string name="audio_player_title">Now Playing</string>
+
+    <string name="video_player_controller.description">Media Controls</string>
+    <string name="video_controller_play_button_description">Play/Pause</string>
+    <string name="video_player_error">Unable to play media</string>
+
+    <string name="navigation_drawer_title">Navigation</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <!-- Navigation Drawer Menu Items -->
+    <string-array
+        name="navigation_drawer_list_items">
+        <item>Media Browser</item>
+        <item>Playlist</item>
+        <item>Now Playing</item>
+        <item>Settings</item>
+        <item>Logout</item>
+        <item>Exit</item>
+    </string-array>string-array>
+
+    <string name="preferences_title">Settings</string>
+    <string name="preferences_title_transcode_setting">Transcode</string>
+    <string name="preferences_title_audio_quality">Audio Quality</string>
+    <string name="preferences_audio_quality_summary">Select the audio quality to use during audio playback.</string>
+    <string name="preferences_title_video_quality">Video Quality</string>
+    <string name="preferences_video_quality_summary">Select the video resolution to use during video playback.</string>
+
+    <string name="preferences_default_audio_quality_value">1</string>
+    <string name="preferences_default_video_quality_value">360</string>
+
+    <string name="play_error_message">Impossible to play the video.</string>
+    <string name="play_progressive_error_message">Impossible to play the progressive video.</string>
+
+    <string-array
+        name="preferences_audio_quality_names">
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
+        <item>Lossless</item>
+    </string-array>
+
+    <string-array
+        name="preferences_audio_quality_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array
+        name="preferences_video_quality_names">
+        <item>240p</item>
+        <item>360p</item>
+        <item>480p</item>
+        <item>720p</item>
+        <item>1080p</item>
+    </string-array>
+
+    <string-array
+        name="preferences_video_quality_values">
+        <item>240</item>
+        <item>360</item>
+        <item>480</item>
+        <item>720</item>
+        <item>1080</item>
+    </string-array>
+
+</resources>

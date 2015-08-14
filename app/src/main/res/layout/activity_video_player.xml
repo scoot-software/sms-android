@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <SurfaceView
+        android:id="@+id/video_surface"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+    </SurfaceView>
+
+    <LinearLayout
+        android:id="@+id/video_controller"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:orientation="horizontal"
+        android:background="@color/video_controller_background"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true" >
+
+        <ImageButton android:id="@+id/video_controller_play"
+            android:src="@drawable/ic_action_play_light"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:background="@null"
+            android:enabled="false"
+            android:contentDescription="@string/video_controller_play_button_description"/>
+
+        <TextView
+            android:id="@+id/video_controller_current_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/VideoControllerText" />
+
+        <SeekBar android:id="@+id/video_controller_timeline"
+            style="?android:attr/seekBarStyle"
+            android:layout_width="0px"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:progressBackgroundTint="@color/video_controller_seekbar"
+            android:layout_gravity="center_vertical|center_horizontal" />
+
+        <TextView
+            android:id="@+id/video_controller_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/VideoControllerText" />
+
+    </LinearLayout>
+
+</RelativeLayout>

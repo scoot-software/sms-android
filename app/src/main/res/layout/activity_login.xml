@@ -1,0 +1,103 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".activity.LoginActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/login_username"
+        android:id="@+id/loginUsernameLbl"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="28dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/loginUsername"
+        android:layout_alignBottom="@+id/loginUsernameLbl"
+        android:layout_toEndOf="@+id/loginUsernameLbl"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:inputType="text"
+        android:layout_toRightOf="@+id/loginUsernameLbl"
+        android:singleLine="true"
+        android:linksClickable="false" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/login_password"
+        android:id="@+id/loginPasswordLbl"
+        android:layout_below="@+id/loginUsername"
+        android:layout_alignLeft="@+id/loginUsernameLbl"
+        android:layout_alignStart="@+id/loginUsernameLbl"
+        android:layout_marginTop="40dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:ems="10"
+        android:id="@+id/loginPassword"
+        android:layout_alignBottom="@+id/loginPasswordLbl"
+        android:layout_toEndOf="@+id/loginPasswordLbl"
+        android:layout_toRightOf="@+id/loginPasswordLbl"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignLeft="@+id/loginUsername"
+        android:layout_alignStart="@+id/loginUsername"
+        android:singleLine="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/login_server"
+        android:id="@+id/loginServerLbl"
+        android:layout_below="@+id/loginPasswordLbl"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="40dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/loginServer"
+        android:layout_alignBottom="@+id/loginServerLbl"
+        android:layout_alignRight="@+id/loginPassword"
+        android:layout_alignEnd="@+id/loginPassword"
+        android:layout_alignLeft="@+id/loginPassword"
+        android:layout_alignStart="@+id/loginPassword"
+        android:singleLine="true"
+        android:inputType="textUri"
+        android:text="@string/login_url_default" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/login_button"
+        android:id="@+id/loginBtn"
+        android:clickable="true"
+        android:onClick="login"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/loginServer"
+        android:layout_alignEnd="@+id/loginServer" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/login_remember_me"
+        android:id="@+id/loginRemember"
+        android:layout_alignBottom="@+id/loginBtn"
+        android:layout_alignLeft="@+id/loginServerLbl"
+        android:layout_alignStart="@+id/loginServerLbl"
+        android:enabled="true" />
+
+</RelativeLayout>

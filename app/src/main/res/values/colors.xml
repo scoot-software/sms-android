@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1a81c4</color>
+    <color name="primary_dark">#1773ae</color>
+    <color name="accent">#4fc3f7</color>
+    <color name="actionbar_background">#1a81c4</color>
+    <color name="video_controller_background">#CC000000</color>
+    <color name="video_controller_seekbar">#FFFFFF</color>
+</resources>

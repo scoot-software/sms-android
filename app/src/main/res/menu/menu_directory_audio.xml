@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/play_all"
+        android:icon="@drawable/ic_action_play_light"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_bar_play_all">
+    </item>
+    <item
+        android:id="@+id/add_all_to_queue"
+        android:icon="@drawable/ic_action_add_to_queue"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_bar_add_all_to_queue">
+    </item>
+</menu>

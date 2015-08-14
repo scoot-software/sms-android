@@ -1,2 +1,2 @@
-# sms-android
-The official Android app for Scoot Media Streamer.
+# Scoot Media Streamer For Android
+The official Scoot Media Streamer app for Android.

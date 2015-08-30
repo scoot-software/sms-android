@@ -28,6 +28,7 @@ public class PlaylistAdapter extends ArrayAdapter<MediaElement> {
 
     @Override
     public int getCount() {
+        if(items == null) { return 0; }
         return items.size();
     }
 

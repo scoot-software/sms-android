@@ -85,6 +85,7 @@
         <ImageButton
             android:id="@+id/previous"
             android:src="@drawable/ic_action_previous"
+            android:contentDescription="@string/audio_player_previous_button_description"
             android:layout_toLeftOf="@+id/playPause"
             android:layout_centerInParent="true"
             android:layout_width="wrap_content"
@@ -93,6 +94,7 @@
         <ImageButton
             android:id="@+id/stop"
             android:src="@drawable/ic_action_stop"
+            android:contentDescription="@string/audio_player_stop_button_description"
             android:layout_centerInParent="true"
             android:layout_toRightOf="@+id/playPause"
             android:layout_width="wrap_content"
@@ -100,6 +102,7 @@
 
         <ImageButton
             android:id="@+id/playPause"
+            android:contentDescription="@string/audio_player_play_pause_button_description"
             android:src="@drawable/ic_action_play_dark"
             android:layout_centerInParent="true"
             android:layout_width="wrap_content"
@@ -108,6 +111,7 @@
         <ImageButton
             android:id="@+id/next"
             android:src="@drawable/ic_action_next"
+            android:contentDescription="@string/audio_player_next_button_description"
             android:layout_toRightOf="@+id/stop"
             android:layout_centerInParent="true"
             android:layout_height="wrap_content"

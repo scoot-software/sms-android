@@ -13,7 +13,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -24,6 +23,7 @@ import android.widget.ListView;
 
 import com.sms.android.R;
 import com.sms.android.adapter.NavigationDrawerListItemAdapter;
+import com.sms.android.fragment.AudioPlayerSmallFragment;
 import com.sms.lib.android.domain.MediaElement;
 import com.sms.lib.android.domain.MediaFolder;
 import com.sms.android.domain.NavigationDrawerListItem;
@@ -45,23 +45,21 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
     // The index for the navigation drawer menus
     private static final int MENU_MEDIA_BROWSER = 0;
-    private static final int MENU_PLAYLIST = 1;
-    private static final int MENU_NOW_PLAYING = 2;
-    private static final int MENU_SETTINGS = 3;
-    private static final int MENU_LOGOUT = 4;
-    private static final int MENU_EXIT = 5;
+    private static final int MENU_SETTINGS = 1;
+    private static final int MENU_LOGOUT = 2;
+    private static final int MENU_EXIT = 3;
 
     private static final String SLIDING_PANEL_STATE = "sliding_panel_state";
 
     // Fragments
     AudioPlaylistFragment audioPlaylistFragment;
     AudioPlayerFragment audioPlayerFragment;
+    AudioPlayerSmallFragment audioPlayerSmallFragment;
     Fragment mediaBrowserFragment;
 
     // Sliding Panel
     private SlidingUpPanelLayout slidingPanel;
-    private ViewPager audioPlayerPager;
-
+    private PanelSlideListener slidingPanelListener;
 
     // Audio Player Service
     private AudioPlayerService audioPlayerService;
@@ -92,10 +90,8 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawerList = (ListView) findViewById(R.id.navigation_drawer_list);
 
-        NavigationDrawerListItem[] drawerListItems = new NavigationDrawerListItem[6];
+        NavigationDrawerListItem[] drawerListItems = new NavigationDrawerListItem[4];
         drawerListItems[MENU_MEDIA_BROWSER] = new NavigationDrawerListItem(R.drawable.ic_action_collection, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_MEDIA_BROWSER]);
-        drawerListItems[MENU_PLAYLIST] = new NavigationDrawerListItem(R.drawable.ic_action_playlist, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_PLAYLIST]);
-        drawerListItems[MENU_NOW_PLAYING] = new NavigationDrawerListItem(R.drawable.ic_action_headphones, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_NOW_PLAYING]);
         drawerListItems[MENU_SETTINGS] = new NavigationDrawerListItem(R.drawable.ic_action_settings, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_SETTINGS]);
         drawerListItems[MENU_LOGOUT] = new NavigationDrawerListItem(R.drawable.ic_action_accounts, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_LOGOUT]);
         drawerListItems[MENU_EXIT] = new NavigationDrawerListItem(R.drawable.ic_action_remove, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_EXIT]);
@@ -122,15 +118,61 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         // Set the drawer toggle as the DrawerListener
         drawerLayout.setDrawerListener(drawerToggle);
 
-        if (savedInstanceState == null) {
-            Fragment fragment = new MediaFolderFragment();
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().add(R.id.container, fragment, Integer.toString(MENU_MEDIA_BROWSER)).commit();
-            updateDrawer(MENU_MEDIA_BROWSER);
-        }
+        // Initialise Small Audio Player fragment for sliding panel
+        audioPlayerSmallFragment = new AudioPlayerSmallFragment();
+        getSupportFragmentManager().beginTransaction().add(R.id.audio_player_small_container, audioPlayerSmallFragment).commit();
 
         // Sliding Panel
-        slidingPanel = initialiseSlidingLayout(savedInstanceState);
+        slidingPanel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        slidingPanel.setPanelHeight((int) getResources().getDimension(R.dimen.audio_player_small_fragment_height));
+
+        slidingPanelListener = new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelAnchored(final View panel) {
+            }
+
+            @Override
+            public void onPanelCollapsed(final View panel) {
+                audioPlayerSmallFragment.getView().setVisibility(View.VISIBLE);
+                audioPlayerSmallFragment.getView().setAlpha(1.0f);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            }
+
+            @Override
+            public void onPanelExpanded(final View panel) {
+                audioPlayerSmallFragment.getView().setVisibility(View.GONE);
+                audioPlayerSmallFragment.getView().setAlpha(1.0f);
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            }
+
+            @Override
+            public void onPanelHidden(final View view) {
+            }
+
+            @Override
+            public void onPanelSlide(final View panel, final float slideOffset) {
+                if (slideOffset < 1.0f) {
+                    audioPlayerSmallFragment.getView().setVisibility(View.VISIBLE);
+                } else {
+                    audioPlayerSmallFragment.getView().setVisibility(View.GONE);
+                }
+
+                audioPlayerSmallFragment.getView().setAlpha(1.0f - slideOffset);
+            }
+        };
+
+        slidingPanel.setPanelSlideListener(slidingPanelListener);
+
+        if (savedInstanceState == null) {
+            // Initialise main view
+            Fragment fragment = new MediaFolderFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.main_container, fragment, Integer.toString(MENU_MEDIA_BROWSER)).commit();
+            updateDrawer(MENU_MEDIA_BROWSER);
+
+            // Initialise sliding view
+            audioPlayerFragment = new AudioPlayerFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.audio_player_container, audioPlayerFragment).commit();
+        }
 
         // Add fragment back stack listener
         getSupportFragmentManager().addOnBackStackChangedListener(this);
@@ -224,85 +266,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
     }
 
-    private SlidingUpPanelLayout initialiseSlidingLayout(final Bundle savedInstanceState) {
-        final SlidingUpPanelLayout slidingLayout =
-                (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        final SlidingUpPanelLayout.PanelSlideListener panelSlideListener
-                = initialiseSlidingPanelLayout();
-
-        slidingLayout.setPanelHeight(
-                (int) getResources().getDimension(R.dimen.audio_player_small_fragment_height));
-        slidingLayout.setPanelSlideListener(panelSlideListener);
-
-        // Ensure that the view state is consistent
-        if (savedInstanceState != null) {
-            if ((PanelState) savedInstanceState.getSerializable(SLIDING_PANEL_STATE) == PanelState.EXPANDED) {
-                slidingLayout.setPanelState(PanelState.EXPANDED);
-                panelSlideListener.onPanelSlide(slidingLayout, 1.0f);
-                panelSlideListener.onPanelExpanded(slidingLayout);
-            } else {
-                slidingLayout.setPanelState(PanelState.COLLAPSED);
-                panelSlideListener.onPanelSlide(slidingLayout, 0.0f);
-                panelSlideListener.onPanelCollapsed(slidingLayout);
-            }
-        }
-
-        return slidingLayout;
-    }
-
-    private PanelSlideListener initialiseSlidingPanelLayout() {
-
-        return new SlidingUpPanelLayout.PanelSlideListener() {
-            final View audioPlayerSmallFragment =
-                    findViewById(R.id.fragment_audio_player_small);
-
-            @Override
-            public void onPanelAnchored(final View panel) {
-            }
-
-            @Override
-            public void onPanelCollapsed(final View panel) {
-                audioPlayerSmallFragment.setVisibility(View.VISIBLE);
-                audioPlayerSmallFragment.setAlpha(1.0f);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            }
-
-            @Override
-            public void onPanelExpanded(final View panel) {
-                audioPlayerSmallFragment.setVisibility(View.GONE);
-                audioPlayerSmallFragment.setAlpha(1.0f);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-            }
-
-            @Override
-            public void onPanelHidden(final View view) {
-            }
-
-            @Override
-            public void onPanelSlide(final View panel, final float slideOffset) {
-                final ActionBar actionBar = getSupportActionBar();
-
-                if (slideOffset > 0.3f) {
-                    if (actionBar.isShowing()) {
-                        actionBar.hide();
-                    }
-                } else {
-                    if (!actionBar.isShowing()) {
-                        actionBar.show();
-                    }
-                }
-
-                if (slideOffset < 1.0f) {
-                    audioPlayerSmallFragment.setVisibility(View.VISIBLE);
-                } else {
-                    audioPlayerSmallFragment.setVisibility(View.GONE);
-                }
-
-                audioPlayerSmallFragment.setAlpha(1.0f - slideOffset);
-            }
-        };
-    }
-
     public void selectDrawerItem(int position) {
 
         switch (position) {
@@ -315,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 }
 
                 // Load media browser fragment
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, mediaBrowserFragment, Integer.toString(position))
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_container, mediaBrowserFragment, Integer.toString(position))
                         .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                         .addToBackStack(Integer.toString(position))
                         .commit();
@@ -323,26 +286,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 // Set title ready to be set when drawer is updated
                 title = mediaBrowserTitle;
                 updateDrawer(position);
-                break;
-
-            case MENU_PLAYLIST:
-                if(audioPlaylistFragment == null) { audioPlaylistFragment = new AudioPlaylistFragment(); }
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, audioPlaylistFragment)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-                        .addToBackStack(Integer.toString(position))
-                        .commit();
-                updateDrawer(position);
-                title = getString(R.string.playlist_title);
-                break;
-
-            case MENU_NOW_PLAYING:
-                if(audioPlayerFragment == null) { audioPlayerFragment = new AudioPlayerFragment(); }
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, audioPlayerFragment)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-                        .addToBackStack(Integer.toString(position))
-                        .commit();
-                updateDrawer(position);
-                title = getString(R.string.audio_player_title);
                 break;
 
             case MENU_SETTINGS:
@@ -390,6 +333,9 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         if(drawerLayout.isDrawerOpen(drawerList)) {
             drawerLayout.closeDrawer(drawerList);
         }
+        else if(slidingPanel.getPanelState() == PanelState.EXPANDED) {
+            slidingPanel.setPanelState(PanelState.COLLAPSED);
+        }
         else {
             super.onBackPressed();
         }
@@ -409,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         mediaBrowserFragment.setArguments(arguments);
         mediaBrowserTitle = folder.getName();
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, mediaBrowserFragment)
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_container, mediaBrowserFragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                 .addToBackStack(Integer.toString(MENU_MEDIA_BROWSER))
                 .commit();
@@ -433,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             mediaBrowserFragment.setArguments(arguments);
             mediaBrowserTitle = element.getTitle();
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.container, mediaBrowserFragment)
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_container, mediaBrowserFragment)
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                     .addToBackStack(Integer.toString(MENU_MEDIA_BROWSER))
                     .commit();
@@ -468,7 +414,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         }
 
         audioPlayerService.playAll(audioElements);
-        selectDrawerItem(MENU_NOW_PLAYING);
     }
 
     @Override
@@ -535,6 +480,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     public void PlayerStateChanged(int position) {
         if(audioPlaylistFragment != null) { if(audioPlaylistFragment.isVisible()) { audioPlaylistFragment.setCurrentPosition(position); } }
         if(audioPlayerFragment != null) { if(audioPlayerFragment.isVisible()) { audioPlayerFragment.updatePlayerControls(); } }
+        if(audioPlayerSmallFragment != null) { audioPlayerSmallFragment.updatePlayerControls(); }
     }
 
     //

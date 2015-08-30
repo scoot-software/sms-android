@@ -42,6 +42,8 @@
     <string name="audio_player_previous_button_description">Play previous track</string>
     <string name="audio_player_play_pause_button_description">Play/Pause</string>
     <string name="audio_player_stop_button_description">Stop playback</string>
+    <string name="audio_player_playlist_button_description">View Current Playlist</string>
+    <string name="audio_player_overflow_menu_button_description">Menu</string>
 
     <string name="video_player_controller.description">Media Controls</string>
     <string name="video_controller_play_button_description">Play/Pause</string>
@@ -54,8 +56,6 @@
     <string-array
         name="navigation_drawer_list_items">
         <item>Media Browser</item>
-        <item>Playlist</item>
-        <item>Now Playing</item>
         <item>Settings</item>
         <item>Logout</item>
         <item>Exit</item>

@@ -34,13 +34,13 @@
                 android:layout_height="match_parent">
 
                 <FrameLayout
-                    android:id="@+id/audio_player_container"
+                    android:id="@+id/sliding_panel_container"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="visible" />
+                    android:visibility="gone" />
 
                 <FrameLayout
-                    android:id="@+id/audio_player_small_container"
+                    android:id="@+id/sliding_panel_small_container"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/audio_player_small_fragment_height"
                     android:visibility="visible" />

@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 
 import com.sms.android.R;
@@ -49,7 +50,9 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     private static final int MENU_LOGOUT = 2;
     private static final int MENU_EXIT = 3;
 
-    private static final String SLIDING_PANEL_STATE = "sliding_panel_state";
+    // The index for the sliding panel views
+    private static final int SLIDING_PANEL_PLAYER = 10;
+    private static final int SLIDING_PANEL_PLAYLIST = 11;
 
     // Fragments
     AudioPlaylistFragment audioPlaylistFragment;
@@ -118,10 +121,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         // Set the drawer toggle as the DrawerListener
         drawerLayout.setDrawerListener(drawerToggle);
 
-        // Initialise Small Audio Player fragment for sliding panel
-        audioPlayerSmallFragment = new AudioPlayerSmallFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.audio_player_small_container, audioPlayerSmallFragment).commit();
-
         // Sliding Panel
         slidingPanel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingPanel.setPanelHeight((int) getResources().getDimension(R.dimen.audio_player_small_fragment_height));
@@ -133,16 +132,32 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
             @Override
             public void onPanelCollapsed(final View panel) {
-                audioPlayerSmallFragment.getView().setVisibility(View.VISIBLE);
-                audioPlayerSmallFragment.getView().setAlpha(1.0f);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                View audioPlayerSmallContainer = findViewById(R.id.sliding_panel_small_container);
+                View audioPlayerContainer = findViewById(R.id.sliding_panel_container);
+                audioPlayerSmallContainer.setVisibility(View.VISIBLE);
+                audioPlayerSmallContainer.setAlpha(1.0f);
+                audioPlayerContainer.setVisibility(View.GONE);
+                audioPlayerContainer.setAlpha(1.0f);
+
+                // Action bar
+                audioPlayerFragment.setMenuVisibility(false);
+                audioPlaylistFragment.setMenuVisibility(false);
+                mediaBrowserFragment.setMenuVisibility(true);
             }
 
             @Override
             public void onPanelExpanded(final View panel) {
-                audioPlayerSmallFragment.getView().setVisibility(View.GONE);
-                audioPlayerSmallFragment.getView().setAlpha(1.0f);
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+                View audioPlayerSmallContainer = findViewById(R.id.sliding_panel_small_container);
+                View audioPlayerContainer = findViewById(R.id.sliding_panel_container);
+                audioPlayerSmallContainer.setVisibility(View.GONE);
+                audioPlayerSmallContainer.setAlpha(1.0f);
+                audioPlayerContainer.setVisibility(View.VISIBLE);
+                audioPlayerContainer.setAlpha(1.0f);
+
+                // Action bar
+                audioPlayerFragment.setMenuVisibility(audioPlayerFragment.isVisible());
+                audioPlaylistFragment.setMenuVisibility(audioPlaylistFragment.isVisible());
+                mediaBrowserFragment.setMenuVisibility(false);
             }
 
             @Override
@@ -151,27 +166,45 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
             @Override
             public void onPanelSlide(final View panel, final float slideOffset) {
+                View audioPlayerSmallContainer = findViewById(R.id.sliding_panel_small_container);
+                View audioPlayerContainer = findViewById(R.id.sliding_panel_container);
+
                 if (slideOffset < 1.0f) {
-                    audioPlayerSmallFragment.getView().setVisibility(View.VISIBLE);
+                    audioPlayerSmallContainer.setVisibility(View.VISIBLE);
+                    audioPlayerContainer.setVisibility(View.VISIBLE);
                 } else {
-                    audioPlayerSmallFragment.getView().setVisibility(View.GONE);
+                    audioPlayerSmallContainer.setVisibility(View.GONE);
+                    audioPlayerContainer.setVisibility(View.VISIBLE);
                 }
 
-                audioPlayerSmallFragment.getView().setAlpha(1.0f - slideOffset);
+                audioPlayerSmallContainer.setAlpha(1.0f - slideOffset);
+                audioPlayerContainer.setAlpha(slideOffset);
             }
         };
 
         slidingPanel.setPanelSlideListener(slidingPanelListener);
+
+        // Fragments
+
+        // Initialise small audio player sliding panel fragment
+        audioPlayerSmallFragment = new AudioPlayerSmallFragment();
+        getSupportFragmentManager().beginTransaction().add(R.id.sliding_panel_small_container, audioPlayerSmallFragment).commit();
+
+        // Initialise audio player fragment
+        audioPlayerFragment = new AudioPlayerFragment();
+        getSupportFragmentManager().beginTransaction().add(R.id.sliding_panel_container, audioPlayerFragment, Integer.toString(SLIDING_PANEL_PLAYER)).commit();
+        audioPlayerFragment.setMenuVisibility(false);
+
+        // Initialise audio playlist fragment
+        audioPlaylistFragment = new AudioPlaylistFragment();
+        getSupportFragmentManager().beginTransaction().add(R.id.sliding_panel_container, audioPlaylistFragment, Integer.toString(SLIDING_PANEL_PLAYLIST)).hide(audioPlaylistFragment).commit();
+        audioPlaylistFragment.setMenuVisibility(false);
 
         if (savedInstanceState == null) {
             // Initialise main view
             Fragment fragment = new MediaFolderFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.main_container, fragment, Integer.toString(MENU_MEDIA_BROWSER)).commit();
             updateDrawer(MENU_MEDIA_BROWSER);
-
-            // Initialise sliding view
-            audioPlayerFragment = new AudioPlayerFragment();
-            getSupportFragmentManager().beginTransaction().add(R.id.audio_player_container, audioPlayerFragment).commit();
         }
 
         // Add fragment back stack listener
@@ -186,6 +219,12 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     }
 
     @Override
+    protected void onResume() {
+        mediaBrowserFragment = getSupportFragmentManager().findFragmentByTag(Integer.toString(MENU_MEDIA_BROWSER));
+        super.onResume();
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         drawerToggle.onConfigurationChanged(newConfig);
@@ -193,7 +232,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
     @Override
     public void onSaveInstanceState(final Bundle state) {
-        state.putSerializable(SLIDING_PANEL_STATE, slidingPanel.getPanelState());
         super.onSaveInstanceState(state);
     }
 
@@ -472,15 +510,27 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
     public void clearAll() { audioPlayerService.clearMediaList(); }
 
+    @Override
+    public void showNowPlaying() {
+        getSupportFragmentManager().beginTransaction().show(audioPlayerFragment).hide(audioPlaylistFragment).commit();
+        audioPlaylistFragment.setMenuVisibility(false);
+        audioPlayerFragment.setMenuVisibility(true);
+    }
+
     //
     // Audio Player Callbacks
     //
 
     @Override
-    public void PlayerStateChanged(int position) {
-        if(audioPlaylistFragment != null) { if(audioPlaylistFragment.isVisible()) { audioPlaylistFragment.setCurrentPosition(position); } }
-        if(audioPlayerFragment != null) { if(audioPlayerFragment.isVisible()) { audioPlayerFragment.updatePlayerControls(); } }
+    public void PlayerStateChanged() {
+        if(audioPlaylistFragment != null) { audioPlaylistFragment.updateCurrentPosition(); }
+        if(audioPlayerFragment != null) { audioPlayerFragment.updatePlayerControls(); }
         if(audioPlayerSmallFragment != null) { audioPlayerSmallFragment.updatePlayerControls(); }
+    }
+
+    @Override
+    public void PlaylistChanged() {
+        if(audioPlaylistFragment != null) { audioPlaylistFragment.updatePlaylist(); }
     }
 
     //
@@ -539,5 +589,12 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     @Override
     public void playPrev() {
         if(audioPlayerService != null && audioPlayerBound) { audioPlayerService.playPrev(); }
+    }
+
+    @Override
+    public void showPlaylist() {
+        getSupportFragmentManager().beginTransaction().hide(audioPlayerFragment).show(audioPlaylistFragment).commit();
+        audioPlaylistFragment.setMenuVisibility(true);
+        audioPlayerFragment.setMenuVisibility(false);
     }
 }

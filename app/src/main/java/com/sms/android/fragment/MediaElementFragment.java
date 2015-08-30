@@ -215,7 +215,34 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+
+                    Toast error;
+
+                    restProgress.dismiss();
+
+                    switch (statusCode) {
+                        case 401:
+                            error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
+                            error.show();
+                            break;
+
+                        case 404:
+                        case 0:
+                            error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
+                            error.show();
+                            break;
+
+                        default:
+                            error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
+                            error.show();
+                            break;
+                    }
+
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray response) {
 
                     Toast error;
 

@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -51,6 +54,9 @@ public class AudioPlayerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Action Bar
+        setHasOptionsMenu(true);
 
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
@@ -189,6 +195,23 @@ public class AudioPlayerFragment extends Fragment {
         updatePlayerControls();
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_audio_player, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.playlist:
+                audioControllerListener.showPlaylist();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
     /**
      * Updates player controls
      */
@@ -262,6 +285,7 @@ public class AudioPlayerFragment extends Fragment {
         void stop();
         void playNext();
         void playPrev();
+        void showPlaylist();
     }
 
 }

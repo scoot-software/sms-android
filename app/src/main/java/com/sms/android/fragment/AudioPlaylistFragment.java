@@ -2,6 +2,7 @@ package com.sms.android.fragment;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -113,19 +114,26 @@ public class AudioPlaylistFragment extends ListFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.now_playing:
+                audioPlaylistListener.showNowPlaying();
+                return true;
             case R.id.clear_all:
                 audioPlaylistListener.clearAll();
-                mediaElementList = audioPlaylistListener.getCurrentPlaylist();
-                playlistAdapter.notifyDataSetChanged();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void setCurrentPosition(int position) {
+    public void updateCurrentPosition() {
         // Update playlist position
-        getListView().setItemChecked(position, true);
+        getListView().setItemChecked(audioPlaylistListener.getPlaylistPosition(), true);
+    }
+
+    public void updatePlaylist() {
+        mediaElementList = audioPlaylistListener.getCurrentPlaylist();
+        playlistAdapter.setItemList(mediaElementList);
+        playlistAdapter.notifyDataSetChanged();
     }
 
     /**
@@ -140,6 +148,7 @@ public class AudioPlaylistFragment extends ListFragment {
         public ArrayList<MediaElement> getCurrentPlaylist();
         public int getPlaylistPosition();
         public void clearAll();
+        public void showNowPlaying();
 
     }
 }

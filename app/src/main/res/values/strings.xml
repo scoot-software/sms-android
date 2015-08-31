@@ -32,7 +32,7 @@
 
     <string name="action_bar_play_all">Play All</string>
     <string name="action_bar_add_all_to_queue">Add All To Queue</string>
-    <string name="action_bar_clear_all">Clear All</string>
+    <string name="action_bar_clear">Clear</string>
     <string name="action_bar_view_playlist">Playlist</string>
     <string name="action_bar_view_now_playing">Now Playing</string>
 

@@ -12,7 +12,7 @@
     <item
         android:id="@+id/clear_all"
         android:icon="@drawable/ic_action_remove"
-        app:showAsAction="ifRoom"
-        android:title="@string/action_bar_clear_all">
+        app:showAsAction="never"
+        android:title="@string/action_bar_clear">
     </item>
 </menu>

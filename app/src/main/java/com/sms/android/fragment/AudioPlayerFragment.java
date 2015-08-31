@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.sms.android.R;
+import com.sms.lib.android.domain.MediaElement;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -145,6 +146,10 @@ public class AudioPlayerFragment extends Fragment {
 
         // Set current button state
         updatePlayerControls();
+
+        // Set current media info
+        updateMediaInfo();
+
     }
 
     @Override
@@ -193,6 +198,9 @@ public class AudioPlayerFragment extends Fragment {
 
         // Update player controls
         updatePlayerControls();
+
+        // Set current media info
+        updateMediaInfo();
     }
 
     @Override
@@ -211,6 +219,17 @@ public class AudioPlayerFragment extends Fragment {
         }
     }
 
+    /**
+     * Updates media info
+     */
+    public void updateMediaInfo() {
+        if(audioControllerListener.getMediaElement() == null) {
+
+        }
+        else {
+
+        }
+    }
 
     /**
      * Updates player controls
@@ -285,6 +304,7 @@ public class AudioPlayerFragment extends Fragment {
         void stop();
         void playNext();
         void playPrev();
+        MediaElement getMediaElement();
         void showPlaylist();
     }
 

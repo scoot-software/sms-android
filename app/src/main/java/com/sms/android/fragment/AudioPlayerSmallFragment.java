@@ -11,6 +11,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sms.android.R;
+import com.sms.lib.android.domain.MediaElement;
+import com.sms.lib.android.service.RESTService;
+import com.squareup.picasso.Picasso;
 
 public class AudioPlayerSmallFragment extends Fragment {
 
@@ -100,6 +103,9 @@ public class AudioPlayerSmallFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         // Set current button state
         updatePlayerControls();
+
+        // Set current media info
+        updateMediaInfo();
     }
 
     @Override
@@ -130,6 +136,33 @@ public class AudioPlayerSmallFragment extends Fragment {
 
         // Update player controls
         updatePlayerControls();
+
+        // Set current media info
+        updateMediaInfo();
+    }
+
+    /**
+     * Updates media info
+     */
+    public void updateMediaInfo() {
+        MediaElement element = audioControllerListener.getMediaElement();
+
+        if(element == null) {
+            titleTxt.setText("");
+            artistTxt.setText("");
+            coverArt.setImageResource(R.drawable.cover_art);
+        }
+        else {
+            titleTxt.setText(element.getTitle());
+            artistTxt.setText(element.getArtist());
+
+            // Cover Art
+            Picasso.with(getActivity())
+                    .load(RESTService.getInstance().getBaseUrl() + "/image/" + element.getID() + "/cover/80")
+                    .placeholder(R.drawable.loading)
+                    .error(R.drawable.cover_art)
+                    .into(coverArt);
+        }
     }
 
     /**

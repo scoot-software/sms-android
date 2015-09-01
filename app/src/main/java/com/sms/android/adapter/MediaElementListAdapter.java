@@ -149,8 +149,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.directory)
+                        .placeholder(R.drawable.ic_content_loading)
+                        .error(R.drawable.ic_content_folder)
                         .into(dirThumbnail);
 
                 break;
@@ -203,8 +203,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.directory)
+                        .placeholder(R.drawable.ic_content_loading)
+                        .error(R.drawable.ic_content_album)
                         .into(aDirThumbnail);
 
                 break;
@@ -246,8 +246,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.directory)
+                        .placeholder(R.drawable.ic_content_loading)
+                        .error(R.drawable.ic_library_video_dark)
                         .into(vDirThumbnail);
 
                 break;
@@ -320,8 +320,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.video)
+                        .placeholder(R.drawable.ic_content_loading)
+                        .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 
                 break;
@@ -353,8 +353,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.video)
+                        .placeholder(R.drawable.ic_content_loading)
+                        .error(R.drawable.ic_content_video)
                         .into(sVidThumbnail);
 
                 break;

@@ -1,6 +1,7 @@
 package com.sms.android.adapter;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,7 +57,12 @@ public class MediaFolderListAdapter extends ArrayAdapter<MediaFolder> {
         title.setText(items.get(position).getName());
 
         ImageView thumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
-        thumbnail.setImageDrawable(convertView.getResources().getDrawable(R.drawable.directory));
+        if(items.get(position).getType() == MediaFolder.ContentType.AUDIO) {
+            thumbnail.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_library_audio));
+        }
+        else if(items.get(position).getType() == MediaFolder.ContentType.VIDEO) {
+            thumbnail.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_library_video_dark));
+        }
 
         return convertView;
     }

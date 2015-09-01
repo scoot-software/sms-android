@@ -159,7 +159,7 @@ public class AudioPlayerSmallFragment extends Fragment {
             // Cover Art
             Picasso.with(getActivity())
                     .load(RESTService.getInstance().getBaseUrl() + "/image/" + element.getID() + "/cover/80")
-                    .placeholder(R.drawable.loading)
+                    .placeholder(R.drawable.ic_content_loading)
                     .error(R.drawable.cover_art)
                     .into(coverArt);
         }

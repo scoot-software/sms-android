@@ -1,12 +1,15 @@
 package com.sms.android.adapter;
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.sms.android.R;
@@ -212,23 +215,23 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
             case VIDEO_DIRECTORY_VIEW:
 
                 // Title
-                TextView vDirTitle = (TextView) convertView.findViewById(R.id.title);
+                final TextView vDirTitle = (TextView) convertView.findViewById(R.id.title);
 
                 if(items.get(position).getTitle() != null) {
                     vDirTitle.setText(items.get(position).getTitle());
                 }
                 else {
-                    vDirTitle.setText("");
+                    vDirTitle.setText("(Unknown_Directory)");
                 }
 
                 // Collection
-                TextView vDirCollection = (TextView) convertView.findViewById(R.id.collection);
+                final TextView vDirCollection = (TextView) convertView.findViewById(R.id.collection);
 
                 if(items.get(position).getCollection() != null) {
                     vDirCollection.setText(items.get(position).getCollection());
                 }
                 else {
-                    vDirCollection.setText("");
+                    vDirCollection.setVisibility(View.GONE);
                 }
 
                 // Year
@@ -238,17 +241,26 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     vDirYear.setText(items.get(position).getYear().toString());
                 }
                 else {
-                    vDirYear.setText("");
+                    vDirYear.setVisibility(View.GONE);
                 }
 
                 // Cover Art
-                ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                final ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.ic_content_loading)
-                        .error(R.drawable.ic_library_video_dark)
-                        .into(vDirThumbnail);
+                        .into(vDirThumbnail, new com.squareup.picasso.Callback() {
+                            @Override
+                            public void onSuccess() {
+                                ((RelativeLayout.LayoutParams) vDirTitle.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, vDirThumbnail.getId());
+                                ((RelativeLayout.LayoutParams) vDirCollection.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, vDirThumbnail.getId());
+                            }
+
+                            @Override
+                            public void onError() {
+                                vDirThumbnail.setVisibility(View.GONE);
+                            }
+                        });
 
                 break;
 
@@ -316,11 +328,10 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                 }
 
                 // Cover Art
-                ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                final ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .placeholder(R.drawable.ic_content_loading)
                         .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 
@@ -329,13 +340,13 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
             case VIDEO_SMALL_VIEW:
 
                 // Title
-                TextView sVidTitle = (TextView) convertView.findViewById(R.id.title);
+                final TextView sVidTitle = (TextView) convertView.findViewById(R.id.title);
 
                 if(items.get(position).getTitle() != null) {
                     sVidTitle.setText(items.get(position).getTitle());
                 }
                 else {
-                    sVidTitle.setText("");
+                    sVidTitle.setText("(Unknown_Video_File)");
                 }
 
                 // Duration
@@ -345,21 +356,39 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     sVidDuration.setText(secondsToString(items.get(position).getDuration()));
                 }
                 else {
-                    sVidDuration.setText("");
+                    sVidDuration.setVisibility(View.GONE);
                 }
 
                 // Cover Art
-                ImageView sVidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                final ImageView sVidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .placeholder(R.drawable.ic_content_loading)
-                        .error(R.drawable.ic_content_video)
-                        .into(sVidThumbnail);
+                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .into(sVidThumbnail, new com.squareup.picasso.Callback() {
+                            @Override
+                            public void onSuccess() {
+                                ((RelativeLayout.LayoutParams) sVidTitle.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, sVidThumbnail.getId());
+                            }
+
+                            @Override
+                            public void onError() {
+                                sVidThumbnail.setVisibility(View.GONE);
+                            }
+                        });
 
                 break;
 
             case AUDIO_VIEW:
+
+                // Track Number
+                TextView audTrackNumber = (TextView) convertView.findViewById(R.id.track_number);
+
+                if(items.get(position).getTrackNumber() != null) {
+                    audTrackNumber.setText(items.get(position).getTrackNumber().toString());
+                }
+                else {
+                    audTrackNumber.setText("0");
+                }
 
                 // Title
                 TextView audTitle = (TextView) convertView.findViewById(R.id.title);
@@ -368,7 +397,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     audTitle.setText(items.get(position).getTitle());
                 }
                 else {
-                    audTitle.setText("");
+                    audTitle.setVisibility(View.GONE);
                 }
 
                 // Artist
@@ -378,7 +407,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     artist.setText(items.get(position).getArtist());
                 }
                 else {
-                    artist.setText("");
+                    artist.setVisibility(View.GONE);
                 }
 
                 // Disc Subtitle
@@ -388,7 +417,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     discSubtitle.setText(items.get(position).getDiscSubtitle());
                 }
                 else {
-                    discSubtitle.setText("");
+                    discSubtitle.setVisibility(View.GONE);
                 }
 
                 // Duration
@@ -398,7 +427,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     audDuration.setText(secondsToString(items.get(position).getDuration()));
                 }
                 else {
-                    audDuration.setText("");
+                    audDuration.setVisibility(View.GONE);
                 }
 
                 break;

@@ -6,4 +6,5 @@
     <color name="actionbar_background">#1a81c4</color>
     <color name="video_controller_background">#CC000000</color>
     <color name="video_controller_seekbar">#FFFFFF</color>
+    <color name="list_item_horizontal_separator">#FFD3D3D3</color>
 </resources>

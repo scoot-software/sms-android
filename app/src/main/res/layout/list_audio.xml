@@ -2,47 +2,74 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:padding="8dp" >
+    android:layout_height="?android:attr/listPreferredItemHeightLarge"
+    android:orientation="horizontal">
 
-    <!-- Title -->
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/track_number"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:textStyle="bold"
-        android:textSize="18sp" />
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dip"
+        android:paddingRight="15dip" />
 
-    <!-- Artist -->
-    <TextView
-        android:id="@+id/artist"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/title"
-        android:layout_marginTop="1dip"
-        android:singleLine="true"
-        android:textSize="15sp" />
+    <View
+        android:id="@+id/track_number_separator"
+        android:layout_width="0.75dip"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dip"
+        android:layout_marginTop="8dip"
+        android:layout_toRightOf="@+id/track_number"
+        android:background="@color/list_item_horizontal_separator" />
 
-    <!-- Disc Subtitle -->
-    <TextView
-        android:id="@+id/discSubtitle"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/artist"
-        android:layout_marginTop="1dip"
-        android:singleLine="true"
-        android:textStyle="italic"
-        android:textSize="12sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/duration"
+        android:layout_toRightOf="@+id/track_number_separator"
+        android:orientation="vertical"
+        android:paddingLeft="10dip">
 
-    <!-- Duration -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
+            android:id="@+id/artist"
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TextView
+            android:id="@+id/discSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:textStyle="italic"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/duration"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_height="match_parent"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:textSize="12sp" />
+        android:gravity="center_vertical"
+        android:paddingLeft="15dip"
+        android:paddingRight="15dip" />
 
 </RelativeLayout>

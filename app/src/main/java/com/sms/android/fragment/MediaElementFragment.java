@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -85,7 +86,7 @@ public class MediaElementFragment extends ListFragment {
         // Action Bar
         setHasOptionsMenu(true);
 
-        // Retrieve Media Folders from server
+        // Retrieve Media Elements from server
         getMediaElements();
     }
 
@@ -315,6 +316,24 @@ public class MediaElementFragment extends ListFragment {
                         } catch (JSONException e) {
                             Toast error = Toast.makeText(getActivity(), getString(R.string.media_error_parsing_json), Toast.LENGTH_SHORT);
                             error.show();
+                        }
+                    }
+
+                    // For audio directories check for multiple artists and display artist if found
+                    if(directoryType.equals(MediaElement.DirectoryMediaType.AUDIO)) {
+                        String artist = null;
+
+                        for(MediaElement element : mediaElements) {
+                            if(element.getType().equals(MediaElement.MediaElementType.AUDIO)) {
+                                if(element.getArtist() != null) {
+                                    if(artist == null) {
+                                        artist = element.getArtist();
+                                    } else if(!element.getArtist().equals(artist)) {
+                                        mediaElementListAdapter.showArtist(true);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
 

@@ -34,10 +34,14 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
     private final Context context;
     private List<MediaElement> items;
 
+    // Flags
+    private boolean showArtist;
+
     public MediaElementListAdapter(Context context, List<MediaElement> items) {
         super(context, R.layout.list_directory, items);
         this.context = context;
         this.items = items;
+        this.showArtist = false;
     }
 
     @Override
@@ -403,7 +407,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                 // Artist
                 TextView artist = (TextView) convertView.findViewById(R.id.artist);
 
-                if(items.get(position).getArtist() != null) {
+                if(showArtist && items.get(position).getArtist() != null) {
                     artist.setText(items.get(position).getArtist());
                 }
                 else {
@@ -446,6 +450,10 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
     public void setItemList(List<MediaElement> itemList) {
         this.items = itemList;
+    }
+
+    public void showArtist(boolean artist) {
+        this.showArtist = artist;
     }
 
     private static String secondsToString(int totalSecs) {

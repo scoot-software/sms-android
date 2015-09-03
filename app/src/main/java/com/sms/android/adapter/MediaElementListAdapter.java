@@ -17,6 +17,7 @@ import com.sms.lib.android.domain.MediaElement;
 import com.sms.lib.android.service.RESTService;
 import com.squareup.picasso.Picasso;
 
+import java.util.Formatter;
 import java.util.List;
 
 /**
@@ -388,10 +389,10 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                 TextView audTrackNumber = (TextView) convertView.findViewById(R.id.track_number);
 
                 if(items.get(position).getTrackNumber() != null) {
-                    audTrackNumber.setText(items.get(position).getTrackNumber().toString());
+                    audTrackNumber.setText(String.format("%02d", items.get(position).getTrackNumber()));
                 }
                 else {
-                    audTrackNumber.setText("0");
+                    audTrackNumber.setText("##");
                 }
 
                 // Title
@@ -412,16 +413,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                 }
                 else {
                     artist.setVisibility(View.GONE);
-                }
-
-                // Disc Subtitle
-                TextView discSubtitle = (TextView) convertView.findViewById(R.id.discSubtitle);
-
-                if (items.get(position).getDiscSubtitle() != null) {
-                    discSubtitle.setText(items.get(position).getDiscSubtitle());
-                }
-                else {
-                    discSubtitle.setVisibility(View.GONE);
                 }
 
                 // Duration

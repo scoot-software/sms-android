@@ -2,7 +2,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="?android:attr/listPreferredItemHeightLarge"
+    android:layout_height="?android:attr/listPreferredItemHeight"
     android:orientation="horizontal">
 
     <TextView
@@ -48,17 +48,6 @@
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-
-        <TextView
-            android:id="@+id/discSubtitle"
-            android:layout_width="match_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:textStyle="italic"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
     </LinearLayout>

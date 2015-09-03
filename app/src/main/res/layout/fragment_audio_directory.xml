@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:ignore="InconsistentLayout">
+
+    <RelativeLayout
+        android:id="@+id/cover_art_frame"
+        android:layout_width="80dip"
+        android:layout_height="80dip"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="5dip">
+
+        <ImageView
+            android:id="@+id/album_cover"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:contentDescription="@string/audio_player_cover_art_description"
+            android:scaleType="fitCenter"
+            android:src="@drawable/cover_art" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/directory_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dip"
+        android:layout_marginLeft="8dip"
+        android:layout_marginStart="8dip"
+        android:layout_marginTop="8dip"
+        android:layout_toRightOf="@+id/cover_art_frame"
+        android:layout_toEndOf="@+id/cover_art_frame"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/directory_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/directory_artist"
+        android:layout_marginBottom="10dip"
+        android:layout_marginLeft="8dip"
+        android:layout_marginStart="8dip"
+        android:layout_toRightOf="@+id/cover_art_frame"
+        android:layout_toEndOf="@+id/cover_art_frame"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/cover_art_frame" />
+
+    <TextView
+        android:id="@android:id/empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/media_not_found" />
+
+</RelativeLayout>

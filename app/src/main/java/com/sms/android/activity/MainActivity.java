@@ -22,6 +22,7 @@ import android.widget.ListView;
 
 import com.sms.android.R;
 import com.sms.android.adapter.NavigationDrawerListItemAdapter;
+import com.sms.android.fragment.AudioDirectoryFragment;
 import com.sms.android.fragment.AudioPlayerSmallFragment;
 import com.sms.lib.android.domain.MediaElement;
 import com.sms.lib.android.domain.MediaFolder;
@@ -460,17 +461,24 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     public void MediaElementSelected(MediaElement element) {
 
         if(element.getType().equals(MediaElement.MediaElementType.DIRECTORY)) {
-
-            // Create fragment and give it an argument for the selected element
             Bundle arguments = new Bundle();
-            arguments.putLong("id", element.getID());
-            arguments.putString("title", element.getTitle());
-            arguments.putByte("directoryType", element.getDirectoryType());
-            arguments.putBoolean("folder", false);
 
-            mediaBrowserFragment = new MediaElementFragment();
+            if(element.getDirectoryType().equals(MediaElement.DirectoryMediaType.AUDIO)) {
+                arguments.putLong("id", element.getID());
+                arguments.putString("title", element.getTitle());
+                arguments.putString("artist", element.getAlbumArtist());
+
+                mediaBrowserFragment = new AudioDirectoryFragment();
+            } else {
+                arguments.putLong("id", element.getID());
+                arguments.putString("title", element.getTitle());
+                arguments.putByte("directoryType", element.getDirectoryType());
+                arguments.putBoolean("folder", false);
+
+                mediaBrowserFragment = new MediaElementFragment();
+            }
+
             mediaBrowserFragment.setArguments(arguments);
-            mediaBrowserTitle = element.getTitle();
 
             getSupportFragmentManager().beginTransaction().replace(R.id.main_container, mediaBrowserFragment, Integer.toString(MENU_MEDIA_BROWSER))
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)

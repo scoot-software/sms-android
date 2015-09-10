@@ -100,7 +100,7 @@ public class AudioDirectoryFragment extends Fragment {
 
         Picasso.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getBaseUrl() + "/image/" + id + "/cover/80")
-                .error(R.drawable.ic_content_album)
+                .error(R.drawable.cover_art)
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);

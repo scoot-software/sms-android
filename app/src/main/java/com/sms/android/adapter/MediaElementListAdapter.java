@@ -364,23 +364,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     sVidDuration.setVisibility(View.GONE);
                 }
 
-                // Cover Art
-                final ImageView sVidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
-
-                Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .into(sVidThumbnail, new com.squareup.picasso.Callback() {
-                            @Override
-                            public void onSuccess() {
-                                ((RelativeLayout.LayoutParams) sVidTitle.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, sVidThumbnail.getId());
-                            }
-
-                            @Override
-                            public void onError() {
-                                sVidThumbnail.setVisibility(View.GONE);
-                            }
-                        });
-
                 break;
 
             case AUDIO_VIEW:

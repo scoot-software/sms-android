@@ -20,15 +20,21 @@
         android:layout_marginBottom="8dip"
         android:layout_marginTop="8dip"
         android:layout_toRightOf="@+id/track_number"
+        android:layout_toEndOf="@+id/track_number"
         android:background="@color/list_item_horizontal_separator" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_toLeftOf="@+id/duration"
+        android:layout_toStartOf="@+id/duration"
         android:layout_toRightOf="@+id/track_number_separator"
+        android:layout_toEndOf="@+id/track_number_separator"
         android:orientation="vertical"
-        android:paddingLeft="10dip">
+        android:paddingLeft="10dip"
+        android:paddingStart="10dip"
+        android:paddingRight="10dip"
+        android:paddingEnd="10dip">
 
         <TextView
             android:id="@+id/title"
@@ -57,8 +63,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:gravity="center_vertical"
-        android:paddingLeft="15dip"
-        android:paddingRight="15dip" />
+        android:paddingLeft="5dip"
+        android:paddingRight="10dip"/>
 
 </RelativeLayout>

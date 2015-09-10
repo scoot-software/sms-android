@@ -3,14 +3,17 @@ package com.sms.android.fragment;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -19,6 +22,7 @@ import com.sms.android.R;
 import com.sms.android.adapter.MediaElementListAdapter;
 import com.sms.lib.android.domain.MediaElement;
 import com.sms.lib.android.service.RESTService;
+import com.squareup.picasso.Picasso;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -31,11 +35,10 @@ import java.util.ArrayList;
  * A fragment representing an audio directory.
  *
  */
-public class AudioDirectoryFragment extends ListFragment {
+public class AudioDirectoryFragment extends Fragment {
 
     private static final String TAG = "AudioDirectoryFragment";
 
-    private ListView listView;
     private MediaElementFragment.MediaElementListener mediaElementListener;
 
     /**
@@ -88,12 +91,42 @@ public class AudioDirectoryFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        View rootView = inflater.inflate(R.layout.fragment_audio_directory, container, false);
+
         mediaElementListAdapter = new MediaElementListAdapter(getActivity(), mediaElements);
 
-        // Set the adapter
-        setListAdapter(mediaElementListAdapter);
+        ImageView coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
 
-        return super.onCreateView(inflater, container, savedInstanceState);
+        Picasso.with(getActivity().getBaseContext())
+                .load(RESTService.getInstance().getBaseUrl() + "/image/" + id + "/cover/80")
+                .error(R.drawable.ic_content_album)
+                .into(coverArt);
+
+        TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);
+        if(title != null) {
+            directoryTitle.setText(title);
+        }
+
+        TextView directoryArtist = (TextView) rootView.findViewById(R.id.directory_artist);
+        if(artist != null) {
+            directoryArtist.setText(artist);
+        }
+
+        ListView listView = (ListView) rootView.findViewById(R.id.songList);
+        listView.setAdapter(mediaElementListAdapter);
+        listView.setEmptyView(rootView.findViewById(R.id.emptyList));
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (mediaElementListener != null) {
+                    mediaElementListener.MediaElementSelected(mediaElements.get(position));
+                }
+            }
+        });
+
+        return rootView;
     }
 
     @Override
@@ -135,15 +168,6 @@ public class AudioDirectoryFragment extends ListFragment {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        if (mediaElementListener != null) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-            mediaElementListener.MediaElementSelected(mediaElements.get(position));
         }
     }
 

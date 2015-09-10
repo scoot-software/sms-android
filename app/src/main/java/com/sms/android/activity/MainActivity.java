@@ -466,7 +466,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             if(element.getDirectoryType().equals(MediaElement.DirectoryMediaType.AUDIO)) {
                 arguments.putLong("id", element.getID());
                 arguments.putString("title", element.getTitle());
-                arguments.putString("artist", element.getAlbumArtist());
+                arguments.putString("artist", element.getArtist());
 
                 mediaBrowserFragment = new AudioDirectoryFragment();
             } else {

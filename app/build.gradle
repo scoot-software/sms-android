@@ -9,7 +9,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
-        versionName "0.3.8"
+        versionName "0.4.0"
     }
     buildTypes {
         release {
@@ -24,8 +24,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.loopj.android:android-async-http:1.4.8'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.android.support:support-v4:22.0.0'
-    compile 'com.android.support:appcompat-v7:22.0.0'
+    compile 'com.android.support:support-v4:22.2.0'
+    compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.sothree.slidinguppanel:library:3.1.1'
     compile project(':..:sms-android-lib')
 }

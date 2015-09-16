@@ -1,4 +1,4 @@
-package com.sms.android.activity;
+package com.scooter1556.sms.android.activity;
 
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
@@ -6,7 +6,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.sms.android.R;
+import com.scooter1556.sms.android.R;
 
 public class SettingsActivity extends AppCompatActivity {
 

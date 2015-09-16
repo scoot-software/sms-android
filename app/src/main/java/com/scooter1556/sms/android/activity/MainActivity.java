@@ -1,4 +1,4 @@
-package com.sms.android.activity;
+package com.scooter1556.sms.android.activity;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,18 +20,18 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.sms.android.R;
-import com.sms.android.adapter.NavigationDrawerListItemAdapter;
-import com.sms.android.fragment.AudioDirectoryFragment;
-import com.sms.android.fragment.AudioPlayerSmallFragment;
-import com.sms.lib.android.domain.MediaElement;
-import com.sms.lib.android.domain.MediaFolder;
-import com.sms.android.domain.NavigationDrawerListItem;
-import com.sms.android.fragment.AudioPlayerFragment;
-import com.sms.android.fragment.AudioPlaylistFragment;
-import com.sms.android.fragment.MediaElementFragment;
-import com.sms.android.fragment.MediaFolderFragment;
-import com.sms.lib.android.service.AudioPlayerService;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.adapter.NavigationDrawerListItemAdapter;
+import com.scooter1556.sms.android.fragment.AudioDirectoryFragment;
+import com.scooter1556.sms.android.fragment.AudioPlayerSmallFragment;
+import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.lib.android.domain.MediaFolder;
+import com.scooter1556.sms.android.domain.NavigationDrawerListItem;
+import com.scooter1556.sms.android.fragment.AudioPlayerFragment;
+import com.scooter1556.sms.android.fragment.AudioPlaylistFragment;
+import com.scooter1556.sms.android.fragment.MediaElementFragment;
+import com.scooter1556.sms.android.fragment.MediaFolderFragment;
+import com.scooter1556.sms.lib.android.service.AudioPlayerService;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;

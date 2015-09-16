@@ -1,4 +1,4 @@
-package com.sms.android.adapter;
+package com.scooter1556.sms.android.adapter;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -9,8 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.sms.android.R;
-import com.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.lib.android.domain.MediaElement;
 
 import java.util.List;
 

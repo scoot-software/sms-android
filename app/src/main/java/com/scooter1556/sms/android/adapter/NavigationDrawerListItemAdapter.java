@@ -1,4 +1,4 @@
-package com.sms.android.adapter;
+package com.scooter1556.sms.android.adapter;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,8 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.sms.android.R;
-import com.sms.android.domain.NavigationDrawerListItem;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.domain.NavigationDrawerListItem;
 
 public class NavigationDrawerListItemAdapter extends ArrayAdapter<NavigationDrawerListItem> {
 

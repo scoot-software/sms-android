@@ -1,4 +1,4 @@
-package com.sms.android.domain;
+package com.scooter1556.sms.android.domain;
 
 /**
  * Created by scott2ware on 19/02/15.

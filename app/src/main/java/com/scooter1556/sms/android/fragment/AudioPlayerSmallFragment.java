@@ -1,4 +1,4 @@
-package com.sms.android.fragment;
+package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -10,9 +10,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.sms.android.R;
-import com.sms.lib.android.domain.MediaElement;
-import com.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.lib.android.service.RESTService;
 import com.squareup.picasso.Picasso;
 
 public class AudioPlayerSmallFragment extends Fragment {

@@ -1,4 +1,4 @@
-package com.sms.android;
+package com.scooter1556.sms.android;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

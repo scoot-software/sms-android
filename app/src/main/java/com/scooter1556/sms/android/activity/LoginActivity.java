@@ -1,4 +1,4 @@
-package com.sms.android.activity;
+package com.scooter1556.sms.android.activity;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -14,8 +14,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.loopj.android.http.TextHttpResponseHandler;
-import com.sms.android.R;
-import com.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.lib.android.service.RESTService;
 
 import org.apache.http.Header;
 

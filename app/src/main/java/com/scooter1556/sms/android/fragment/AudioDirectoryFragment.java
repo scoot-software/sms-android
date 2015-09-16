@@ -1,4 +1,4 @@
-package com.sms.android.fragment;
+package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -20,10 +20,10 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.sms.android.R;
-import com.sms.android.adapter.MediaElementListAdapter;
-import com.sms.lib.android.domain.MediaElement;
-import com.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
+import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.lib.android.service.RESTService;
 import com.squareup.picasso.Picasso;
 
 import org.apache.http.Header;

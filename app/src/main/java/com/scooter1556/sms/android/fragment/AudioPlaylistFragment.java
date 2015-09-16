@@ -1,4 +1,4 @@
-package com.sms.android.fragment;
+package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -15,9 +15,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.sms.android.R;
-import com.sms.android.adapter.PlaylistAdapter;
-import com.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.adapter.PlaylistAdapter;
+import com.scooter1556.sms.lib.android.domain.MediaElement;
 
 import java.util.ArrayList;
 

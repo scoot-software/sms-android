@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sms.android" >
+    package="com.scooter1556.sms.android" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission
@@ -38,7 +38,7 @@
             android:screenOrientation="landscape" />
 
         <service
-            android:name="com.sms.lib.android.service.AudioPlayerService"
+            android:name="com.scooter1556.sms.lib.android.service.AudioPlayerService"
             android:enabled="true"
             android:exported="true" />
 

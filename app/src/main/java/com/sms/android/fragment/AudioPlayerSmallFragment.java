@@ -73,7 +73,7 @@ public class AudioPlayerSmallFragment extends Fragment {
             public void onClick(View status) {
                 if(audioControllerListener.isPlaying()) {
                     audioControllerListener.pause();
-                    playPauseButton.setImageResource(R.drawable.ic_action_play_dark);
+                    playPauseButton.setImageResource(R.drawable.ic_play_dark);
                 }
                 else {
                     audioControllerListener.start();
@@ -150,7 +150,7 @@ public class AudioPlayerSmallFragment extends Fragment {
         if(element == null) {
             titleTxt.setText("");
             artistTxt.setText("");
-            coverArt.setImageResource(R.drawable.cover_art);
+            coverArt.setImageResource(R.drawable.ic_content_audio);
         }
         else {
             titleTxt.setText(element.getTitle());
@@ -159,8 +159,7 @@ public class AudioPlayerSmallFragment extends Fragment {
             // Cover Art
             Picasso.with(getActivity())
                     .load(RESTService.getInstance().getBaseUrl() + "/image/" + element.getID() + "/cover/80")
-                    .placeholder(R.drawable.ic_content_loading)
-                    .error(R.drawable.cover_art)
+                    .error(R.drawable.ic_content_audio)
                     .into(coverArt);
         }
     }
@@ -170,10 +169,10 @@ public class AudioPlayerSmallFragment extends Fragment {
      */
     public void updatePlayerControls() {
         if(audioControllerListener.isPlaying()) {
-            playPauseButton.setImageResource(R.drawable.ic_action_pause_dark);
+            playPauseButton.setImageResource(R.drawable.ic_pause_dark);
         }
         else {
-            playPauseButton.setImageResource(R.drawable.ic_action_play_dark);
+            playPauseButton.setImageResource(R.drawable.ic_play_dark);
         }
     }
 

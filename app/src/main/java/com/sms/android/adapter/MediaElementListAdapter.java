@@ -1,8 +1,10 @@
 package com.sms.android.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.text.Html;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import com.sms.lib.android.domain.MediaElement;
 import com.sms.lib.android.service.RESTService;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
@@ -34,6 +37,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
     private final Context context;
     private List<MediaElement> items;
+    private SparseBooleanArray selectedItemIds;
 
     // Flags
     private boolean showArtist;
@@ -43,6 +47,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
         this.context = context;
         this.items = items;
         this.showArtist = false;
+        this.selectedItemIds = new SparseBooleanArray();
     }
 
     @Override
@@ -149,15 +154,14 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     dirTitle.setText(items.get(position).getTitle());
                 }
                 else {
-                    dirTitle.setText("");
+                    dirTitle.setVisibility(View.GONE);
                 }
 
                 // Cover Art
-                ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                final ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.ic_content_loading)
                         .error(R.drawable.ic_content_folder)
                         .into(dirThumbnail);
 
@@ -172,7 +176,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     aDirTitle.setText(items.get(position).getTitle());
                 }
                 else {
-                    aDirTitle.setText("");
+                    aDirTitle.setVisibility(View.GONE);
                 }
 
                 // Artist
@@ -182,7 +186,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     aDirCollection.setText(items.get(position).getArtist());
                 }
                 else {
-                    aDirCollection.setText("");
+                    aDirCollection.setVisibility(View.GONE);
                 }
 
                 // Description
@@ -193,7 +197,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     aDirDescription.setText(items.get(position).getDescription());
                 }
                 else {
-                    aDirDescription.setText("");
+                    aDirDescription.setVisibility(View.GONE);
                 }
 
                 // Year
@@ -203,15 +207,14 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                     aDirYear.setText(items.get(position).getYear().toString());
                 }
                 else {
-                    aDirYear.setText("");
+                    aDirYear.setVisibility(View.GONE);
                 }
 
                 // Cover Art
-                ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                final ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .placeholder(R.drawable.ic_content_loading)
                         .error(R.drawable.ic_content_album)
                         .into(aDirThumbnail);
 
@@ -254,19 +257,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
 
                 Picasso.with(context)
                         .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .into(vDirThumbnail, new com.squareup.picasso.Callback() {
-                            @Override
-                            public void onSuccess() {
-                                ((RelativeLayout.LayoutParams) vDirTitle.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, vDirThumbnail.getId());
-                                ((RelativeLayout.LayoutParams) vDirCollection.getLayoutParams()).addRule(RelativeLayout.RIGHT_OF, vDirThumbnail.getId());
-                            }
-
-                            @Override
-                            public void onError() {
-                                vDirThumbnail.setVisibility(View.GONE);
-                            }
-                        });
-
+                        .error(R.drawable.ic_content_video)
+                        .into(vDirThumbnail);
                 break;
 
             case VIDEO_VIEW:
@@ -411,7 +403,35 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
                 break;
         }
 
+        convertView.setBackgroundColor(selectedItemIds.get(position) ? context.getResources().getColor(R.color.list_item_checked) : Color.TRANSPARENT);
+
         return convertView;
+    }
+
+    public void toggleSelection(int position) {
+        selectView(position, !selectedItemIds.get(position));
+    }
+
+    public void removeSelection() {
+        selectedItemIds = new SparseBooleanArray();
+        notifyDataSetChanged();
+    }
+
+    public void selectView(int position, boolean value) {
+        if (value)
+            selectedItemIds.put(position, value);
+        else
+            selectedItemIds.delete(position);
+
+        notifyDataSetChanged();
+    }
+
+    public int getSelectedCount() {
+        return selectedItemIds.size();
+    }
+
+    public SparseBooleanArray getSelectedIds() {
+        return selectedItemIds;
     }
 
     //

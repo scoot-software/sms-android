@@ -11,11 +11,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.sms.android.R;
 import com.sms.lib.android.domain.MediaElement;
+import com.sms.lib.android.service.RESTService;
+import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,6 +29,10 @@ public class AudioPlayerFragment extends Fragment {
     private AudioControllerListener audioControllerListener;
 
     // User Interface Elements
+    private ImageView coverArt;
+    private TextView title;
+    private TextView artist;
+    private TextView album;
     private ImageButton playPauseButton;
     private ImageButton stopButton;
     private ImageButton previousButton;
@@ -70,6 +77,10 @@ public class AudioPlayerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_audio_player, container, false);
 
         // UI Elements
+        coverArt = (ImageView) view.findViewById(R.id.cover_art);
+        title = (TextView) view.findViewById(R.id.title);
+        artist = (TextView) view.findViewById(R.id.artist);
+        album = (TextView) view.findViewById(R.id.album);
         playPauseButton = (ImageButton) view.findViewById(R.id.playPause);
         stopButton = (ImageButton) view.findViewById(R.id.stop);
         previousButton = (ImageButton) view.findViewById(R.id.previous);
@@ -85,7 +96,7 @@ public class AudioPlayerFragment extends Fragment {
             public void onClick(View status) {
                 if(audioControllerListener.isPlaying()) {
                     audioControllerListener.pause();
-                    playPauseButton.setImageResource(R.drawable.ic_action_play_dark);
+                    playPauseButton.setImageResource(R.drawable.ic_play_dark);
                 }
                 else {
                     audioControllerListener.start();
@@ -223,11 +234,24 @@ public class AudioPlayerFragment extends Fragment {
      * Updates media info
      */
     public void updateMediaInfo() {
-        if(audioControllerListener.getMediaElement() == null) {
+        MediaElement element = audioControllerListener.getMediaElement();
 
+        if(element == null) {
+            title.setText("");
+            artist.setText("");
+            album.setText("");
+            coverArt.setImageResource(R.drawable.ic_content_audio);
         }
         else {
+            title.setText(element.getTitle());
+            artist.setText(element.getArtist());
+            album.setText(element.getAlbum());
 
+            // Cover Art
+            Picasso.with(getActivity())
+                    .load(RESTService.getInstance().getBaseUrl() + "/image/" + element.getID() + "/cover/500")
+                    .error(R.drawable.ic_content_audio)
+                    .into(coverArt);
         }
     }
 
@@ -236,10 +260,10 @@ public class AudioPlayerFragment extends Fragment {
      */
     public void updatePlayerControls() {
         if(audioControllerListener.isPlaying()) {
-            playPauseButton.setImageResource(R.drawable.ic_action_pause_dark);
+            playPauseButton.setImageResource(R.drawable.ic_pause_dark);
         }
         else {
-            playPauseButton.setImageResource(R.drawable.ic_action_play_dark);
+            playPauseButton.setImageResource(R.drawable.ic_play_dark);
         }
     }
 

@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ListFragment;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.sms.android.R;
@@ -28,6 +31,8 @@ public class AudioPlaylistFragment extends ListFragment {
 
     private AudioPlaylistListener audioPlaylistListener;
 
+    private ActionMode actionMode;
+
     public static AudioPlaylistFragment newInstance() {
         AudioPlaylistFragment fragment = new AudioPlaylistFragment();
         return fragment;
@@ -41,8 +46,9 @@ public class AudioPlaylistFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Get current playlist
-        mediaElementList = audioPlaylistListener.getCurrentPlaylist();
+        // Initialisation
+        mediaElementList = audioPlaylistListener.GetCurrentPlaylist();
+        playlistAdapter = new PlaylistAdapter(getActivity(), mediaElementList);
 
         // Action Bar
         setHasOptionsMenu(true);
@@ -54,9 +60,6 @@ public class AudioPlaylistFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Setup view adapter
-        playlistAdapter = new PlaylistAdapter(getActivity(), mediaElementList);
-
         // Set the adapter
         setListAdapter(playlistAdapter);
 
@@ -66,10 +69,14 @@ public class AudioPlaylistFragment extends ListFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         setEmptyText(getString(R.string.playlist_empty));
-        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
-        // Check playlist position
-        getListView().setItemChecked(audioPlaylistListener.getPlaylistPosition(), true);
+        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+                onListItemSelect(position);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -91,12 +98,11 @@ public class AudioPlaylistFragment extends ListFragment {
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
 
-        // Check playlist position
-        getListView().setItemChecked(audioPlaylistListener.getPlaylistPosition(), true);
+        updatePlaylist();
+        updateCurrentPosition();
     }
 
     @Override
@@ -106,8 +112,30 @@ public class AudioPlaylistFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        if (audioPlaylistListener != null) {
-            audioPlaylistListener.PlaylistItemSelected(position);
+        if (actionMode == null) {
+            if (audioPlaylistListener != null) {
+                audioPlaylistListener.PlaylistItemSelected(position);
+            }
+        } else {
+            // add or remove selection for current list item
+            onListItemSelect(position);
+        }
+    }
+
+    private void onListItemSelect(int position) {
+        playlistAdapter.toggleSelection(position);
+        boolean hasCheckedItems = playlistAdapter.getSelectedCount() > 0;
+
+        if (hasCheckedItems && actionMode == null) {
+            // There are some selected items, start action mode.
+            actionMode = getListView().startActionMode(new ActionModeCallback());
+        } else if (!hasCheckedItems && actionMode != null) {
+            // There no selected items, finish action mode.
+            actionMode.finish();
+        }
+
+        if (actionMode != null) {
+            actionMode.setTitle(String.valueOf(playlistAdapter.getSelectedCount()) + " Selected");
         }
     }
 
@@ -115,10 +143,10 @@ public class AudioPlaylistFragment extends ListFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.now_playing:
-                audioPlaylistListener.showNowPlaying();
+                audioPlaylistListener.ShowNowPlaying();
                 return true;
             case R.id.clear_all:
-                audioPlaylistListener.clearAll();
+                audioPlaylistListener.ClearAll();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -127,13 +155,69 @@ public class AudioPlaylistFragment extends ListFragment {
 
     public void updateCurrentPosition() {
         // Update playlist position
-        getListView().setItemChecked(audioPlaylistListener.getPlaylistPosition(), true);
+        playlistAdapter.setCheckedItem(audioPlaylistListener.GetPlaylistPosition());
+        playlistAdapter.notifyDataSetChanged();
     }
 
     public void updatePlaylist() {
-        mediaElementList = audioPlaylistListener.getCurrentPlaylist();
+        mediaElementList = audioPlaylistListener.GetCurrentPlaylist();
         playlistAdapter.setItemList(mediaElementList);
         playlistAdapter.notifyDataSetChanged();
+    }
+
+    private class ActionModeCallback implements ActionMode.Callback {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // inflate contextual menu
+            mode.getMenuInflater().inflate(R.menu.menu_playlist_context, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            SparseBooleanArray selected;
+            ArrayList<Long> selectedItemIds = new ArrayList<>();
+
+            switch (item.getItemId()) {
+
+                case R.id.remove:
+                    // Retrieve selected item ids
+                    selected = playlistAdapter.getSelectedIds();
+
+                    // Get selected item IDs
+                    for (int i = 0; i < selected.size(); i++) {
+                        if (selected.valueAt(i)) {
+                            selectedItemIds.add(playlistAdapter.getItem(selected.keyAt(i)).getID());
+                        }
+                    }
+
+                    // Remove these from the playlist
+                    for(Long id : selectedItemIds) {
+                        audioPlaylistListener.RemoveItemFromPlaylist(id);
+                    }
+
+                    // End action mode
+                    mode.finish();
+                    return true;
+
+                default:
+                    return false;
+            }
+
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // Remove selection
+            playlistAdapter.removeSelection();
+            actionMode = null;
+        }
     }
 
     /**
@@ -144,11 +228,12 @@ public class AudioPlaylistFragment extends ListFragment {
      */
     public interface AudioPlaylistListener {
 
-        public void PlaylistItemSelected(int position);
-        public ArrayList<MediaElement> getCurrentPlaylist();
-        public int getPlaylistPosition();
-        public void clearAll();
-        public void showNowPlaying();
+        void PlaylistItemSelected(int position);
+        ArrayList<MediaElement> GetCurrentPlaylist();
+        int GetPlaylistPosition();
+        void RemoveItemFromPlaylist(long id);
+        void ClearAll();
+        void ShowNowPlaying();
 
     }
 }

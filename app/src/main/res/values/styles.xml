@@ -44,4 +44,9 @@
         <item name="android:layout_width">@dimen/audio_player_button_small_width</item>
     </style>
 
+    <style name="AudioPlayerButton" parent="android:Widget.Holo.ImageButton">
+        <item name="android:background">?android:attr/actionBarItemBackground</item>
+        <item name="android:minHeight">@dimen/audio_player_button_height</item>
+    </style>
+
 </resources>

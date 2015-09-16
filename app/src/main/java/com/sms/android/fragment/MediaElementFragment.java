@@ -154,22 +154,6 @@ public class MediaElementFragment extends ListFragment {
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     */
-    public interface MediaElementListener {
-
-        public void MediaElementSelected(MediaElement element);
-
-        public void PlayAll(ArrayList<MediaElement> mediaElements);
-
-        public void AddAllToQueue(ArrayList<MediaElement> mediaElements);
-
-    }
-
     private void getMediaElements() {
 
         mediaElements = new ArrayList<>();
@@ -385,5 +369,19 @@ public class MediaElementFragment extends ListFragment {
                 }
             });
         }
+    }
+
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     */
+    public interface MediaElementListener {
+
+        void MediaElementSelected(MediaElement element);
+        void PlayAll(ArrayList<MediaElement> mediaElements);
+        void AddAllAndPlayNext(ArrayList<MediaElement> mediaElements);
+        void AddAllToQueue(ArrayList<MediaElement> mediaElements);
     }
 }

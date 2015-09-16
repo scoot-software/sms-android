@@ -20,7 +20,7 @@
         android:layout_alignParentBottom="true" >
 
         <ImageButton android:id="@+id/video_controller_play"
-            android:src="@drawable/ic_action_play_light"
+            android:src="@drawable/ic_play_light"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:background="@null"

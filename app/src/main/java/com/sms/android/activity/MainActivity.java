@@ -101,10 +101,10 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         drawerList = (ListView) findViewById(R.id.navigation_drawer_list);
 
         NavigationDrawerListItem[] drawerListItems = new NavigationDrawerListItem[4];
-        drawerListItems[MENU_MEDIA_BROWSER] = new NavigationDrawerListItem(R.drawable.ic_action_collection, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_MEDIA_BROWSER]);
-        drawerListItems[MENU_SETTINGS] = new NavigationDrawerListItem(R.drawable.ic_action_settings, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_SETTINGS]);
-        drawerListItems[MENU_LOGOUT] = new NavigationDrawerListItem(R.drawable.ic_action_accounts, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_LOGOUT]);
-        drawerListItems[MENU_EXIT] = new NavigationDrawerListItem(R.drawable.ic_action_remove, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_EXIT]);
+        drawerListItems[MENU_MEDIA_BROWSER] = new NavigationDrawerListItem(R.drawable.ic_media_browser, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_MEDIA_BROWSER]);
+        drawerListItems[MENU_SETTINGS] = new NavigationDrawerListItem(R.drawable.ic_settings, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_SETTINGS]);
+        drawerListItems[MENU_LOGOUT] = new NavigationDrawerListItem(R.drawable.ic_logout, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_LOGOUT]);
+        drawerListItems[MENU_EXIT] = new NavigationDrawerListItem(R.drawable.ic_close, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_EXIT]);
         NavigationDrawerListItemAdapter drawerAdapter = new NavigationDrawerListItemAdapter(this, R.layout.drawer_list_item, drawerListItems);
         drawerList.setAdapter(drawerAdapter);
         drawerList.setOnItemClickListener(new DrawerItemClickListener());
@@ -298,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         // Update Audio Player Fragments
         audioPlayerSmallFragment.updatePlayerControls(); audioPlayerSmallFragment.updateMediaInfo();
         audioPlayerFragment.updatePlayerControls(); audioPlayerFragment.updateMediaInfo();
+        audioPlaylistFragment.updatePlaylist();
         audioPlaylistFragment.updateCurrentPosition();
     }
 
@@ -518,6 +519,22 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     }
 
     @Override
+    public void AddAllAndPlayNext(ArrayList<MediaElement> mediaElements) {
+        if(mediaElements == null) { return; }
+
+        ArrayList<MediaElement> audioElements = new ArrayList<>();
+
+        for (MediaElement element : mediaElements) {
+
+            if(element.getType().equals(MediaElement.MediaElementType.AUDIO)) {
+                audioElements.add(element);
+            }
+        }
+
+        audioPlayerService.addAllAndPlayNext(audioElements);
+    }
+
+    @Override
     public void AddAllToQueue(ArrayList<MediaElement> mediaElements) {
         if (mediaElements == null) {
             return;
@@ -558,23 +575,33 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     }
 
     @Override
-    public ArrayList<MediaElement> getCurrentPlaylist() {
+    public ArrayList<MediaElement> GetCurrentPlaylist() {
         if(audioPlayerService == null) { return null; }
         return audioPlayerService.getMediaList();
     }
 
     @Override
-    public int getPlaylistPosition() {
+    public int GetPlaylistPosition() {
         if (audioPlayerService == null) {
             return 0;
         }
         return audioPlayerService.getMediaListPosition();
     }
 
-    public void clearAll() { audioPlayerService.clearMediaList(); }
+    @Override
+    public void RemoveItemFromPlaylist(long id) {
+        if(audioPlayerService == null) {
+            return;
+        }
+
+        audioPlayerService.removeMediaElementFromList(id);
+    }
 
     @Override
-    public void showNowPlaying() {
+    public void ClearAll() { audioPlayerService.clearMediaList(); }
+
+    @Override
+    public void ShowNowPlaying() {
         // Load audio player fragment in sliding panel container and update menu items
         getSupportFragmentManager().beginTransaction().show(audioPlayerFragment).hide(audioPlaylistFragment).commit();
         audioPlaylistFragment.setMenuVisibility(false);

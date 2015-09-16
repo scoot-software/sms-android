@@ -108,7 +108,7 @@ public class VideoPlayerActivity extends Activity implements MediaPlayer.OnCompl
         currentTime.setText(stringForTime(startOffset));
 
         playButton = (ImageButton)findViewById(R.id.video_controller_play);
-        playButton.setImageResource(R.drawable.ic_action_play_light);
+        playButton.setImageResource(R.drawable.ic_play_light);
         playButton.setOnClickListener(onPlayButtonPressed);
 
         controller = findViewById(R.id.video_controller);
@@ -217,7 +217,7 @@ public class VideoPlayerActivity extends Activity implements MediaPlayer.OnCompl
         player.start();
 
         playButton.setEnabled(true);
-        playButton.setImageResource(R.drawable.ic_action_pause_light);
+        playButton.setImageResource(R.drawable.ic_pause_light);
 
         showController = false;
         surface.postDelayed(updateController, 1000);
@@ -329,13 +329,13 @@ public class VideoPlayerActivity extends Activity implements MediaPlayer.OnCompl
 
             if (player != null) {
                 if (player.isPlaying()) {
-                    playButton.setImageResource(R.drawable.ic_action_play_light);
+                    playButton.setImageResource(R.drawable.ic_play_light);
                     player.pause();
                     showController = true;
                     surface.removeCallbacks(updateController);
                 }
                 else {
-                    playButton.setImageResource(R.drawable.ic_action_pause_light);
+                    playButton.setImageResource(R.drawable.ic_pause_light);
                     player.start();
                     showController = false;
                     surface.postDelayed(updateController, 1000);

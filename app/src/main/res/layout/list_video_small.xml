@@ -13,8 +13,8 @@
         android:orientation="vertical"
         android:paddingLeft="10dip"
         android:paddingStart="10dip"
-        android:paddingRight="10dip"
-        android:paddingEnd="10dip">
+        android:paddingRight="5dip"
+        android:paddingEnd="5dip">
 
         <TextView
             android:id="@+id/title"

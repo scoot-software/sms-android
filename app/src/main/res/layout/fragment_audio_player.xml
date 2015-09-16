@@ -1,47 +1,76 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.sms.android.fragment.AudioPlayerFragment">
+<?xml version="1.0" encoding="utf-8"?>
 
-    <!-- Song Thumbnail Image -->
-    <LinearLayout
-        android:id="@+id/artwork"
-        android:layout_width="fill_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip"
+        android:layout_marginTop="4dip"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/cover_art"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_centerInParent="true"
+            android:scaleType="fitCenter"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/trackInfo"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:gravity="center"
-        android:layout_alignParentTop="true">
-        <ImageView android:layout_width="wrap_content"
+        android:layout_marginTop="8dip"
+        android:clickable="true"
+        android:paddingBottom="2dip"
+        android:paddingLeft="10dip"
+        android:paddingRight="10dip">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_content_album"/>
-    </LinearLayout>
+            android:layout_alignParentTop="true"
+            android:ellipsize="marquee"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_horizontal"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:id="@+id/artistTxt"
-        android:layout_below="@+id/artwork"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp" />
+        <TextView
+            android:id="@+id/artist"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/title"
+            android:layout_marginTop="1dip"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_horizontal"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:id="@+id/titleTxt"
-        android:layout_below="@+id/artistTxt"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp" />
+        <TextView
+            android:id="@+id/album"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/artist"
+            android:layout_marginTop="1dip"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_horizontal"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    </RelativeLayout>
 
     <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/seekbar"
         android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:layout_below="@+id/titleTxt">
-
+        android:layout_width="match_parent">
         <TextView
             android:id="@+id/position"
             android:layout_width="wrap_content"
@@ -50,7 +79,7 @@
             android:layout_centerVertical="true"
             android:paddingLeft="8dip"
             android:text="0:00"
-            android:textSize="12sp"/>
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
 
         <SeekBar
             android:id="@+id/progress_bar"
@@ -71,52 +100,51 @@
             android:layout_centerVertical="true"
             android:paddingRight="8dip"
             android:text="-:--"
-            android:textSize="12sp"/>
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
 
     </RelativeLayout>
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_below="@+id/seekbar">
+    <LinearLayout
+        android:id="@+id/buttons_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <ImageButton
             android:id="@+id/previous"
-            android:src="@drawable/ic_action_previous"
+            android:src="@drawable/ic_skip_previous"
             android:contentDescription="@string/audio_player_previous_button_description"
-            android:layout_toLeftOf="@+id/playPause"
-            android:layout_centerInParent="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            style="@style/AudioPlayerButton"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
 
         <ImageButton
             android:id="@+id/stop"
-            android:src="@drawable/ic_action_stop"
+            android:src="@drawable/ic_stop"
             android:contentDescription="@string/audio_player_stop_button_description"
-            android:layout_centerInParent="true"
-            android:layout_toRightOf="@+id/playPause"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            style="@style/AudioPlayerButton"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
 
         <ImageButton
             android:id="@+id/playPause"
             android:contentDescription="@string/audio_player_play_pause_button_description"
-            android:src="@drawable/ic_action_play_dark"
-            android:layout_centerInParent="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:src="@drawable/ic_play_dark"
+            style="@style/AudioPlayerButton"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
 
         <ImageButton
             android:id="@+id/next"
-            android:src="@drawable/ic_action_next"
+            android:src="@drawable/ic_skip_next"
             android:contentDescription="@string/audio_player_next_button_description"
-            android:layout_toRightOf="@+id/stop"
-            android:layout_centerInParent="true"
+            style="@style/AudioPlayerButton"
+            android:layout_width="0dip"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content" />
+            android:layout_weight="1"/>
 
-    </RelativeLayout>
+    </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>

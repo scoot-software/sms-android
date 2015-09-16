@@ -23,7 +23,7 @@
             android:layout_height="fill_parent"
             android:contentDescription="@string/audio_player_cover_art_description"
             android:scaleType="fitCenter"
-            android:src="@drawable/cover_art"/>
+            android:src="@drawable/ic_content_audio"/>
 
     </RelativeLayout>
 

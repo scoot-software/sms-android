@@ -21,6 +21,8 @@
 
     <!-- Audio Player -->
     <dimen name="audio_player_small_fragment_height">48dp</dimen>
+    <dimen name="audio_player_button_height">70dip</dimen>
+    <dimen name="audio_player_button_width">65dip</dimen>
     <dimen name="audio_player_button_small_height">48dip</dimen>
     <dimen name="audio_player_button_small_width">50dip</dimen>
 

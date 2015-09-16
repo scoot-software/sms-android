@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -59,6 +61,9 @@ public class AudioDirectoryFragment extends Fragment {
     String title = null;
     String artist = null;
 
+    ListView listView = null;
+    private ActionMode actionMode;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -100,7 +105,7 @@ public class AudioDirectoryFragment extends Fragment {
 
         Picasso.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getBaseUrl() + "/image/" + id + "/cover/80")
-                .error(R.drawable.cover_art)
+                .error(R.drawable.ic_content_album)
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);
@@ -113,16 +118,30 @@ public class AudioDirectoryFragment extends Fragment {
             directoryArtist.setText(artist);
         }
 
-        ListView listView = (ListView) rootView.findViewById(R.id.songList);
+        listView = (ListView) rootView.findViewById(R.id.songList);
         listView.setAdapter(mediaElementListAdapter);
         listView.setEmptyView(rootView.findViewById(R.id.emptyList));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mediaElementListener != null) {
-                    mediaElementListener.MediaElementSelected(mediaElements.get(position));
+                if (actionMode == null) {
+                    if (mediaElementListener != null) {
+                        mediaElementListener.MediaElementSelected(mediaElements.get(position));
+                    }
+                } else {
+                    // add or remove selection for current list item
+                    onListItemSelect(position);
                 }
+            }
+        });
+
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+                onListItemSelect(position);
+                return true;
             }
         });
 
@@ -157,11 +176,31 @@ public class AudioDirectoryFragment extends Fragment {
         mediaElementListener = null;
     }
 
+    private void onListItemSelect(int position) {
+        mediaElementListAdapter.toggleSelection(position);
+        boolean hasCheckedItems = mediaElementListAdapter.getSelectedCount() > 0;
+
+        if (hasCheckedItems && actionMode == null) {
+            // There are some selected items, start action mode.
+            actionMode = listView.startActionMode(new ActionModeCallback());
+        } else if (!hasCheckedItems && actionMode != null) {
+            // There no selected items, finish action mode.
+            actionMode.finish();
+        }
+
+        if (actionMode != null) {
+            actionMode.setTitle(String.valueOf(mediaElementListAdapter.getSelectedCount()) + " Selected");
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.play_all:
                 mediaElementListener.PlayAll(mediaElements);
+                return true;
+            case R.id.add_all_and_play_next:
+                mediaElementListener.AddAllAndPlayNext(mediaElements);
                 return true;
             case R.id.add_all_to_queue:
                 mediaElementListener.AddAllToQueue(mediaElements);
@@ -270,5 +309,97 @@ public class AudioDirectoryFragment extends Fragment {
                 restProgress.setMessage(message);
             }
         });
+    }
+
+    private class ActionModeCallback implements ActionMode.Callback {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // inflate contextual menu
+            mode.getMenuInflater().inflate(R.menu.menu_audio_context, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            SparseBooleanArray selected;
+            ArrayList<MediaElement> selectedItems;
+
+            switch (item.getItemId()) {
+
+                case R.id.play:
+                    // Retrieve selected item ids
+                    selected = mediaElementListAdapter.getSelectedIds();
+
+                    // Get selected media elements
+                    selectedItems = new ArrayList<>();
+                    for (int i = 0; i < selected.size(); i++) {
+                        if (selected.valueAt(i)) {
+                            selectedItems.add(mediaElementListAdapter.getItem(selected.keyAt(i)));
+                        }
+                    }
+
+                    // Play selected items
+                    mediaElementListener.PlayAll(selectedItems);
+
+                    // End action mode
+                    mode.finish();
+                    return true;
+
+                    case R.id.add_and_play_next:
+                        // Retrieve selected item ids
+                        selected = mediaElementListAdapter.getSelectedIds();
+
+                        // Get selected media elements
+                        selectedItems = new ArrayList<>();
+                        for (int i = 0; i < selected.size(); i++) {
+                            if (selected.valueAt(i)) {
+                                selectedItems.add(mediaElementListAdapter.getItem(selected.keyAt(i)));
+                            }
+                        }
+
+                        // Play selected items next
+                        mediaElementListener.AddAllAndPlayNext(selectedItems);
+
+                        // End action mode
+                        mode.finish();
+                        return true;
+
+                case R.id.add_to_queue:
+                    // Retrieve selected item ids
+                    selected = mediaElementListAdapter.getSelectedIds();
+
+                    // Get selected media elements
+                    selectedItems = new ArrayList<>();
+                    for (int i = 0; i < selected.size(); i++) {
+                        if (selected.valueAt(i)) {
+                            selectedItems.add(mediaElementListAdapter.getItem(selected.keyAt(i)));
+                        }
+                    }
+
+                    // Play selected items next
+                    mediaElementListener.AddAllToQueue(selectedItems);
+
+                    // End action mode
+                    mode.finish();
+                    return true;
+
+                default:
+                    return false;
+            }
+
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // Remove selection
+            mediaElementListAdapter.removeSelection();
+            actionMode = null;
+        }
     }
 }

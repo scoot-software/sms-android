@@ -31,10 +31,15 @@
     <string name="playlist_empty">Playlist is empty!</string>
 
     <string name="action_bar_play_all">Play All</string>
+    <string name="action_bar_play">Play</string>
+    <string name="action_bar_add_all_and_play_next">Add All And Play Next</string>
+    <string name="action_bar_add_and_play_next">Add And Play Next</string>
     <string name="action_bar_add_all_to_queue">Add All To Queue</string>
+    <string name="action_bar_add_to_queue">Add To Queue</string>
     <string name="action_bar_clear">Clear</string>
     <string name="action_bar_view_playlist">Playlist</string>
     <string name="action_bar_view_now_playing">Now Playing</string>
+
 
     <string name="notification_please_wait">Please Wait...</string>
 

@@ -12,6 +12,7 @@ import android.view.ViewManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.scooter1556.sms.android.R;
@@ -26,7 +27,7 @@ import java.util.List;
 /**
  * Created by scott2ware on 18/12/14.
  */
-public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
+public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implements SectionIndexer {
 
     private static final int DIRECTORY_VIEW = 0;
     private static final int AUDIO_DIRECTORY_VIEW = 1;
@@ -466,5 +467,20 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> {
         }
 
         return timeString;
+    }
+
+    @Override
+    public Object[] getSections() {
+        return new Object[0];
+    }
+
+    @Override
+    public int getPositionForSection(int i) {
+        return 0;
+    }
+
+    @Override
+    public int getSectionForPosition(int i) {
+        return 0;
     }
 }

@@ -102,15 +102,17 @@ public class MediaElementFragment extends ListFragment {
     }
 
     @Override
+    public void onViewCreated (View view, Bundle savedInstanceState) {
+        getListView().setFastScrollEnabled(true);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if(directoryType.equals(MediaElement.DirectoryMediaType.AUDIO)) {
-            inflater.inflate(R.menu.menu_directory_audio, menu);
-        }
     }
 
     @Override
@@ -133,16 +135,7 @@ public class MediaElementFragment extends ListFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.play_all:
-                mediaElementListener.PlayAll(mediaElements);
-                return true;
-            case R.id.add_all_to_queue:
-                mediaElementListener.AddAllToQueue(mediaElements);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

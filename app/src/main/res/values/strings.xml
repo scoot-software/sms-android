@@ -20,6 +20,7 @@
     <string name="error_server">Operation failed with status code: </string>
     <string name="error_server_not_found">Unable to contact server</string>
     <string name="error_unauthenticated">Username or Password is incorrect</string>
+    <string name="error_video_playback">Unable to play video</string>
 
     <string name="media_title">Media Browser</string>
     <string name="media_retrieving_folders">Retrieving Media Folders</string>

@@ -17,8 +17,6 @@ import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
-import org.apache.http.Header;
-
 public class LoginActivity extends AppCompatActivity {
 
     private Context context = this;
@@ -152,28 +150,7 @@ public class LoginActivity extends AppCompatActivity {
         restService.getVersion(new TextHttpResponseHandler() {
 
             @Override
-            public void onStart() {
-                loginProgress = ProgressDialog.show(context, getString(R.string.login_title), getString(R.string.login_progress_dialog), true);
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-
-                // Update server version in shared preferences
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt(Version, Integer.parseInt(responseString));
-                editor.apply();
-
-                loginProgress.dismiss();
-
-                // Start the main activity
-                Intent startApp = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(startApp);
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
                 Toast error;
 
                 loginProgress.dismiss();
@@ -195,7 +172,25 @@ public class LoginActivity extends AppCompatActivity {
                         error.show();
                         break;
                 }
+            }
 
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+                // Update server version in shared preferences
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt(Version, Integer.parseInt(responseString));
+                editor.apply();
+
+                loginProgress.dismiss();
+
+                // Start the main activity
+                Intent startApp = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(startApp);
+            }
+
+            @Override
+            public void onStart() {
+                loginProgress = ProgressDialog.show(context, getString(R.string.login_title), getString(R.string.login_progress_dialog), true);
             }
 
             @Override
@@ -228,7 +223,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
                 loginProgress.dismiss();
 
                 // Start the main activity
@@ -237,7 +232,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
                 setupUserInterface();
                 loginProgress.dismiss();
             }

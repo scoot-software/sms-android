@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,7 +20,6 @@ import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
-import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -161,7 +159,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                     Gson parser = new Gson();
                     mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
 
@@ -172,7 +170,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 
                     Gson parser = new Gson();
 
@@ -193,7 +191,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
 
                     Toast error;
 
@@ -220,7 +218,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray response) {
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
 
                     Toast error;
 
@@ -271,7 +269,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                     Gson parser = new Gson();
                     mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
 
@@ -282,7 +280,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 
                     Gson parser = new Gson();
 
@@ -321,7 +319,7 @@ public class MediaElementFragment extends ListFragment {
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
 
                     Toast error;
 

@@ -26,7 +26,6 @@ import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
 import com.squareup.picasso.Picasso;
 
-import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -221,7 +220,7 @@ public class AudioDirectoryFragment extends Fragment {
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 Gson parser = new Gson();
                 mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
 
@@ -232,7 +231,7 @@ public class AudioDirectoryFragment extends Fragment {
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 
                 Gson parser = new Gson();
 
@@ -269,7 +268,7 @@ public class AudioDirectoryFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
 
                 Toast error;
 

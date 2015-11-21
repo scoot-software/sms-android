@@ -25,8 +25,6 @@ import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.player.SMSVideoPlayer;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
-import org.apache.http.Header;
-
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -202,14 +200,14 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
         restService.initialiseStream(mediaElement.getID(), new TextHttpResponseHandler() {
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
                 player.setJobID(Long.parseLong(responseString));
                 preparePlayer();
                 initialised = true;
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
                 Toast error = Toast.makeText(getApplicationContext(), getString(R.string.video_player_error), Toast.LENGTH_SHORT);
                 error.show();
             }

@@ -17,7 +17,6 @@ import com.scooter1556.sms.android.adapter.MediaFolderListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaFolder;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
-import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -141,7 +140,7 @@ public class MediaFolderFragment extends ListFragment {
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 Gson parser = new Gson();
                 mediaFolders.add(parser.fromJson(response.toString(), MediaFolder.class));
 
@@ -152,7 +151,7 @@ public class MediaFolderFragment extends ListFragment {
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 
                 Gson parser = new Gson();
 
@@ -173,7 +172,7 @@ public class MediaFolderFragment extends ListFragment {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
 
                 Toast error;
 
@@ -200,7 +199,7 @@ public class MediaFolderFragment extends ListFragment {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray response) {
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
 
                 Toast error;
 

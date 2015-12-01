@@ -226,7 +226,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             player.setDuration(mediaElement.getDuration());
         }
 
-        String streamUrl = restService.getBaseUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (player.getOffset() * 0.001);
+        String streamUrl = restService.getConnection().getUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (player.getOffset() * 0.001);
         Uri contentUri = Uri.parse(streamUrl);
 
         player.addListener(this);
@@ -273,7 +273,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     private void seekTo(int position) {
         if(player != null) {
             // Generate new stream uri
-            String streamUrl = restService.getBaseUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (position * 0.001);
+            String streamUrl = restService.getConnection().getUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (position * 0.001);
             Uri contentUri = Uri.parse(streamUrl);
 
             // Initialise player in new position

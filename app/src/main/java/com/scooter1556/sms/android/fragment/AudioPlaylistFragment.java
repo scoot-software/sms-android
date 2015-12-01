@@ -1,6 +1,7 @@
 package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ListFragment;
@@ -80,13 +81,13 @@ public class AudioPlaylistFragment extends ListFragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         try {
-            audioPlaylistListener = (AudioPlaylistListener) activity;
+            audioPlaylistListener = (AudioPlaylistListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement AudioPlaylistListener");
         }
     }

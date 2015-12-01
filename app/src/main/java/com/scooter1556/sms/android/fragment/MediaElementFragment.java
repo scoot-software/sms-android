@@ -2,6 +2,7 @@ package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
@@ -101,6 +102,7 @@ public class MediaElementFragment extends ListFragment {
 
     @Override
     public void onViewCreated (View view, Bundle savedInstanceState) {
+        setEmptyText(getString(R.string.media_not_found));
         getListView().setFastScrollEnabled(true);
     }
 
@@ -114,13 +116,13 @@ public class MediaElementFragment extends ListFragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         try {
-            mediaElementListener = (MediaElementListener) activity;
+            mediaElementListener = (MediaElementListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement MediaElementListener");
         }
     }

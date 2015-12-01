@@ -25,8 +25,11 @@ import java.util.Formatter;
 import java.util.List;
 
 /**
- * Created by scott2ware on 18/12/14.
+ * Adapter for displaying media elements.
+ *
+ * Created by Scott Ware.
  */
+
 public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implements SectionIndexer {
 
     private static final int DIRECTORY_VIEW = 0;
@@ -162,7 +165,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_folder)
                         .into(dirThumbnail);
 
@@ -215,7 +218,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_album)
                         .into(aDirThumbnail);
 
@@ -257,7 +260,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_video)
                         .into(vDirThumbnail);
                 break;
@@ -329,7 +332,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Picasso.with(context)
-                        .load(RESTService.getInstance().getBaseUrl() + "/image/" + items.get(position).getID() + "/cover/150")
+                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/150")
                         .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 

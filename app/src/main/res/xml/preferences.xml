@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:title="@string/preferences_title_transcode_setting"
-        android:key="pref_key_transcode_settings">
+    <PreferenceCategory android:title="@string/preferences_title_connections" >
+        <Preference
+            android:title="@string/preferences_title_manage_connections"
+            android:summary="@string/preferences_summary_connections"
+            android:persistent="false" >
+
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:targetPackage="com.scooter1556.sms.android"
+                android:targetClass="com.scooter1556.sms.android.activity.ConnectionActivity" />
+
+        </Preference>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/preferences_title_transcode_setting" android:key="pref_key_transcode_settings">
         <ListPreference
             android:key="pref_video_quality"
             android:title="@string/preferences_title_video_quality"
-            android:summary="@string/preferences_video_quality_summary"
+            android:summary="@string/preferences_summary_video_quality"
             android:entries="@array/preferences_video_quality_names"
             android:entryValues="@array/preferences_video_quality_values"
             android:defaultValue="@string/preferences_default_video_quality_value" />
@@ -15,7 +27,7 @@
         <ListPreference
             android:key="pref_audio_quality"
             android:title="@string/preferences_title_audio_quality"
-            android:summary="@string/preferences_audio_quality_summary"
+            android:summary="@string/preferences_summary_audio_quality"
             android:entries="@array/preferences_audio_quality_names"
             android:entryValues="@array/preferences_audio_quality_values"
             android:defaultValue="@string/preferences_default_audio_quality_value" />

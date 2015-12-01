@@ -40,6 +40,10 @@
     <string name="action_bar_clear">Clear</string>
     <string name="action_bar_view_playlist">Playlist</string>
     <string name="action_bar_view_now_playing">Now Playing</string>
+    <string name="action_bar_add_connection">Add Connection</string>
+    <string name="action_bar_save_connection">Save Connection</string>
+    <string name="action_bar_edit_connection">Edit Connection</string>
+    <string name="action_bar_remove_connection">Remove Connection</string>
 
 
     <string name="notification_please_wait">Please Wait...</string>
@@ -65,16 +69,39 @@
         name="navigation_drawer_list_items">
         <item>Media Browser</item>
         <item>Settings</item>
-        <item>Logout</item>
         <item>Exit</item>
     </string-array>string-array>
 
+    <string name="connections_title">Connections</string>
+    <string name="connections_edit_title">Edit Connection</string>
+    <string name="connections_add_title">New Connection</string>
+    <string name="connections_action_mode_title">Options</string>
+    <string name="connections_empty">No connections have been added!</string>
+    <string name="connections_name">Name</string>
+    <string name="connections_name_dialog">Enter A Name</string>
+    <string name="connections_url">Server Address</string>
+    <string name="connections_url_dialog">Enter Server Address</string>
+    <string name="connections_url_default">http://</string>
+    <string name="connections_username">Username</string>
+    <string name="connections_username_dialog">Enter Username</string>
+    <string name="connections_password">Password</string>
+    <string name="connections_password_dialog">Enter Password</string>
+    <string name="connections_password_set">Password is set.</string>
+    <string name="connections_testing">Test Connection</string>
+    <string name="connections_no_name">Enter a name</string>
+    <string name="connections_no_username">Enter a username</string>
+    <string name="connections_no_password">Enter a password</string>
+    <string name="connections_invalid_url">Enter a valid server address</string>
+
     <string name="preferences_title">Settings</string>
+    <string name="preferences_title_connections">Connections</string>
+    <string name="preferences_title_manage_connections">Manage Connections</string>
     <string name="preferences_title_transcode_setting">Transcode</string>
     <string name="preferences_title_audio_quality">Audio Quality</string>
-    <string name="preferences_audio_quality_summary">Select the audio quality to use during audio playback.</string>
     <string name="preferences_title_video_quality">Video Quality</string>
-    <string name="preferences_video_quality_summary">Select the video resolution to use during video playback.</string>
+    <string name="preferences_summary_connections">Add and manage SMS server connections.</string>
+    <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
+    <string name="preferences_summary_video_quality">Select the video resolution to use during video playback.</string>
 
     <string name="preferences_default_audio_quality_value">1</string>
     <string name="preferences_default_video_quality_value">360</string>

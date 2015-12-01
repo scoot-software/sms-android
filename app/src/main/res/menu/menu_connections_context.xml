@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/edit_connection"
+        android:icon="@drawable/ic_edit"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_bar_edit_connection">
+    </item>
+
+    <item
+        android:id="@+id/remove_connection"
+        android:icon="@drawable/ic_remove"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_bar_remove_connection">
+    </item>
+
+</menu>

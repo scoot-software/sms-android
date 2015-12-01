@@ -1,6 +1,7 @@
 package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -164,12 +165,12 @@ public class AudioPlayerFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            audioControllerListener = (AudioControllerListener) activity;
+            audioControllerListener = (AudioControllerListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement AudioControllerListener");
         }
     }
@@ -249,7 +250,7 @@ public class AudioPlayerFragment extends Fragment {
 
             // Cover Art
             Picasso.with(getActivity())
-                    .load(RESTService.getInstance().getBaseUrl() + "/image/" + element.getID() + "/cover/500")
+                    .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/cover/500")
                     .error(R.drawable.ic_content_audio)
                     .into(coverArt);
         }

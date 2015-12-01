@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -24,6 +25,8 @@ import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.NavigationDrawerListItemAdapter;
 import com.scooter1556.sms.android.fragment.AudioDirectoryFragment;
 import com.scooter1556.sms.android.fragment.AudioPlayerSmallFragment;
+import com.scooter1556.sms.lib.android.database.ConnectionDatabase;
+import com.scooter1556.sms.lib.android.domain.Connection;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.domain.MediaFolder;
 import com.scooter1556.sms.android.domain.NavigationDrawerListItem;
@@ -33,6 +36,7 @@ import com.scooter1556.sms.android.fragment.MediaElementFragment;
 import com.scooter1556.sms.android.fragment.MediaFolderFragment;
 import com.scooter1556.sms.lib.android.service.AudioPlayerService;
 
+import com.scooter1556.sms.lib.android.service.RESTService;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
@@ -42,12 +46,12 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements MediaFolderFragment.MediaFolderListener, MediaElementFragment.MediaElementListener, AudioPlaylistFragment.AudioPlaylistListener, AudioPlayerService.AudioPlayerListener, AudioPlayerFragment.AudioControllerListener, FragmentManager.OnBackStackChangedListener {
 
     public static final int RESULT_CODE_SETTINGS = 101;
+    public static final int RESULT_CODE_CONNECTIONS = 102;
 
     // The index for the navigation drawer menus
     private static final int MENU_MEDIA_BROWSER = 0;
     private static final int MENU_SETTINGS = 1;
-    private static final int MENU_LOGOUT = 2;
-    private static final int MENU_EXIT = 3;
+    private static final int MENU_EXIT = 2;
 
     // The index for the sliding panel views
     private static final int SLIDING_PANEL_SMALL_PLAYER = 10;
@@ -59,6 +63,12 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     private static final String STATE_SLIDING_PANEL_FRAGMENT = "state_sliding_panel_fragment";
     private static final String STATE_SLIDING_PANEL_TITLE = "state_sliding_panel_title";
     private static final String STATE_MAIN_TITLE= "state_main_title";
+
+    // Preferences
+    SharedPreferences sharedPreferences;
+
+    // Database
+    ConnectionDatabase db;
 
     // Fragments
     AudioPlaylistFragment audioPlaylistFragment;
@@ -82,10 +92,20 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     private int lastDrawerItem, currentDrawerItem = MENU_MEDIA_BROWSER;
     private int slidingPanelFragment;
 
+    // Flags
+    boolean connectionChanged = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Retrieve preferences if they exist
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(onPreferencesChanged);
+
+        // Initialise database
+        db = new ConnectionDatabase(this);
 
         // Load default settings
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -100,10 +120,9 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawerList = (ListView) findViewById(R.id.navigation_drawer_list);
 
-        NavigationDrawerListItem[] drawerListItems = new NavigationDrawerListItem[4];
+        NavigationDrawerListItem[] drawerListItems = new NavigationDrawerListItem[3];
         drawerListItems[MENU_MEDIA_BROWSER] = new NavigationDrawerListItem(R.drawable.ic_media_browser, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_MEDIA_BROWSER]);
         drawerListItems[MENU_SETTINGS] = new NavigationDrawerListItem(R.drawable.ic_settings, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_SETTINGS]);
-        drawerListItems[MENU_LOGOUT] = new NavigationDrawerListItem(R.drawable.ic_logout, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_LOGOUT]);
         drawerListItems[MENU_EXIT] = new NavigationDrawerListItem(R.drawable.ic_close, getResources().getStringArray(R.array.navigation_drawer_list_items)[MENU_EXIT]);
         NavigationDrawerListItemAdapter drawerAdapter = new NavigationDrawerListItemAdapter(this, R.layout.drawer_list_item, drawerListItems);
         drawerList.setAdapter(drawerAdapter);
@@ -221,6 +240,16 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             audioPlaylistFragment = new AudioPlaylistFragment();
             audioPlaylistFragment.setMenuVisibility(false);
             getSupportFragmentManager().beginTransaction().add(R.id.sliding_panel_container, audioPlaylistFragment, Integer.toString(SLIDING_PANEL_PLAYLIST)).hide(audioPlaylistFragment).commit();
+
+            // Check connection
+            long id = sharedPreferences.getLong("Connection", -1);
+
+            if(id < 0) {
+                Intent connectionsIntent = new Intent(this, ConnectionActivity.class);
+                startActivityForResult(connectionsIntent, RESULT_CODE_CONNECTIONS);
+            } else {
+                RESTService.getInstance().setConnection(db.getConnection(id));
+            }
         }
         else {
             // Reload fragments
@@ -244,7 +273,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 slidingPanelListener.onPanelSlide(slidingPanel, 0.0f);
                 slidingPanelListener.onPanelCollapsed(slidingPanel);
             }
-
         }
 
         // Add fragment back stack listener
@@ -256,6 +284,23 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
         drawerToggle.syncState();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if(connectionChanged) {
+            // Clear back stack
+            getSupportFragmentManager().popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+            // Initialise new media browser
+            mediaBrowserFragment = new MediaFolderFragment();
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_container, mediaBrowserFragment, Integer.toString(MENU_MEDIA_BROWSER)).commit();
+
+            // Reset connection flag
+            connectionChanged = false;
+        }
     }
 
     @Override
@@ -389,13 +434,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 updateDrawer(position);
                 break;
 
-            case MENU_LOGOUT:
-                Intent loginIntent = new Intent(this, LoginActivity.class);
-                loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                loginIntent.putExtra("logout",true);
-                startActivity(loginIntent);
-                finish();
-
             case MENU_EXIT:
                 stopService(audioPlayerIntent);
                 audioPlayerService = null;
@@ -435,6 +473,30 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             super.onBackPressed();
         }
     }
+
+    private SharedPreferences.OnSharedPreferenceChangeListener onPreferencesChanged = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+
+            // Server connection has changed
+            if(key.equals("Connection")) {
+                long id = prefs.getLong("Connection", -1);
+
+                // Stop playback
+                audioPlayerService.stop();
+                audioPlayerService.clearMediaList();
+
+                // Update REST service
+                if(id < 0) {
+                    RESTService.getInstance().setConnection(null);
+                } else {
+                    RESTService.getInstance().setConnection(db.getConnection(id));
+                }
+
+                // Update connection flag
+                connectionChanged = true;
+            }
+        }
+    };
 
     @Override
     public void MediaFolderSelected(MediaFolder folder) {

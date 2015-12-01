@@ -2,6 +2,7 @@ package com.scooter1556.sms.android.fragment;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.SparseBooleanArray;
@@ -103,7 +104,7 @@ public class AudioDirectoryFragment extends Fragment {
         ImageView coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
 
         Picasso.with(getActivity().getBaseContext())
-                .load(RESTService.getInstance().getBaseUrl() + "/image/" + id + "/cover/80")
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover/80")
                 .error(R.drawable.ic_content_album)
                 .into(coverArt);
 
@@ -158,13 +159,13 @@ public class AudioDirectoryFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         try {
-            mediaElementListener = (MediaElementFragment.MediaElementListener) activity;
+            mediaElementListener = (MediaElementFragment.MediaElementListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement MediaElementListener");
         }
     }

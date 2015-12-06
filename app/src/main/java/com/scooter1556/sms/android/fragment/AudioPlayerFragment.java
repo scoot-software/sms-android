@@ -1,6 +1,5 @@
 package com.scooter1556.sms.android.fragment;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,10 +15,10 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
-import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -249,9 +248,10 @@ public class AudioPlayerFragment extends Fragment {
             album.setText(element.getAlbum());
 
             // Cover Art
-            Picasso.with(getActivity())
+            Glide.with(getActivity())
                     .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/cover/500")
                     .error(R.drawable.ic_content_audio)
+                    .crossFade()
                     .into(coverArt);
         }
     }

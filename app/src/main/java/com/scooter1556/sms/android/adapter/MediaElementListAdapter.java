@@ -2,26 +2,21 @@ package com.scooter1556.sms.android.adapter;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
 import android.text.Html;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
-import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
 
 /**
@@ -164,9 +159,10 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
-                Picasso.with(context)
+                Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_folder)
+                        .crossFade()
                         .into(dirThumbnail);
 
                 break;
@@ -217,9 +213,10 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
-                Picasso.with(context)
+                Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_album)
+                        .crossFade()
                         .into(aDirThumbnail);
 
                 break;
@@ -259,10 +256,12 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
-                Picasso.with(context)
+                Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .crossFade()
                         .error(R.drawable.ic_content_video)
                         .into(vDirThumbnail);
+
                 break;
 
             case VIDEO_VIEW:
@@ -331,8 +330,9 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
-                Picasso.with(context)
+                Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/150")
+                        .crossFade()
                         .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 

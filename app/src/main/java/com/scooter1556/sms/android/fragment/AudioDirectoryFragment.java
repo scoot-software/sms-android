@@ -19,13 +19,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -103,9 +103,10 @@ public class AudioDirectoryFragment extends Fragment {
 
         ImageView coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
 
-        Picasso.with(getActivity().getBaseContext())
+        Glide.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover/80")
                 .error(R.drawable.ic_content_album)
+                .crossFade()
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);

@@ -15,7 +15,7 @@
         </Preference>
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/preferences_title_transcode_setting" android:key="pref_key_transcode_settings">
+    <PreferenceCategory android:title="@string/preferences_title_streaming_setting" android:key="pref_key_streaming_settings">
         <ListPreference
             android:key="pref_video_quality"
             android:title="@string/preferences_title_video_quality"

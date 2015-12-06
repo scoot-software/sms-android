@@ -11,10 +11,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
-import com.squareup.picasso.Picasso;
 
 public class AudioPlayerSmallFragment extends Fragment {
 
@@ -158,9 +158,10 @@ public class AudioPlayerSmallFragment extends Fragment {
             artistTxt.setText(element.getArtist());
 
             // Cover Art
-            Picasso.with(getActivity())
+            Glide.with(getActivity())
                     .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/cover/80")
                     .error(R.drawable.ic_content_audio)
+                    .crossFade()
                     .into(coverArt);
         }
     }

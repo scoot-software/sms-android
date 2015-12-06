@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     private static final String STATE_MAIN_TITLE= "state_main_title";
 
     // Preferences
-    SharedPreferences sharedPreferences;
+    private static SharedPreferences sharedPreferences;
 
     // Database
     ConnectionDatabase db;

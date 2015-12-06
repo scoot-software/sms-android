@@ -94,14 +94,14 @@
     <string name="connections_invalid_url">Enter a valid server address</string>
 
     <string name="preferences_title">Settings</string>
-    <string name="preferences_title_connections">Connections</string>
-    <string name="preferences_title_manage_connections">Manage Connections</string>
-    <string name="preferences_title_transcode_setting">Transcode</string>
     <string name="preferences_title_audio_quality">Audio Quality</string>
     <string name="preferences_title_video_quality">Video Quality</string>
-    <string name="preferences_summary_connections">Add and manage SMS server connections.</string>
     <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
     <string name="preferences_summary_video_quality">Select the video resolution to use during video playback.</string>
+    <string name="preferences_title_connections">Connections</string>
+    <string name="preferences_title_manage_connections">Manage Connections</string>
+    <string name="preferences_title_streaming_setting">Streaming</string>
+    <string name="preferences_summary_connections">Add and manage SMS server connections.</string>
 
     <string name="preferences_default_audio_quality_value">1</string>
     <string name="preferences_default_video_quality_value">360</string>

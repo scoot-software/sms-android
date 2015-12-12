@@ -251,7 +251,6 @@ public class AudioPlayerFragment extends Fragment {
             Glide.with(getActivity())
                     .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/cover/500")
                     .error(R.drawable.ic_content_audio)
-                    .crossFade()
                     .into(coverArt);
         }
     }

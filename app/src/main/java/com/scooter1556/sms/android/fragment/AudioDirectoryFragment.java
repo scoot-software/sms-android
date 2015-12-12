@@ -106,7 +106,6 @@ public class AudioDirectoryFragment extends Fragment {
         Glide.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover/80")
                 .error(R.drawable.ic_content_album)
-                .crossFade()
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);

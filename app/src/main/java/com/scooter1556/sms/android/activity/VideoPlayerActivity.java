@@ -359,7 +359,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     @Override
     public void onError(Exception e) {
         // Display error message
-        Toast warning = Toast.makeText(this, getString(R.string.error_video_playback), Toast.LENGTH_SHORT);
+        Toast warning = Toast.makeText(this, getString(R.string.error_media_playback), Toast.LENGTH_SHORT);
         warning.show();
 
         // Release player and finish activity

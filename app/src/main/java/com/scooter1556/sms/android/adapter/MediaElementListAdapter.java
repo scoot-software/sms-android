@@ -162,7 +162,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_folder)
-                        .crossFade()
                         .into(dirThumbnail);
 
                 break;
@@ -216,7 +215,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_album)
-                        .crossFade()
                         .into(aDirThumbnail);
 
                 break;
@@ -258,7 +256,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
 
                 Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .crossFade()
                         .error(R.drawable.ic_content_video)
                         .into(vDirThumbnail);
 
@@ -332,7 +329,6 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
 
                 Glide.with(context)
                         .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .crossFade()
                         .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 

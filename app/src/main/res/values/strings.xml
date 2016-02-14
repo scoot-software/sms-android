@@ -81,15 +81,17 @@
     <string name="preferences_title">Settings</string>
     <string name="preferences_title_audio_quality">Audio Quality</string>
     <string name="preferences_title_video_quality">Video Quality</string>
+    <string name="preferences_title_direct_play">Enable Direct Play</string>
     <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
     <string name="preferences_summary_video_quality">Select the video resolution to use during video playback.</string>
+    <string name="preferences_summary_direct_play">Enable direct streaming of media on the local network.</string>
     <string name="preferences_title_connections">Connections</string>
     <string name="preferences_title_manage_connections">Manage Connections</string>
     <string name="preferences_title_streaming_setting">Streaming</string>
     <string name="preferences_summary_connections">Add and manage SMS server connections.</string>
 
     <string name="preferences_default_audio_quality_value">1</string>
-    <string name="preferences_default_video_quality_value">360</string>
+    <string name="preferences_default_video_quality_value">1</string>
 
     <string name="play_error_message">Impossible to play the video.</string>
     <string name="play_progressive_error_message">Impossible to play the progressive video.</string>
@@ -112,20 +114,20 @@
 
     <string-array
         name="preferences_video_quality_names">
-        <item>240p</item>
-        <item>360p</item>
-        <item>480p</item>
-        <item>720p</item>
-        <item>1080p</item>
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
+        <item>HD</item>
+        <item>Full HD</item>
     </string-array>
 
     <string-array
         name="preferences_video_quality_values">
-        <item>240</item>
-        <item>360</item>
-        <item>480</item>
-        <item>720</item>
-        <item>1080</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
 </resources>

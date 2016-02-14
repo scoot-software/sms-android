@@ -55,6 +55,10 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
     private static final String TAG = "VideoPlayerActivity";
 
+    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
+    static final String FORMAT = "matroska";
+    static final int MAX_SAMPLE_RATE = 48000;
+
     private static final int CONTROLLER_TIMEOUT = 5000;
 
     // REST Client
@@ -213,12 +217,23 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             error.show();
         }
 
+        // Get settings
+        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
         // Initialise Stream
-        restService.initialiseStream(mediaElement.getID(), new TextHttpResponseHandler() {
+        restService.initialiseStream(mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new TextHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+                // Configure Player
                 player.setJobID(Long.parseLong(responseString));
+                player.setID(mediaElement.getID());
+                player.setQuality(settings.getString("pref_video_quality", "0"));
+
+                if(mediaElement.getDuration() != null) {
+                    player.setDuration(mediaElement.getDuration());
+                }
+
                 preparePlayer();
                 initialised = true;
             }
@@ -232,18 +247,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     }
 
     private void preparePlayer() {
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Configure Player
-        player.setID(mediaElement.getID());
-        player.setQuality(settings.getString("pref_video_quality", "360"));
-
-        if(mediaElement.getDuration() != null) {
-            player.setDuration(mediaElement.getDuration());
-        }
-
-        String streamUrl = restService.getConnection().getUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (player.getOffset() * 0.001);
+        String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getJobID() + "?offset=" + (int) (player.getOffset() * 0.001);
         Uri contentUri = Uri.parse(streamUrl);
 
         player.addListener(this);
@@ -290,7 +294,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     private void seekTo(int position) {
         if(player != null) {
             // Generate new stream uri
-            String streamUrl = restService.getConnection().getUrl() + "/stream/video" + "?id=" + player.getJobID() + "&client=android" + "&quality=" + player.getQuality() + "&offset=" + (int) (position * 0.001);
+            String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getJobID() + "?offset=" + (int) (position * 0.001);
             Uri contentUri = Uri.parse(streamUrl);
 
             // Initialise player in new position

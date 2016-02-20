@@ -4,19 +4,6 @@
     <string name="app_name">Scoot Media Streamer</string>
     <string name="launcher_name">Media Streamer</string>
 
-    <string name="login_title">Login</string>
-    <string name="login_progress_dialog">Logging In</string>
-    <string name="login_initialise">Initialising</string>
-    <string name="login_username">Username</string>
-    <string name="login_password">Password</string>
-    <string name="login_server">Server</string>
-    <string name="login_button">Login</string>
-    <string name="login_no_username">Please enter a username</string>
-    <string name="login_no_password">Please enter a password</string>
-    <string name="login_no_server">Please enter a server address</string>
-    <string name="login_remember_me">Remember Me</string>
-    <string name="login_url_default">http://</string>
-
     <string name="media_title">Media Browser</string>
     <string name="media_retrieving_folders">Retrieving Media Folders</string>
     <string name="media_retrieving_elements">Retrieving Media</string>
@@ -71,6 +58,8 @@
     <string name="connections_name">Name</string>
     <string name="connections_name_dialog">Enter A Name</string>
     <string name="connections_url">Server Address</string>
+    <string name="connections_alt_url">Alternative Address (Optional)</string>
+    <string name="connections_alt_url_dialog">Enter Alternative Server Address</string>
     <string name="connections_url_dialog">Enter Server Address</string>
     <string name="connections_username">Username</string>
     <string name="connections_username_dialog">Enter Username</string>

@@ -57,7 +57,9 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
     static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
     static final String FORMAT = "matroska";
+
     static final int MAX_SAMPLE_RATE = 48000;
+    static final int MAX_MOBILE_QUALITY = 2;
 
     private static final int CONTROLLER_TIMEOUT = 5000;
 

@@ -177,7 +177,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_folder)
                         .into(dirThumbnail);
 
@@ -230,7 +230,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_album)
                         .into(aDirThumbnail);
 
@@ -272,7 +272,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
                         .error(R.drawable.ic_content_video)
                         .into(vDirThumbnail);
 
@@ -345,7 +345,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 final ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + items.get(position).getID() + "/cover/150")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/150")
                         .error(R.drawable.ic_content_video)
                         .into(vidThumbnail);
 

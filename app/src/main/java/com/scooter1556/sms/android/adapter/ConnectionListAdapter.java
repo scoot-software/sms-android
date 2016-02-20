@@ -24,18 +24,15 @@
 package com.scooter1556.sms.android.adapter;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.domain.Connection;
-import com.scooter1556.sms.lib.android.domain.MediaFolder;
 
 import java.util.List;
 
@@ -79,7 +76,7 @@ public class ConnectionListAdapter extends ArrayAdapter<Connection> {
         TextView title = (TextView) convertView.findViewById(R.id.title);
         title.setText(items.get(position).getTitle());
 
-        // URL
+        // Url
         TextView url = (TextView) convertView.findViewById(R.id.url);
         url.setText(items.get(position).getUrl());
 

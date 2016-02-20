@@ -44,6 +44,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.NavigationDrawerListItemAdapter;
 import com.scooter1556.sms.android.fragment.AudioDirectoryFragment;
@@ -66,6 +67,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.util.ArrayList;
 
+import cz.msebera.android.httpclient.Header;
+
 public class MainActivity extends AppCompatActivity implements MediaFolderFragment.MediaFolderListener, MediaElementFragment.MediaElementListener, AudioPlaylistFragment.AudioPlaylistListener, AudioPlayerService.AudioPlayerListener, AudioPlayerFragment.AudioControllerListener, FragmentManager.OnBackStackChangedListener {
 
     public static final int RESULT_CODE_SETTINGS = 101;
@@ -86,9 +89,6 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     private static final String STATE_SLIDING_PANEL_FRAGMENT = "state_sliding_panel_fragment";
     private static final String STATE_SLIDING_PANEL_TITLE = "state_sliding_panel_title";
     private static final String STATE_MAIN_TITLE= "state_main_title";
-
-    // Preferences
-    private static SharedPreferences sharedPreferences;
 
     // Database
     ConnectionDatabase db;
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         setContentView(R.layout.activity_main);
 
         // Retrieve preferences if they exist
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPreferences.registerOnSharedPreferenceChangeListener(onPreferencesChanged);
 
         // Initialise database
@@ -271,7 +271,8 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 Intent connectionsIntent = new Intent(this, ConnectionActivity.class);
                 startActivityForResult(connectionsIntent, RESULT_CODE_CONNECTIONS);
             } else {
-                RESTService.getInstance().setConnection(db.getConnection(id));
+                Connection connection = db.getConnection(id);
+                RESTService.getInstance().setConnection(connection);
             }
         }
         else {

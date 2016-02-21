@@ -43,8 +43,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
-import com.loopj.android.http.TextHttpResponseHandler;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.NavigationDrawerListItemAdapter;
 import com.scooter1556.sms.android.fragment.AudioDirectoryFragment;
@@ -70,6 +71,7 @@ import java.util.ArrayList;
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements MediaFolderFragment.MediaFolderListener, MediaElementFragment.MediaElementListener, AudioPlaylistFragment.AudioPlaylistListener, AudioPlayerService.AudioPlayerListener, AudioPlayerFragment.AudioControllerListener, FragmentManager.OnBackStackChangedListener {
+    public static final int MIN_SUPPORTED_SERVER_VERSION = 37;
 
     public static final int RESULT_CODE_SETTINGS = 101;
     public static final int RESULT_CODE_CONNECTIONS = 102;
@@ -325,6 +327,9 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             // Reset connection flag
             connectionChanged = false;
         }
+
+        // Check server version
+        checkServerVersion();
     }
 
     @Override
@@ -586,6 +591,39 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
             i.putExtra("mediaElement", element);
             startActivity(i);
         }
+    }
+
+    // Check server version meets minimum requirement and display connections if not
+    public void checkServerVersion() {
+        // Get server version
+        RESTService.getInstance().getVersion(new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String result = new String(responseBody);
+                int version = Integer.valueOf(result);
+
+                if(version < MIN_SUPPORTED_SERVER_VERSION) {
+                    // Display warning
+                    Toast version_warning = Toast.makeText(getApplicationContext(), getString(R.string.error_unsupported_server_version), Toast.LENGTH_LONG);
+                    version_warning.show();
+
+                    // Open connections activity
+                    Intent connectionsIntent = new Intent(getApplicationContext(), ConnectionActivity.class);
+                    startActivityForResult(connectionsIntent, RESULT_CODE_CONNECTIONS);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                // Display warning
+                Toast connection_warning = Toast.makeText(getApplicationContext(), getString(R.string.error_server_not_found), Toast.LENGTH_LONG);
+                connection_warning.show();
+
+                // Open connections activity
+                Intent connectionsIntent = new Intent(getApplicationContext(), ConnectionActivity.class);
+                startActivityForResult(connectionsIntent, RESULT_CODE_CONNECTIONS);
+            }
+        });
     }
 
     @Override

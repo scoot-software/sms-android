@@ -203,6 +203,7 @@ public class EditConnectionFragment extends Fragment {
 
         // Test connection
         RESTService.getInstance().testConnection(connection, false, new TextHttpResponseHandler() {
+            Toast error;
 
             @Override
             public void onStart() {
@@ -211,17 +212,21 @@ public class EditConnectionFragment extends Fragment {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+                int version = Integer.valueOf(responseString);
+
                 testProgress.dismiss();
 
-                // Save connection
-                connectionListener.SaveConnection(connection);
-
+                if(version < RESTService.MIN_SUPPORTED_SERVER_VERSION) {
+                    error = Toast.makeText(getContext(), getString(R.string.error_unsupported_server_version), Toast.LENGTH_SHORT);
+                    error.show();
+                } else {
+                    // Save connection
+                    connectionListener.SaveConnection(connection);
+                }
             }
 
             @Override
             public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-                Toast error;
-
                 testProgress.dismiss();
 
                 switch (statusCode) {

@@ -71,8 +71,6 @@ import java.util.ArrayList;
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements MediaFolderFragment.MediaFolderListener, MediaElementFragment.MediaElementListener, AudioPlaylistFragment.AudioPlaylistListener, AudioPlayerService.AudioPlayerListener, AudioPlayerFragment.AudioControllerListener, FragmentManager.OnBackStackChangedListener {
-    public static final int MIN_SUPPORTED_SERVER_VERSION = 37;
-
     public static final int RESULT_CODE_SETTINGS = 101;
     public static final int RESULT_CODE_CONNECTIONS = 102;
 
@@ -602,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 String result = new String(responseBody);
                 int version = Integer.valueOf(result);
 
-                if(version < MIN_SUPPORTED_SERVER_VERSION) {
+                if(version < RESTService.MIN_SUPPORTED_SERVER_VERSION) {
                     // Display warning
                     Toast version_warning = Toast.makeText(getApplicationContext(), getString(R.string.error_unsupported_server_version), Toast.LENGTH_LONG);
                     version_warning.show();

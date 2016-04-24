@@ -59,8 +59,8 @@ import com.scooter1556.sms.android.fragment.AudioPlayerFragment;
 import com.scooter1556.sms.android.fragment.AudioPlaylistFragment;
 import com.scooter1556.sms.android.fragment.MediaElementFragment;
 import com.scooter1556.sms.android.fragment.MediaFolderFragment;
-import com.scooter1556.sms.lib.android.service.AudioPlayerService;
 
+import com.scooter1556.sms.lib.android.service.AudioPlayerService;
 import com.scooter1556.sms.lib.android.service.RESTService;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
@@ -778,13 +778,13 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     }
 
     @Override
-    public int getCurrentPosition() {
+    public long getCurrentPosition() {
         if(audioPlayerService == null || !audioPlayerBound) { return 0; }
         return audioPlayerService.getCurrentPosition();
     }
 
     @Override
-    public int getDuration() {
+    public long getDuration() {
         if(audioPlayerService == null || !audioPlayerBound) { return -1; }
         return audioPlayerService.getDuration();
     }

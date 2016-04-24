@@ -42,11 +42,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer.ExoPlayer;
-import com.loopj.android.http.TextHttpResponseHandler;
+import com.google.gson.Gson;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.lib.android.domain.TranscodeProfile;
 import com.scooter1556.sms.lib.android.player.SMSVideoPlayer;
 import com.scooter1556.sms.lib.android.service.RESTService;
+
+import org.json.JSONObject;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -179,8 +183,8 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
         super.onDestroy();
 
         if(player != null) {
-            if(player.getJobID() != null) {
-                restService.endJob(player.getJobID());
+            if(player.getTranscodeProfile() != null) {
+                restService.endJob(player.getTranscodeProfile().getID());
             }
 
             releasePlayer();
@@ -223,12 +227,16 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Initialise Stream
-        restService.initialiseStream(mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new TextHttpResponseHandler() {
+        restService.initialiseStream(mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
 
             @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                // Parse profile
+                Gson parser = new Gson();
+                TranscodeProfile profile = parser.fromJson(response.toString(), TranscodeProfile.class);
+
                 // Configure Player
-                player.setJobID(Long.parseLong(responseString));
+                player.setTranscodeProfile(profile);
                 player.setID(mediaElement.getID());
                 player.setQuality(settings.getString("pref_video_quality", "0"));
 
@@ -249,7 +257,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     }
 
     private void preparePlayer() {
-        String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getJobID() + "?offset=" + (int) (player.getOffset() * 0.001);
+        String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getTranscodeProfile().getID() + "?offset=" + (int) (player.getOffset() * 0.001);
         Uri contentUri = Uri.parse(streamUrl);
 
         player.addListener(this);
@@ -296,7 +304,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     private void seekTo(int position) {
         if(player != null) {
             // Generate new stream uri
-            String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getJobID() + "?offset=" + (int) (position * 0.001);
+            String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getTranscodeProfile().getID() + "?offset=" + (int) (position * 0.001);
             Uri contentUri = Uri.parse(streamUrl);
 
             // Initialise player in new position

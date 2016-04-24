@@ -153,7 +153,7 @@ public class AudioPlayerFragment extends Fragment {
             @Override
             public void onProgressChanged(SeekBar seekBar, int position, boolean fromUser) {
                 if (fromUser) {
-                    positionTxt.setText(formatDuration((int)(position * 0.001)));
+                    positionTxt.setText(formatDuration(position));
                 }
             }
 
@@ -166,7 +166,7 @@ public class AudioPlayerFragment extends Fragment {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 seekInProgress = false;
                 int position = seekBar.getProgress();
-                positionTxt.setText(formatDuration((int)(position * 0.001)));
+                positionTxt.setText(formatDuration(position));
                 audioControllerListener.seek(position);
             }
         });
@@ -295,15 +295,14 @@ public class AudioPlayerFragment extends Fragment {
         if(seekInProgress) { return; }
 
         if (audioControllerListener.isPlaying()) {
-            int millisPlayed = Math.max(0, audioControllerListener.getCurrentPosition());
-            Integer duration = audioControllerListener.getDuration();
-            int millisTotal = duration == null ? 0 : duration;
+            long position = Math.max(0, audioControllerListener.getCurrentPosition());
+            long duration = audioControllerListener.getDuration();
 
-            positionTxt.setText(formatDuration((int)(millisPlayed * 0.001)));
-            durationTxt.setText(formatDuration((int)(millisTotal * 0.001)));
-            progressBar.setMax(millisTotal == 0 ? 100 : millisTotal);
+            positionTxt.setText(formatDuration((int) position));
+            durationTxt.setText(formatDuration((int) duration));
+            progressBar.setMax((int)(duration == 0 ? 100 : duration));
             if (!seekInProgress) {
-                progressBar.setProgress(millisPlayed);
+                progressBar.setProgress((int) position);
                 progressBar.setEnabled(true);
             }
         } else if(!audioControllerListener.isPaused()) {
@@ -344,8 +343,8 @@ public class AudioPlayerFragment extends Fragment {
         boolean isPlaying();
         boolean isPaused();
         void seek(int pos);
-        int getCurrentPosition();
-        int getDuration();
+        long getCurrentPosition();
+        long getDuration();
         void pause();
         void start();
         void stop();

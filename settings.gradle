@@ -1,1 +1,1 @@
-include ':app', '..:sms-android-lib'
+include ':app', '..:sms-android-lib', ':library', ':flac'

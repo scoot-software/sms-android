@@ -1,1 +1,5 @@
-include ':app', '..:sms-android-lib', ':library', ':flac'
+include ':app', ':sms-android-lib', ':library', ':flac'
+
+project (':sms-android-lib').projectDir = new File('../sms-android-lib')
+project (':library').projectDir = new File('../sms-android-lib/lib/ExoPlayer/library')
+project (':flac').projectDir = new File('../sms-android-lib/lib/ExoPlayer/extensions/flac')

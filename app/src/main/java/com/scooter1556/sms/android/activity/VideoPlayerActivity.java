@@ -24,9 +24,11 @@
 package com.scooter1556.sms.android.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -86,6 +88,9 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
     private SMSVideoPlayer player;
     private MediaElement mediaElement;
 
+    // Locks
+    WifiManager.WifiLock wifiLock;
+
     // Override automatic controller visibility
     private Boolean showController = false;
     private Boolean initialised = false;
@@ -140,6 +145,8 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             }
         });
 
+        wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "sms");
+
         controller = findViewById(R.id.video_controller);
     }
 
@@ -175,6 +182,8 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             player.setOffset(player.getCurrentPosition());
             player.removeListener(this);
             player.release();
+
+            wifiLock.release();
         }
     }
 
@@ -262,12 +271,16 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
         player.addListener(this);
         player.initialise(this, contentUri, holder.getSurface(), !paused);
+
+        wifiLock.acquire();
     }
 
     private void releasePlayer() {
         if (player != null) {
             player.release();
             player = null;
+
+            wifiLock.release();
         }
     }
 
@@ -286,6 +299,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
                 // Allow screen to turn off
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                wifiLock.release();
             }
             else {
                 playButton.setImageResource(R.drawable.ic_pause_light);
@@ -297,6 +311,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
                 // Keep screen on
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                wifiLock.acquire();
             }
         }
     }

@@ -183,7 +183,9 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             player.removeListener(this);
             player.release();
 
-            wifiLock.release();
+            if (wifiLock.isHeld()) {
+                wifiLock.release();
+            }
         }
     }
 
@@ -280,7 +282,9 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
             player.release();
             player = null;
 
-            wifiLock.release();
+            if (wifiLock.isHeld()) {
+                wifiLock.release();
+            }
         }
     }
 
@@ -299,7 +303,10 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
 
                 // Allow screen to turn off
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                wifiLock.release();
+
+                if (wifiLock.isHeld()) {
+                    wifiLock.release();
+                }
             }
             else {
                 playButton.setImageResource(R.drawable.ic_pause_light);

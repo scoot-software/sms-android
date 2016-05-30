@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -126,6 +127,9 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
         // Retrieve preferences if they exist
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPreferences.registerOnSharedPreferenceChangeListener(onPreferencesChanged);
+
+        // Set volume control to media
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Initialise database
         db = new ConnectionDatabase(this);

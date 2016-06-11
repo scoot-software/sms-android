@@ -390,11 +390,12 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
+
         if (audioPlayerService != null) {
             audioPlayerService.unregisterListener(this);
+            unbindService(audioPlayerConnection);
         }
-        unbindService(audioPlayerConnection);
-        super.onDestroy();
     }
 
     @Override
@@ -466,10 +467,11 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
                 break;
 
             case MENU_EXIT:
-                stopService(audioPlayerIntent);
-                audioPlayerService = null;
+                if(audioPlayerIntent != null) {
+                    stopService(audioPlayerIntent);
+                }
+
                 finish();
-                System.exit(0);
 
             default:
                 break;

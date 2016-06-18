@@ -49,8 +49,6 @@ public class EditConnectionFragment extends Fragment {
     private EditText nameText;
     private TextInputLayout urlTextLayout;
     private EditText urlText;
-    private TextInputLayout altUrlTextLayout;
-    private EditText altUrlText;
     private TextInputLayout usernameTextLayout;
     private EditText usernameText;
     private TextInputLayout passwordTextLayout;
@@ -91,9 +89,6 @@ public class EditConnectionFragment extends Fragment {
         urlTextLayout = (TextInputLayout) view.findViewById(R.id.connections_layout_url);
         urlText = (EditText) view.findViewById(R.id.connections_url);
 
-        altUrlTextLayout = (TextInputLayout) view.findViewById(R.id.connections_layout_alt_url);
-        altUrlText = (EditText) view.findViewById(R.id.connections_alt_url);
-
         usernameTextLayout = (TextInputLayout) view.findViewById(R.id.connections_layout_username);
         usernameText = (EditText) view.findViewById(R.id.connections_username);
 
@@ -104,7 +99,6 @@ public class EditConnectionFragment extends Fragment {
         if(connection != null) {
             nameText.setText(connection.getTitle());
             urlText.setText(connection.getUrl());
-            altUrlText.setText(connection.getAltUrl());
             usernameText.setText(connection.getUsername());
             passwordText.setText(connection.getPassword());
         }
@@ -155,7 +149,6 @@ public class EditConnectionFragment extends Fragment {
 
         connection.setTitle(nameText.getText().toString());
         connection.setUrl(urlText.getText().toString());
-        connection.setAltUrl(altUrlText.getText().toString());
         connection.setUsername(usernameText.getText().toString());
         connection.setPassword(passwordText.getText().toString());
 
@@ -175,16 +168,6 @@ public class EditConnectionFragment extends Fragment {
             urlTextLayout.setErrorEnabled(false);
         }
 
-        if(connection.getAltUrl() != null && !connection.getAltUrl().isEmpty()) {
-            if(!Patterns.WEB_URL.matcher(connection.getAltUrl()).matches()) {
-                altUrlTextLayout.setError(getString(R.string.connections_invalid_url));
-                altUrlText.requestFocus();
-                return;
-            } else {
-                altUrlTextLayout.setErrorEnabled(false);
-            }
-        }
-
         if(connection.getUsername() == null || connection.getUsername().isEmpty()) {
             usernameTextLayout.setError(getString(R.string.connections_no_username));
             usernameText.requestFocus();
@@ -202,7 +185,7 @@ public class EditConnectionFragment extends Fragment {
         }
 
         // Test connection
-        RESTService.getInstance().testConnection(connection, false, new TextHttpResponseHandler() {
+        RESTService.getInstance().testConnection(connection, new TextHttpResponseHandler() {
             Toast error;
 
             @Override

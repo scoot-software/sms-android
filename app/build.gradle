@@ -8,8 +8,8 @@ android {
         applicationId "com.scooter1556.sms.android"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 7
-        versionName "0.4.6"
+        versionCode 8
+        versionName "0.4.7"
     }
     buildTypes {
         release {

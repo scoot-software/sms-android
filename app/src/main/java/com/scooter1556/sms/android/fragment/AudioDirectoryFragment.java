@@ -23,11 +23,10 @@
  */
 package com.scooter1556.sms.android.fragment;
 
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -40,7 +39,6 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
@@ -52,7 +50,6 @@ import com.scooter1556.sms.lib.android.service.RESTService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -60,7 +57,12 @@ public class AudioDirectoryFragment extends Fragment {
 
     private static final String TAG = "AudioDirectoryFragment";
 
+    // Callback
     private MediaElementFragment.MediaElementListener mediaElementListener;
+
+    // Flags
+    boolean isReady = false;
+    boolean isRunning = false;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
@@ -72,9 +74,6 @@ public class AudioDirectoryFragment extends Fragment {
 
     // REST Client
     RESTService restService = null;
-
-    ProgressDialog restProgress;
-    JsonHttpResponseHandler handler;
 
     // Information we need to retrieve contents
     Long id = null;
@@ -96,9 +95,13 @@ public class AudioDirectoryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Set fragment running
+        isRunning = true;
+
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
 
+        // Get REST service instance
         restService = RESTService.getInstance();
 
         // Retrieve arguments from main activity
@@ -114,9 +117,7 @@ public class AudioDirectoryFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_audio_directory, container, false);
 
         mediaElementListAdapter = new MediaElementListAdapter(getActivity(), mediaElements);
@@ -150,7 +151,7 @@ public class AudioDirectoryFragment extends Fragment {
                         mediaElementListener.MediaElementSelected(mediaElements.get(position));
                     }
                 } else {
-                    // add or remove selection for current list item
+                    // Add or remove selection for current list item
                     onListItemSelect(position);
                 }
             }
@@ -166,11 +167,6 @@ public class AudioDirectoryFragment extends Fragment {
         });
 
         return rootView;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     @Override
@@ -234,42 +230,17 @@ public class AudioDirectoryFragment extends Fragment {
 
         mediaElements = new ArrayList<>();
 
-        handler = new JsonHttpResponseHandler() {
-            @Override
-            public void onStart() {
-                restProgress = ProgressDialog.show(getActivity(), getString(R.string.media_retrieving_elements), getString(R.string.notification_please_wait), true);
-                restProgress.setCancelable(true);
-                restProgress.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        handler.sendCancelMessage();
-                    }
-                });
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
-
-                mediaElementListAdapter.setItemList(mediaElements);
-                mediaElementListAdapter.notifyDataSetChanged();
-
-                restProgress.dismiss();
-            }
-
+        restService.getMediaElementContents(getContext(), id, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 
                 Gson parser = new Gson();
 
-                for(int i=0; i<response.length(); i++)
-                {
+                for(int i=0; i<response.length(); i++) {
                     try {
                         mediaElements.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
                     } catch (JSONException e) {
-                        Toast error = Toast.makeText(getActivity(), getString(R.string.media_error_parsing_json), Toast.LENGTH_SHORT);
-                        error.show();
+                        Log.e(TAG, "Error parsing json", e);
                     }
                 }
 
@@ -282,7 +253,7 @@ public class AudioDirectoryFragment extends Fragment {
                             if(artist == null) {
                                 artist = element.getArtist();
                             } else if(!element.getArtist().equals(artist)) {
-                                mediaElementListAdapter.showArtist(true);
+                                mediaElementListAdapter.showSubtitle(true);
                                 break;
                             }
                         }
@@ -291,43 +262,8 @@ public class AudioDirectoryFragment extends Fragment {
 
                 mediaElementListAdapter.setItemList(mediaElements);
                 mediaElementListAdapter.notifyDataSetChanged();
-
-                restProgress.dismiss();
             }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-
-                Toast error;
-
-                restProgress.dismiss();
-
-                switch (statusCode) {
-                    case 401:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    case 404:
-                    case 0:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    default:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-                }
-            }
-
-            @Override
-            public void onCancel(){
-                restProgress.dismiss();
-            }
-        };
-
-        restService.getMediaElementContents(id, handler);
+        });
     }
 
     private class ActionModeCallback implements ActionMode.Callback {

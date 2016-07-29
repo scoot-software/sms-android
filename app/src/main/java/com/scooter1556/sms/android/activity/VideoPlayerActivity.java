@@ -238,7 +238,7 @@ public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callb
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Initialise Stream
-        restService.initialiseStream(mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        restService.initialiseStream(getApplicationContext(), mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {

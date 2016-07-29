@@ -600,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements MediaFolderFragme
     // Check server version meets minimum requirement and display connections if not
     public void checkServerVersion() {
         // Get server version
-        RESTService.getInstance().getVersion(new AsyncHttpResponseHandler() {
+        RESTService.getInstance().getVersion(getApplicationContext(), new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String result = new String(responseBody);

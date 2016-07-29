@@ -56,13 +56,13 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
     private SparseBooleanArray selectedItemIds;
 
     // Flags
-    private boolean showArtist;
+    private boolean showSubtitle;
 
     public MediaElementListAdapter(Context context, List<MediaElement> items) {
         super(context, R.layout.list_directory, items);
         this.context = context;
         this.items = items;
-        this.showArtist = false;
+        this.showSubtitle = false;
         this.selectedItemIds = new SparseBooleanArray();
     }
 
@@ -400,7 +400,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Artist
                 TextView artist = (TextView) convertView.findViewById(R.id.artist);
 
-                if(showArtist && items.get(position).getArtist() != null) {
+                if(showSubtitle && items.get(position).getArtist() != null) {
                     artist.setText(items.get(position).getArtist());
                 }
                 else {
@@ -463,8 +463,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
         this.items = itemList;
     }
 
-    public void showArtist(boolean artist) {
-        this.showArtist = artist;
+    public void showSubtitle(boolean subtitle) {
+        this.showSubtitle = subtitle;
     }
 
     private static String secondsToString(int totalSecs) {

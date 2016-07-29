@@ -23,10 +23,10 @@
  */
 package com.scooter1556.sms.android.fragment;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,18 +34,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -53,8 +50,12 @@ public class MediaElementFragment extends ListFragment {
 
     private static final String TAG = "MediaElementFragment";
 
-    private ListView listView;
+    // Callback
     private MediaElementListener mediaElementListener;
+
+    // Flags
+    boolean isReady = false;
+    boolean isRunning = false;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
@@ -66,8 +67,6 @@ public class MediaElementFragment extends ListFragment {
 
     // REST Client
     RESTService restService = null;
-
-    ProgressDialog restProgress;
 
     // Information we need to retrieve contents
     Long id = null;
@@ -87,9 +86,13 @@ public class MediaElementFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Set fragment running
+        isRunning = true;
+
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
 
+        // Get REST service instance
         restService = RESTService.getInstance();
 
         // Retrieve arguments from main activity
@@ -106,11 +109,9 @@ public class MediaElementFragment extends ListFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Set list adapter
         mediaElementListAdapter = new MediaElementListAdapter(getActivity(), mediaElements);
-
-        // Set the adapter
         setListAdapter(mediaElementListAdapter);
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -118,17 +119,31 @@ public class MediaElementFragment extends ListFragment {
 
     @Override
     public void onViewCreated (View view, Bundle savedInstanceState) {
-        setEmptyText(getString(R.string.media_not_found));
+        // Enable fast scrolling
         getListView().setFastScrollEnabled(true);
+
+        // Show list if content is ready
+        setListShown(isReady);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onDestroy() {
+        // Cancel any remaining requests
+        restService.getClient().cancelRequests(getContext(), false);
+
+        // Set fragment is not running
+        isRunning = false;
+
+        super.onDestroy();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -150,179 +165,79 @@ public class MediaElementFragment extends ListFragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
+        // Notify the active callbacks interface that an item has been selected.
         if (mediaElementListener != null) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
             mediaElementListener.MediaElementSelected(mediaElements.get(position));
         }
     }
 
     private void getMediaElements() {
-
+        // Initialise array for media content
         mediaElements = new ArrayList<>();
 
         // Retrieve contents of a Media Folder
         if(folder) {
-
-            restService.getMediaFolderContents(id, new JsonHttpResponseHandler() {
-                @Override
-                public void onStart() {
-                    restProgress = ProgressDialog.show(getActivity(), getString(R.string.media_retrieving_elements), getString(R.string.notification_please_wait), true);
-                }
-
-                @Override
-                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                    Gson parser = new Gson();
-                    mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
-
-                    mediaElementListAdapter.setItemList(mediaElements);
-                    mediaElementListAdapter.notifyDataSetChanged();
-
-                    restProgress.dismiss();
-                }
-
+            restService.getMediaFolderContents(getContext(), id, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                    // Check fragment has not been destroyed
+                    if(!isRunning) {
+                        return;
+                    }
 
                     Gson parser = new Gson();
 
-                    for(int i=0; i<response.length(); i++)
-                    {
+                    for(int i=0; i<response.length(); i++) {
                         try {
                             mediaElements.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
                         } catch (JSONException e) {
-                            Toast error = Toast.makeText(getActivity(), getString(R.string.media_error_parsing_json), Toast.LENGTH_SHORT);
-                            error.show();
+                            Log.e(TAG, "Error parsing json", e);
                         }
                     }
 
                     mediaElementListAdapter.setItemList(mediaElements);
                     mediaElementListAdapter.notifyDataSetChanged();
 
-                    restProgress.dismiss();
-                }
-
-                @Override
-                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-
-                    Toast error;
-
-                    restProgress.dismiss();
-
-                    switch (statusCode) {
-                        case 401:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        case 404:
-                        case 0:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        default:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
+                    if(isRunning) {
+                        setListShown(true);
                     }
 
-                }
-
-                @Override
-                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-
-                    Toast error;
-
-                    restProgress.dismiss();
-
-                    switch (statusCode) {
-                        case 401:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        case 404:
-                        case 0:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        default:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-                    }
-
-                }
-
-                @Override
-                public void onRetry(int retryNo)
-                {
-                    String message = getString(R.string.notification_please_wait);
-
-                    // Add visual indicator of retry attempt to progress dialog
-                    for(int i=0; i<retryNo; i++)
-                    {
-                        message += ".";
-                    }
-
-                    restProgress.setMessage(message);
+                    isReady = true;
                 }
             });
         }
         // Retrieve Media Element directory contents
         else {
-
-            restService.getMediaElementContents(id, new JsonHttpResponseHandler() {
-                @Override
-                public void onStart() {
-                    restProgress = ProgressDialog.show(getActivity(), getString(R.string.media_retrieving_elements), getString(R.string.notification_please_wait), true);
-                }
-
-                @Override
-                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                    Gson parser = new Gson();
-                    mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
-
-                    mediaElementListAdapter.setItemList(mediaElements);
-                    mediaElementListAdapter.notifyDataSetChanged();
-
-                    restProgress.dismiss();
-                }
-
+            restService.getMediaElementContents(getContext(), id, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                    // Check fragment has not been destroyed
+                    if (!isRunning) {
+                        return;
+                    }
 
                     Gson parser = new Gson();
 
-                    for(int i=0; i<response.length(); i++)
-                    {
+                    for (int i = 0; i < response.length(); i++) {
                         try {
                             mediaElements.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
                         } catch (JSONException e) {
-                            Toast error = Toast.makeText(getActivity(), getString(R.string.media_error_parsing_json), Toast.LENGTH_SHORT);
-                            error.show();
+                            Log.e(TAG, "Error parsing json", e);
                         }
                     }
 
                     // For audio directories check for multiple artists and display artist if found
-                    if(directoryType.equals(MediaElement.DirectoryMediaType.AUDIO)) {
+                    if (directoryType.equals(MediaElement.DirectoryMediaType.AUDIO)) {
                         String artist = null;
 
-                        for(MediaElement element : mediaElements) {
-                            if(element.getType().equals(MediaElement.MediaElementType.AUDIO)) {
-                                if(element.getArtist() != null) {
-                                    if(artist == null) {
+                        for (MediaElement element : mediaElements) {
+                            if (element.getType().equals(MediaElement.MediaElementType.AUDIO)) {
+                                if (element.getArtist() != null) {
+                                    if (artist == null) {
                                         artist = element.getArtist();
-                                    } else if(!element.getArtist().equals(artist)) {
-                                        mediaElementListAdapter.showArtist(true);
+                                    } else if (!element.getArtist().equals(artist)) {
+                                        mediaElementListAdapter.showSubtitle(true);
                                         break;
                                     }
                                 }
@@ -333,48 +248,11 @@ public class MediaElementFragment extends ListFragment {
                     mediaElementListAdapter.setItemList(mediaElements);
                     mediaElementListAdapter.notifyDataSetChanged();
 
-                    restProgress.dismiss();
-                }
-
-                @Override
-                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-
-                    Toast error;
-
-                    restProgress.dismiss();
-
-                    switch (statusCode) {
-                        case 401:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        case 404:
-                        case 0:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
-
-                        default:
-                            error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                            error.show();
-                            break;
+                    if (isRunning) {
+                        setListShown(true);
                     }
 
-                }
-
-                @Override
-                public void onRetry(int retryNo)
-                {
-                    String message = getString(R.string.notification_please_wait);
-
-                    // Add visual indicator of retry attempt to progress dialog
-                    for(int i=0; i<retryNo; i++)
-                    {
-                        message += ".";
-                    }
-
-                    restProgress.setMessage(message);
+                    isReady = true;
                 }
             });
         }
@@ -387,7 +265,6 @@ public class MediaElementFragment extends ListFragment {
      * activity.
      */
     public interface MediaElementListener {
-
         void MediaElementSelected(MediaElement element);
         void PlayAll(ArrayList<MediaElement> mediaElements);
         void AddAllAndPlayNext(ArrayList<MediaElement> mediaElements);

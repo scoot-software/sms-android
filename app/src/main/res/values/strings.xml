@@ -85,6 +85,8 @@
     <string name="play_error_message">Impossible to play the video.</string>
     <string name="play_progressive_error_message">Impossible to play the progressive video.</string>
 
+    <string name="button_retry">Retry</string>
+
     <string-array
         name="preferences_audio_quality_names">
         <item>Low</item>

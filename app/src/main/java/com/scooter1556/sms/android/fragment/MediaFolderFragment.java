@@ -23,26 +23,23 @@
  */
 package com.scooter1556.sms.android.fragment;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaFolderListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaFolder;
 import com.scooter1556.sms.lib.android.service.RESTService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +48,12 @@ public class MediaFolderFragment extends ListFragment {
 
     private static final String TAG = "MediaFolderFragment";
 
-    private ListView listView;
+    // Callback
     private MediaFolderListener mediaFolderListener;
+
+    // Flags
+    boolean isReady = false;
+    boolean isRunning = false;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
@@ -64,8 +65,6 @@ public class MediaFolderFragment extends ListFragment {
 
     // REST Client
     RESTService restService = null;
-
-    ProgressDialog restProgress;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -79,9 +78,13 @@ public class MediaFolderFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Set fragment running
+        isRunning = true;
+
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
 
+        // Get REST service instance
         restService = RESTService.getInstance();
 
         // Retrieve Media Folders from server
@@ -89,11 +92,9 @@ public class MediaFolderFragment extends ListFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Set list adapter
         mediaFolderListAdapter = new MediaFolderListAdapter(getActivity(), mediaFolders);
-
-        // Set the adapter
         setListAdapter(mediaFolderListAdapter);
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -101,12 +102,19 @@ public class MediaFolderFragment extends ListFragment {
 
     @Override
     public void onViewCreated (View view, Bundle savedInstanceState) {
-        setEmptyText(getString(R.string.media_not_found));
+        // Show list if content is ready
+        setListShown(isReady);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onDestroy() {
+        // Cancel any remaining requests
+        restService.getClient().cancelRequests(getContext(), false);
+
+        // Set fragment is not running
+        isRunning = false;
+
+        super.onDestroy();
     }
 
     @Override
@@ -129,11 +137,45 @@ public class MediaFolderFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
+        // Notify the active callbacks interface that an item has been selected.
         if (mediaFolderListener != null) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
             mediaFolderListener.MediaFolderSelected(mediaFolders.get(position));
         }
+    }
+
+    private void getMediaFolders() {
+        // Initialise array for media content
+        mediaFolders = new ArrayList<>();
+
+        // Retrieve list of media folders
+        restService.getMediaFolders(getContext(), new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                // Check fragment has not been destroyed
+                if(!isRunning) {
+                    return;
+                }
+
+                Gson parser = new Gson();
+
+                for(int i=0; i<response.length(); i++) {
+                    try {
+                        mediaFolders.add(parser.fromJson(response.getJSONObject(i).toString(), MediaFolder.class));
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing json", e);
+                    }
+                }
+
+                mediaFolderListAdapter.setItemList(mediaFolders);
+                mediaFolderListAdapter.notifyDataSetChanged();
+
+                if (isRunning) {
+                    setListShown(true);
+                }
+
+                isReady = true;
+            }
+        });
     }
 
     /**
@@ -143,120 +185,6 @@ public class MediaFolderFragment extends ListFragment {
      * activity.
      */
     public interface MediaFolderListener {
-
-        public void MediaFolderSelected(MediaFolder folder);
-
-    }
-
-    private void getMediaFolders() {
-
-        mediaFolders = new ArrayList<>();
-
-        restService.getMediaFolders(new JsonHttpResponseHandler() {
-            @Override
-            public void onStart() {
-                restProgress = ProgressDialog.show(getActivity(), getString(R.string.media_retrieving_folders), getString(R.string.notification_please_wait), true);
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                mediaFolders.add(parser.fromJson(response.toString(), MediaFolder.class));
-
-                mediaFolderListAdapter.setItemList(mediaFolders);
-                mediaFolderListAdapter.notifyDataSetChanged();
-
-                restProgress.dismiss();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-
-                Gson parser = new Gson();
-
-                for(int i=0; i<response.length(); i++)
-                {
-                    try {
-                        mediaFolders.add(parser.fromJson(response.getJSONObject(i).toString(), MediaFolder.class));
-                    } catch (JSONException e) {
-                        Toast error = Toast.makeText(getActivity(), getString(R.string.media_error_parsing_json), Toast.LENGTH_SHORT);
-                        error.show();
-                    }
-                }
-
-                mediaFolderListAdapter.setItemList(mediaFolders);
-                mediaFolderListAdapter.notifyDataSetChanged();
-
-                restProgress.dismiss();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-
-                Toast error;
-
-                restProgress.dismiss();
-
-                switch (statusCode) {
-                    case 401:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    case 404:
-                    case 0:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    default:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-                }
-
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-
-                Toast error;
-
-                restProgress.dismiss();
-
-                switch (statusCode) {
-                    case 401:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_unauthenticated), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    case 404:
-                    case 0:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server_not_found), Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-
-                    default:
-                        error = Toast.makeText(getActivity(), getString(R.string.error_server) + statusCode, Toast.LENGTH_SHORT);
-                        error.show();
-                        break;
-                }
-
-            }
-
-            @Override
-            public void onRetry(int retryNo)
-            {
-                String message = getString(R.string.notification_please_wait);
-
-                // Add visual indicator of retry attempt to progress dialog
-                for(int i=0; i<retryNo; i++)
-                {
-                    message += ".";
-                }
-
-                restProgress.setMessage(message);
-            }
-        });
+        void MediaFolderSelected(MediaFolder folder);
     }
 }

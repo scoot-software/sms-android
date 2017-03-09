@@ -26,9 +26,14 @@ package com.scooter1556.sms.android.activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NavUtils;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.scooter1556.sms.android.R;
@@ -45,6 +50,9 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
     // Fragments
     ConnectionFragment connectionFragment;
 
+    // Toolbar
+    private Toolbar toolbar;
+
     // Database
     private ConnectionDatabase db;
 
@@ -58,7 +66,9 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
         db = new ConnectionDatabase(this);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        if (findViewById(R.id.fragment_container) != null) {
+        initialiseToolbar();
+
+        if (findViewById(R.id.container) != null) {
 
             if (savedInstanceState != null) {
                 return;
@@ -66,9 +76,34 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
 
             connectionFragment = new ConnectionFragment();
 
-            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, connectionFragment).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.container, connectionFragment).commit();
+        }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        toolbar.setTitle(title);
+    }
+
+    @Override
+    public void setTitle(int titleId) {
+        super.setTitle(titleId);
+        toolbar.setTitle(titleId);
+    }
+
+    protected void initialiseToolbar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        if (toolbar != null) {
+            toolbar.inflateMenu(R.menu.menu_connections);
+            setSupportActionBar(toolbar);
+        }
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(false);
+            getSupportActionBar().setHomeButtonEnabled(true);
         }
     }
 
@@ -80,16 +115,15 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void AddConnection() {
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new EditConnectionFragment())
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, new EditConnectionFragment())
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                 .commit();
-
-        getSupportActionBar().setTitle(R.string.connections_add_title);
     }
 
     @Override
@@ -99,11 +133,9 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
         arguments.putSerializable("Connection", db.getConnection(id));
         fragment.setArguments(arguments);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment)
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                 .commit();
-
-        getSupportActionBar().setTitle(R.string.connections_edit_title);
     }
 
     @Override
@@ -124,10 +156,8 @@ public class ConnectionActivity extends AppCompatActivity implements ConnectionF
 
 
         // Load updated connections list
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ConnectionFragment())
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, new ConnectionFragment())
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                 .commit();
-
-        getSupportActionBar().setTitle(R.string.connections_title);
     }
 }

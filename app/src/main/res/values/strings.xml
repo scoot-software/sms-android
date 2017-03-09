@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Author: Scott Ware <scoot.software@gmail.com>
+    Copyright (c) 2015 Scott Ware
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
 <resources>
 
     <string name="app_name">Scoot Media Streamer</string>
@@ -26,6 +49,9 @@
     <string name="action_bar_save_connection">Save Connection</string>
     <string name="action_bar_edit_connection">Edit Connection</string>
     <string name="action_bar_remove_connection">Remove Connection</string>
+    <string name="action_bar_media_route">Available Devices</string>
+
+    <string name="button_more">More</string>
 
     <string name="audio_player_title">Now Playing</string>
     <string name="audio_player_cover_art_description">Cover Art</string>
@@ -40,16 +66,18 @@
     <string name="video_controller_play_button_description">Play/Pause</string>
     <string name="video_player_error">Unable to play media</string>
 
+    <string name="label_pause">Pause</string>
+    <string name="label_play">Play</string>
+    <string name="label_previous">Previous</string>
+    <string name="label_next">Next</string>
+
     <string name="navigation_drawer_title">Navigation</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <!-- Navigation Drawer Menu Items -->
-    <string-array
-        name="navigation_drawer_list_items">
-        <item>Media Browser</item>
-        <item>Settings</item>
-        <item>Exit</item>
-    </string-array>string-array>
+    <string name="navigation_drawer_item_home">Home</string>
+    <string name="navigation_drawer_item_music">Music</string>
+    <string name="navigation_drawer_item_video">Video</string>
+    <string name="navigation_drawer_item_settings">Settings</string>
 
     <string name="connections_title">Connections</string>
     <string name="connections_edit_title">Edit Connection</string>
@@ -87,6 +115,41 @@
 
     <string name="button_retry">Retry</string>
 
+    <string name="cast_application_id">0F717E79</string>
+    <string name="cast_to_device">Casting to %1$s</string>
+    <string name="cast_stop">Stop Casting</string>
+    <string name="cast_first_time_ux">Touch to connect to a Google Cast device</string>
+
+    <string name="description_currently_playing">Media currently playing</string>
+    <string name="description_currently_playing_title">Title of media currently playing</string>
+    <string name="description_currently_playing_subtitle">Subtitle of media currently playing</string>
+    <string name="description_currently_playing_extra_info">Additional information for media currently playing</string>
+    <string name="description_play_item">Play item</string>
+    <string name="description_play_pause">Play/Pause</string>
+    <string name="description_skip_next">Skip to next</string>
+    <string name="description_skip_prev">Skip to previous</string>
+    <string name="description_background_image">Background image for cover art</string>
+
+    <string name="error_no_metadata">Unable to retrieve metadata.</string>
+    <string name="error_no_connection">Cannot connect to server. Please, check your Internet connectivity.</string>
+
+    <string name="heading_music">Music</string>
+    <string name="heading_video">Video</string>
+    <string name="heading_media_folders">Media Folders</string>
+    <string name="heading_recently_added">Recently Added</string>
+    <string name="heading_recently_played">Recently Played</string>
+    <string name="heading_artists">Artists</string>
+    <string name="heading_album_artists">Album Artists</string>
+    <string name="heading_albums">Albums</string>
+    <string name="heading_collections">Collections</string>
+    <string name="heading_home">Home</string>
+    <string name="heading_tracklist">Tracklist</string>
+
+    <string name="state_loading">Loading</string>
+
+    <string name="dialogue_ok">OK</string>
+    <string name="dialogue_error">Error</string>
+
     <string-array
         name="preferences_audio_quality_names">
         <item>Low</item>
@@ -105,9 +168,11 @@
 
     <string-array
         name="preferences_video_quality_names">
+        <item>Very Low</item>
         <item>Low</item>
         <item>Medium</item>
         <item>High</item>
+        <item>Very High</item>
         <item>HD</item>
         <item>Full HD</item>
     </string-array>
@@ -119,6 +184,8 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
+        <item>5</item>
+        <item>6</item>
     </string-array>
 
 </resources>

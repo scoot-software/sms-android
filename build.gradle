@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
+        classpath 'com.android.tools.build:gradle:2.3.0'
         classpath 'com.novoda:bintray-release:0.2.7'
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -16,5 +16,15 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+    }
+    project.ext {
+        compileSdkVersion = 25
+        targetSdkVersion = 25
+        buildToolsVersion = '23.0.3'
+        releaseRepoName = 'sms-android'
+        releaseUserOrg = 'scoot.software'
+        releaseGroupId = 'com.scooter1556.sms'
+        releaseVersion = '0.4.7'
+        releaseWebsite = 'https://github.com/scoot-software/sms-android'
     }
 }

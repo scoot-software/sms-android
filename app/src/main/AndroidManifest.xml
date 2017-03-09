@@ -1,41 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Author: Scott Ware <scoot.software@gmail.com>
+    Copyright (c) 2015 Scott Ware
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.scooter1556.sms.android" >
 
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="22"/>
 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
 
+    <!-- Make application available to both TV and regular devices. -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
 
     <application
+        tools:replace="android:label"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/launcher_name"
         android:hardwareAccelerated="true"
-        android:theme="@style/Theme.AppCompat.Light">
+        android:theme="@style/AppTheme">
 
+        <!-- Main activity for media browsing on mobile devices -->
         <activity
-            android:name=".activity.MainActivity"
-            android:theme="@style/AppTheme"
+            android:name=".activity.HomeActivity"
+            android:label="@string/app_name"
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Use this intent filter to get voice searches -->
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
+
+        <!-- Main activity for Android TV user interface -->
+        <activity
+            android:name=".activity.tv.TvBrowseActivity"
+            android:label="@string/app_name"
+            android:theme="@style/TVTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Android TV UI when playing media -->
+        <activity
+            android:name=".activity.tv.TvPlaybackActivity"
+            android:theme="@style/TVTheme"
+            android:parentActivityName=".activity.tv.TvBrowseActivity" />
+
+        <activity
+            android:name=".activity.MusicActivity"
+            android:label="@string/heading_music"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".activity.HomeActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.HomeActivity" />
+        </activity>
+
+        <activity
+            android:name=".activity.VideoActivity"
+            android:label="@string/heading_video"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".activity.HomeActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.HomeActivity" />
+        </activity>
+
+        <activity
+            android:name=".activity.BrowseActivity"
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".activity.SettingsActivity"
             android:label="@string/preferences_title"
             android:theme="@style/AppTheme"
-            android:parentActivityName=".activity.MainActivity" >
+            android:parentActivityName=".activity.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity" />
+                android:value=".activity.HomeActivity" />
         </activity>
 
         <activity
@@ -51,25 +134,65 @@
         </activity>
 
         <activity
-            android:name=".activity.VideoPlayerActivity"
-            android:theme="@style/VideoPlayerTheme"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="landscape" />
+            android:name=".activity.NowPlayingActivity"
+            android:icon="@drawable/ic_launcher">
+        </activity>
 
-        <service
-            android:name="com.scooter1556.sms.lib.android.service.AudioPlayerService"
-            android:enabled="true"
-            android:exported="true" >
+        <!-- A full screen activity showing controls and a seek bar for the current playing media -->
+        <activity
+            android:name=".activity.FullScreenPlayerActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activity.HomeActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.HomeActivity"/>
+        </activity>
+
+        <activity
+            android:name=".activity.VideoPlayerActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|uiMode"
+            android:label="@string/app_name"
+            android:launchMode="singleTask">
+
             <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
+                <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
-        </service>
+        </activity>
 
         <receiver android:name="android.support.v4.media.session.MediaButtonReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/auto_app_desc" />
+
+        <meta-data
+            android:name="com.google.android.gms.car.notification.SmallIcon"
+            android:resource="@drawable/ic_notification" />
+
+        <meta-data
+            android:name="com.google.android.gms.car.application.theme"
+            android:resource="@style/CarTheme" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.scooter1556.sms.android.provider.CastOptionsProvider" />
+
+        <service
+            android:name=".service.MediaService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
 
     </application>
 

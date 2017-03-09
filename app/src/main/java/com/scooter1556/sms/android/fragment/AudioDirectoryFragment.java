@@ -46,7 +46,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
-import com.scooter1556.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.service.RESTService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -126,7 +126,6 @@ public class AudioDirectoryFragment extends Fragment {
 
         Glide.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover/80")
-                .error(R.drawable.ic_content_album)
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);

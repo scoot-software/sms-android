@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Author: Scott Ware <scoot.software@gmail.com>
+    Copyright (c) 2015 Scott Ware
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
 <resources>
 
     <!-- Default screen margins, per the Android Design guidelines. -->
@@ -25,5 +48,44 @@
     <dimen name="audio_player_button_width">65dip</dimen>
     <dimen name="audio_player_button_small_height">48dip</dimen>
     <dimen name="audio_player_button_small_width">50dip</dimen>
+
+    <!-- Playback Controls -->
+    <dimen name="playback_controls_coverart_horizontal_margin">8dp</dimen>
+    <dimen name="playback_controls_coverart_size">64dp</dimen>
+    <dimen name="playback_controls_padding">8dp</dimen>
+
+    <!-- Full Screen Player-->
+    <dimen name="text_view_margin">16dp</dimen>
+    <dimen name="end_text_margin">16dp</dimen>
+
+    <!-- Media Browser-->
+    <dimen name="media_item_height">72dp</dimen>
+    <dimen name="media_item_icon_margin_start">12dp</dimen>
+    <dimen name="media_item_text_margin_start">60dp</dimen>
+
+    <!-- Fragment List -->
+    <dimen name="error_horizontal_padding">4dp</dimen>
+    <dimen name="error_vertical_padding">16dp</dimen>
+
+    <!-- Cards -->
+    <dimen name="card_margin">5dp</dimen>
+    <dimen name="card_radius">0dp</dimen>
+
+    <dimen name="card_media_width">170dp</dimen>
+    <dimen name="card_media_audio_height">240dp</dimen>
+    <dimen name="card_media_audio_image_height">160dp</dimen>
+    <dimen name="card_media_video_height">320dp</dimen>
+    <dimen name="card_media_video_image_height">240dp</dimen>
+    <dimen name="card_media_artist_height">210dp</dimen>
+    <dimen name="card_media_album_height">210dp</dimen>
+    <dimen name="card_media_folder_height">220dp</dimen>
+    <dimen name="card_media_folder_image_height">160dp</dimen>
+    <dimen name="card_media_folder_image">80dp</dimen>
+    <dimen name="card_media_collection_height">210dp</dimen>
+
+    <dimen name="card_media_title_padding">10dp</dimen>
+    <dimen name="card_media_title">15sp</dimen>
+    <dimen name="card_media_subtitle_padding_bottom">5dp</dimen>
+    <dimen name="card_media_subtitle">12sp</dimen>
 
 </resources>

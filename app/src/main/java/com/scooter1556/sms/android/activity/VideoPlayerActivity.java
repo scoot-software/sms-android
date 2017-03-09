@@ -1,467 +1,703 @@
-/*
- * Author: Scott Ware <scoot.software@gmail.com>
- * Copyright (c) 2015 Scott Ware
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.scooter1556.sms.android.activity;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.net.wifi.WifiManager;
+import android.content.res.Configuration;
+import android.graphics.Point;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.format.DateUtils;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.exoplayer.ExoPlayer;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.framework.CastButtonFactory;
+import com.google.android.gms.cast.framework.CastContext;
+import com.google.android.gms.cast.framework.CastSession;
+import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
-import com.scooter1556.sms.lib.android.domain.TranscodeProfile;
-import com.scooter1556.sms.lib.android.player.SMSVideoPlayer;
-import com.scooter1556.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.playback.CastPlayback;
+import com.scooter1556.sms.android.playback.LocalPlayback;
+import com.scooter1556.sms.android.playback.Playback;
+import com.scooter1556.sms.android.service.MediaService;
+import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.InterfaceUtils;
 
-import org.json.JSONObject;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import java.util.Formatter;
-import java.util.Locale;
+import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
 
-public class VideoPlayerActivity extends Activity implements SurfaceHolder.Callback, SMSVideoPlayer.Listener {
-
+public class VideoPlayerActivity extends AppCompatActivity implements Playback.Callback {
     private static final String TAG = "VideoPlayerActivity";
 
-    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
-    static final String FORMAT = "matroska";
+    private SimpleExoPlayerView videoView;
+    private TextView titleView;
+    private TextView subtitleView;
+    private TextView descriptionView;
+    private TextView startText;
+    private TextView endText;
+    private SeekBar seekbar;
+    private ImageView playPause;
+    private ImageButton playCircle;
+    private ProgressBar loading;
+    private View controllers;
+    private View container;
+    private ImageView coverArt;
 
-    static final int MAX_SAMPLE_RATE = 48000;
-    static final int MAX_MOBILE_QUALITY = 2;
+    private Timer seekbarTimer;
+    private Timer controllersTimer;
+    private final Handler handler = new Handler();
+    private final float aspectRatio = 72f / 128;
+    private MediaBrowserCompat.MediaItem currentMedia;
+    private boolean controllersVisible;
+    private int duration;
 
-    private static final int CONTROLLER_TIMEOUT = 5000;
+    private Playback playback;
 
-    // REST Client
-    RESTService restService = null;
-
-    // UI
-    private SurfaceView surface;
-    private SurfaceHolder holder;
-    private View controller = null;
-    private long lastActionTime = 0L;
-    private SeekBar timeline = null;
-    private TextView duration, currentTime;
-    private ImageButton playButton = null;
-    private StringBuilder formatBuilder;
-    private Formatter formatter;
-    private ImageView videoOverlay;
-
-    // Player
-    private SMSVideoPlayer player;
-    private MediaElement mediaElement;
-
-    // Locks
-    WifiManager.WifiLock wifiLock;
-
-    // Override automatic controller visibility
-    private Boolean showController = false;
-    private Boolean initialised = false;
-    private Boolean ready = false;
-    private Boolean seekInProgress = false;
-    private Boolean paused = false;
+    private CastContext castContext;
+    private CastSession castSession;
+    private SessionManagerListener<CastSession> sessionManagerListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_video_player);
 
-        restService = RESTService.getInstance();
+        videoView = (SimpleExoPlayerView) findViewById(R.id.videoView);
+        titleView = (TextView) findViewById(R.id.titleText);
+        descriptionView = (TextView) findViewById(R.id.descriptionText);
+        descriptionView.setMovementMethod(new ScrollingMovementMethod());
+        subtitleView = (TextView) findViewById(R.id.subtitleText);
+        startText = (TextView) findViewById(R.id.startText);
+        startText.setText(DateUtils.formatElapsedTime(0));
+        endText = (TextView) findViewById(R.id.endText);
+        seekbar = (SeekBar) findViewById(R.id.seekBar);
+        playPause = (ImageView) findViewById(R.id.playPauseImageView);
+        loading = (ProgressBar) findViewById(R.id.progressBar);
+        controllers = findViewById(R.id.controllers);
+        container = findViewById(R.id.container);
+        coverArt = (ImageView) findViewById(R.id.coverArtView);
+        playCircle = (ImageButton) findViewById(R.id.play_circle);
 
-        player = new SMSVideoPlayer();
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            currentMedia = getIntent().getParcelableExtra(EXTRA_MEDIA_ITEM);
+        }
 
-        surface = (SurfaceView) findViewById(R.id.video_surface);
-        surface.setOnSystemUiVisibilityChangeListener(onSystemUiVisibilityChanged);
-        surface.setOnTouchListener(new View.OnTouchListener() {
+        setupActionBar();
+
+        // Setup UI for orientation
+        updateConfiguration(getResources().getConfiguration());
+
+        setupCastListener();
+        castContext = CastContext.getSharedInstance(this);
+        castSession = castContext.getSessionManager().getCurrentCastSession();
+
+        if (castSession != null && castSession.isConnected()) {
+            playback = new CastPlayback(this);
+        } else {
+            playback = new LocalPlayback(this);
+        }
+
+        playback.setCallback(this);
+
+        playCircle.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                togglePlayback();
+            public void onClick(View v) {
+                playback.play(currentMedia.getMediaId(), true);
+            }
+        });
+
+        setupControlsCallbacks();
+
+        if (titleView != null) {
+            updateMetadata(true);
+        }
+    }
+
+    private void setupCastListener() {
+        sessionManagerListener = new SessionManagerListener<CastSession>() {
+
+            @Override
+            public void onSessionEnded(CastSession session, int error) {
+                Log.d(TAG, "onSessionEnded()");
+                // Setup new playback
+                switchToPlayback(new LocalPlayback(getApplicationContext()), true);
+
+                updatePlayButton();
+                invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onSessionResumed(CastSession session, boolean wasSuspended) {
+                Log.d(TAG, "onSessionResumed()");
+                castSession = castSession;
+
+                if(!(playback instanceof CastPlayback)) {
+                    Playback playback = new CastPlayback(getApplicationContext());
+                    switchToPlayback(playback, !wasSuspended);
+                }
+            }
+
+            @Override
+            public void onSessionResumeFailed(CastSession session, int error) {
+                Log.d(TAG, "onSessionResumeFailed()");
+                onApplicationDisconnected();
+            }
+
+            @Override
+            public void onSessionStarted(CastSession session, String sessionId) {
+                Log.d(TAG, "onSessionStarted()");
+                castSession = castSession;
+
+                // Check device is capable of playing video
+                if(castSession.getCastDevice().hasCapability(CastDevice.CAPABILITY_VIDEO_OUT)) {
+                    // Setup new playback
+                    switchToPlayback(new CastPlayback(getApplicationContext()), true);
+
+                    updatePlayButton();
+                    invalidateOptionsMenu();
+                }
+            }
+
+            @Override
+            public void onSessionStartFailed(CastSession session, int error) {
+                Log.d(TAG, "onSessionStartFailed()");
+                onApplicationDisconnected();
+            }
+
+            @Override
+            public void onSessionStarting(CastSession session) {
+                Log.d(TAG, "onSessionStarting()");
+            }
+
+            @Override
+            public void onSessionEnding(CastSession session) {
+                Log.d(TAG, "onSessionEnding()");
+                playback.updateLastKnownStreamPosition();
+            }
+
+            @Override
+            public void onSessionResuming(CastSession session, String sessionId) {
+                Log.d(TAG, "onSessionResuming()");
+            }
+
+            @Override
+            public void onSessionSuspended(CastSession session, int reason) {
+                Log.d(TAG, "onSessionSuspended()");
+            }
+
+            private void onApplicationDisconnected() {
+                updatePlayButton();
+                invalidateOptionsMenu();
+            }
+        };
+    }
+
+    /**
+     * Switch to a different Playback instance, maintaining all playback state, if possible.
+     */
+    public void switchToPlayback(Playback newPlayback, boolean resumePlaying) {
+        // Suspend the current playback
+        int oldState = playback.getState();
+        long pos = playback.getCurrentStreamPosition();
+        String currentMediaID = playback.getCurrentMediaId();
+
+        playback.stop(false);
+
+        Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
+                " Resume: " + resumePlaying +
+                " State: " + oldState +
+                " Position: " + pos +
+                " Media ID: " + currentMediaID +
+                ")");
+
+        // End old job if needed
+        if(playback.getCurrentJobId() != null) {
+            RESTService.getInstance().endJob(playback.getCurrentJobId());
+        }
+
+        // End session if needed
+        if(playback.getSessionId() != null) {
+            RESTService.getInstance().endSession(playback.getSessionId());
+        }
+
+        // Setup new playback
+        newPlayback.setCallback(this);
+        newPlayback.setCurrentStreamPosition(pos < 0 ? 0 : pos);
+        newPlayback.setCurrentMediaId(currentMediaID);
+        newPlayback.start();
+
+        // Finally swap the instance
+        playback = newPlayback;
+
+
+        switch (oldState) {
+
+            case PlaybackStateCompat.STATE_BUFFERING:
+
+            case PlaybackStateCompat.STATE_CONNECTING:
+
+            case PlaybackStateCompat.STATE_PAUSED:
+                playback.pause();
+                break;
+
+            case PlaybackStateCompat.STATE_PLAYING:
+                if (resumePlaying && currentMedia != null) {
+                    playback.play(currentMedia.getDescription().getMediaId(), true);
+                } else if (!resumePlaying) {
+                    playback.pause();
+                } else {
+                    playback.stop(true);
+                }
+                break;
+
+            case PlaybackStateCompat.STATE_NONE:
+                break;
+
+            default:
+                Log.d(TAG, "Default called. Old state is " + oldState);
+        }
+    }
+
+    private void stopTrickplayTimer() {
+        Log.d(TAG, "Stopped TrickPlay Timer");
+        if (seekbarTimer != null) {
+            seekbarTimer.cancel();
+        }
+    }
+
+    private void restartTrickplayTimer() {
+        stopTrickplayTimer();
+        seekbarTimer = new Timer();
+        seekbarTimer.scheduleAtFixedRate(new UpdateSeekbarTask(), 100, 1000);
+        Log.d(TAG, "Restarted TrickPlay Timer");
+    }
+
+    private void stopControllersTimer() {
+        if (controllersTimer != null) {
+            controllersTimer.cancel();
+        }
+    }
+
+    private void startControllersTimer() {
+        if (controllersTimer != null) {
+            controllersTimer.cancel();
+        }
+
+        controllersTimer = new Timer();
+        controllersTimer.schedule(new HideControllersTask(), 5000);
+    }
+
+    // should be called from the main thread
+    private void updateControllersVisibility(boolean show) {
+        Log.d(TAG, "updateControllersVisibility(" + show + ")");
+
+        if (show) {
+            getSupportActionBar().show();
+            controllers.setVisibility(View.VISIBLE);
+        } else {
+            if (!InterfaceUtils.isOrientationPortrait(this)) {
+                getSupportActionBar().hide();
+            }
+            controllers.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause() was called");
+
+        if (seekbarTimer != null) {
+            seekbarTimer.cancel();
+            seekbarTimer = null;
+        }
+        if (controllersTimer != null) {
+            controllersTimer.cancel();
+        }
+        // since we are playing locally, we need to stop the playback of
+        // video (if user is not watching, pause it!)
+        playback.pause();
+        updatePlayButton();
+
+        castContext.getSessionManager().removeSessionManagerListener(
+                sessionManagerListener, CastSession.class);
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "onStop() was called");
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "onDestroy() is called");
+        stopControllersTimer();
+        stopTrickplayTimer();
+        playback.stop(true);
+
+        // Allow screen to turn off
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStart() {
+        Log.d(TAG, "onStart was called");
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume() was called");
+        castContext.getSessionManager().addSessionManagerListener(sessionManagerListener, CastSession.class);
+
+        if (castSession != null && castSession.isConnected()) {
+        } else {
+        }
+
+        super.onResume();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(@NonNull KeyEvent event) {
+        return castContext.onDispatchVolumeKeyEventBeforeJellyBean(event) || super.dispatchKeyEvent(event);
+    }
+
+    private class HideControllersTask extends TimerTask {
+
+        @Override
+        public void run() {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    updateControllersVisibility(false);
+                    controllersVisible = false;
+                }
+            });
+
+        }
+    }
+
+    private class UpdateSeekbarTask extends TimerTask {
+
+        @Override
+        public void run() {
+            handler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    int currentPos = (int) (playback.getCurrentStreamPosition() * 0.001);
+                    updateSeekbar(currentPos, duration);
+                }
+            });
+        }
+    }
+
+    private void setupControlsCallbacks() {
+        videoView.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                Log.d(TAG, "onTouch()");
+
+                if (!controllersVisible) {
+                    updateControllersVisibility(true);
+                }
+
+                startControllersTimer();
                 return false;
             }
         });
 
-        holder = surface.getHolder();
-        holder.addCallback(this);
-
-        videoOverlay = (ImageView) findViewById(R.id.video_overlay);
-        videoOverlay.setImageResource(R.drawable.play_overlay);
-
-        timeline = (SeekBar)findViewById(R.id.video_controller_timeline);
-        timeline.setOnSeekBarChangeListener(onSeek);
-
-        formatBuilder = new StringBuilder();
-        formatter = new Formatter(formatBuilder, Locale.getDefault());
-
-        duration = (TextView) findViewById(R.id.video_controller_duration);
-        duration.setText(stringForTime(0));
-
-        currentTime = (TextView) findViewById(R.id.video_controller_current_time);
-        currentTime.setText(stringForTime(0));
-
-        playButton = (ImageButton)findViewById(R.id.video_controller_play);
-        playButton.setImageResource(R.drawable.ic_play_light);
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                togglePlayback();
-            }
-        });
-
-        wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "sms");
-
-        controller = findViewById(R.id.video_controller);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        controller.setVisibility(View.VISIBLE);
-        showController = true;
-
-        // Hide action bar
-        surface.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-
-        // Retrieve media element to play
-        Intent intent = getIntent();
-        mediaElement = (MediaElement) intent.getSerializableExtra("mediaElement");
-
-        // If our surface is ready start playing video (surface is not destroyed if the power button is pressed)
-        if(ready) {
-            preparePlayer();
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        surface.removeCallbacks(updateController);
-        videoOverlay.setVisibility(View.VISIBLE);
-        paused = true;
-
-        if(player != null) {
-            player.setOffset(player.getCurrentPosition());
-            player.removeListener(this);
-            player.release();
-
-            if (wifiLock.isHeld()) {
-                wifiLock.release();
-            }
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        if(player != null) {
-            if(player.getTranscodeProfile() != null) {
-                restService.endJob(player.getTranscodeProfile().getID());
-            }
-
-            releasePlayer();
-        }
-    }
-
-    private SeekBar.OnSeekBarChangeListener onSeek = new SeekBar.OnSeekBarChangeListener() {
-
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int position, boolean fromUser) {
-            if (fromUser) {
-                currentTime.setText(stringForTime(position));
-            }
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            seekInProgress = true;
-            showController = true;
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            lastActionTime = SystemClock.elapsedRealtime();
-            seekInProgress = false;
-            showController = false;
-            int position = seekBar.getProgress();
-            seekTo(position);
-        }
-    };
-
-    private void initialiseVideo() {
-
-        if(mediaElement == null) {
-            Toast error = Toast.makeText(getApplicationContext(), getString(R.string.video_player_error), Toast.LENGTH_SHORT);
-            error.show();
-        }
-
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Initialise Stream
-        restService.initialiseStream(getApplicationContext(), mediaElement.getID(), null, SUPPORTED_CODECS, null, FORMAT, Integer.parseInt(settings.getString("pref_video_quality", "0")), MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                // Parse profile
-                Gson parser = new Gson();
-                TranscodeProfile profile = parser.fromJson(response.toString(), TranscodeProfile.class);
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                Log.d(TAG, "onStopTrackingTouch()");
 
-                // Configure Player
-                player.setTranscodeProfile(profile);
-                player.setID(mediaElement.getID());
-                player.setQuality(settings.getString("pref_video_quality", "0"));
-
-                if(mediaElement.getDuration() != null) {
-                    player.setDuration(mediaElement.getDuration());
+                if (playback.isPlaying()) {
+                    playback.seekTo(seekBar.getProgress() * 1000);
                 }
 
-                preparePlayer();
-                initialised = true;
+                startControllersTimer();
             }
 
             @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-                Toast error = Toast.makeText(getApplicationContext(), getString(R.string.video_player_error), Toast.LENGTH_SHORT);
-                error.show();
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                Log.d(TAG, "onStartTrackingTouch()");
+
+                stopTrickplayTimer();
+                stopControllersTimer();
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                startText.setText(DateUtils.formatElapsedTime(progress));
+            }
+        });
+
+        playPause.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick(" + v.toString() + ")");
+
+                if(playback.isPlaying()) {
+                    playback.pause();
+                } else {
+                    playback.play(currentMedia.getMediaId(), true);
+                }
             }
         });
     }
 
-    private void preparePlayer() {
-        String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getTranscodeProfile().getID() + "?offset=" + (int) (player.getOffset() * 0.001);
-        Uri contentUri = Uri.parse(streamUrl);
+    @Override
+    public void onCompletion() {
+        Log.d(TAG, "onCompletion()");
 
-        player.addListener(this);
-        player.initialise(this, contentUri, holder.getSurface(), !paused);
-
-        wifiLock.acquire();
+        // Allow screen to turn off
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
-    private void releasePlayer() {
-        if (player != null) {
-            player.release();
-            player = null;
+    @Override
+    public void onPlaybackStatusChanged(int state) {
+        String log = "onPlaybackStatusChanged(): ";
 
-            if (wifiLock.isHeld()) {
-                wifiLock.release();
-            }
-        }
-    }
+        switch (state) {
+            case PlaybackStateCompat.STATE_BUFFERING:
+                log += "BUFFERING";
 
-    private void togglePlayback() {
-        lastActionTime = SystemClock.elapsedRealtime();
+                videoView.setPlayer(playback.getMediaPlayer());
+                videoView.setUseController(false);
+                videoView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
 
-        if (player != null) {
-            if (player.isPlaying()) {
-                playButton.setImageResource(R.drawable.ic_play_light);
-                videoOverlay.setVisibility(View.VISIBLE);
-                showController = true;
-                surface.removeCallbacks(updateController);
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-                player.pause();
-                paused = true;
+                break;
+
+            case PlaybackStateCompat.STATE_STOPPED:
+                log += "STOPPED";
+
+                stopTrickplayTimer();
+                updatePlayButton();
+
+                // Allow screen to turn off
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                break;
+
+            case PlaybackStateCompat.STATE_NONE:
+                log += "NONE";
 
                 // Allow screen to turn off
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-                if (wifiLock.isHeld()) {
-                    wifiLock.release();
-                }
-            }
-            else {
-                playButton.setImageResource(R.drawable.ic_pause_light);
-                videoOverlay.setVisibility(View.INVISIBLE);
-                player.start();
-                paused = false;
-                showController = false;
-                surface.postDelayed(updateController, 1000);
+                break;
 
-                // Keep screen on
+            case PlaybackStateCompat.STATE_PLAYING:
+                log += "PLAYING";
+
+                startControllersTimer();
+                restartTrickplayTimer();
+                updatePlayButton();
+                duration = playback.getCurrentMediaElement().getDuration();
+                endText.setText(DateUtils.formatElapsedTime(duration));
+                seekbar.setMax(duration);
+
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                wifiLock.acquire();
-            }
-        }
-    }
-
-    private void seekTo(int position) {
-        if(player != null) {
-            // Generate new stream uri
-            String streamUrl = restService.getConnection().getUrl() + "/stream/" + player.getTranscodeProfile().getID() + "?offset=" + (int) (position * 0.001);
-            Uri contentUri = Uri.parse(streamUrl);
-
-            // Initialise player in new position
-            player.release();
-            player.setOffset(position);
-            player.initialise(this, contentUri, holder.getSurface(), !paused);
-        }
-    }
-
-    private View.OnSystemUiVisibilityChangeListener onSystemUiVisibilityChanged = new View.OnSystemUiVisibilityChangeListener() {
-        @Override
-        public void onSystemUiVisibilityChange(int visibility) {
-            if(showController) { return; }
-
-            if ((visibility & (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN)) == 0) {
-                lastActionTime = SystemClock.elapsedRealtime();
-                controller.setVisibility(View.VISIBLE);
-            } else {
-                controller.setVisibility(View.GONE);
-            }
-        }
-    };
-
-    private Runnable updateController = new Runnable() {
-        public void run() {
-            if (!showController && (lastActionTime > 0) && ((SystemClock.elapsedRealtime() - lastActionTime) > CONTROLLER_TIMEOUT)) {
-                lastActionTime = 0;
-                surface.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
-            }
-
-            if (player != null && !seekInProgress) {
-                timeline.setProgress((int) player.getCurrentPosition());
-                currentTime.setText(stringForTime(player.getCurrentPosition()));
-            }
-
-            surface.postDelayed(updateController, 1000);
-        }
-    };
-
-    @Override
-    public void onStateChanged(boolean playWhenReady, int playbackState) {
-        switch(playbackState) {
-            case ExoPlayer.STATE_BUFFERING:
-                break;
-            case ExoPlayer.STATE_ENDED:
-                releasePlayer();
-                finish();
-                break;
-            case ExoPlayer.STATE_IDLE:
-                break;
-            case ExoPlayer.STATE_PREPARING:
-                break;
-            case ExoPlayer.STATE_READY:
-                // Set timeline
-                timeline.setProgress((int) player.getCurrentPosition());
-                currentTime.setText(stringForTime(player.getCurrentPosition()));
-
-                timeline.setMax((int) (player.getDuration() * 1000));
-                duration.setText(stringForTime(player.getDuration() * 1000));
-
-                if(player.isPlaying()) {
-                    playButton.setImageResource(R.drawable.ic_pause_light);
-                    videoOverlay.setVisibility(View.INVISIBLE);
-
-                    // Keep screen on
-                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                    showController = false;
-                    surface.postDelayed(updateController, 1000);
-                    lastActionTime = SystemClock.elapsedRealtime();
-                } else {
-                    playButton.setImageResource(R.drawable.ic_play_light);
-                    videoOverlay.setVisibility(View.VISIBLE);
-                }
 
                 break;
 
             default:
+                log += "DEFAULT";
                 break;
         }
     }
 
     @Override
-    public void onError(Exception e) {
-        // Display error message
-        Toast warning = Toast.makeText(this, getString(R.string.error_media_playback), Toast.LENGTH_SHORT);
-        warning.show();
+    public void onError(String error) {
+        Log.d(TAG, "onError(" + error + ")");
 
-        // Release player and finish activity
-        releasePlayer();
-        finish();
+        updatePlayButton();
+        InterfaceUtils.showErrorDialog(VideoPlayerActivity.this, error);
+
+        // Allow screen to turn off
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        if(initialised) {
-            paused = true;
-            preparePlayer();
+    public void setCurrentMediaID(String mediaID) {
+
+    }
+
+    private void updateSeekbar(int position, int duration) {
+        seekbar.setProgress(position);
+        seekbar.setMax(duration);
+        startText.setText(DateUtils.formatElapsedTime(position));
+        endText.setText(DateUtils.formatElapsedTime(duration));
+    }
+
+    private void updatePlayButton() {
+        String log = "updatePlayButton(): ";
+
+        boolean isConnected = (castSession !=null) && (castSession.isConnected() || castSession.isConnecting());
+        controllers.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+        playCircle.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+
+        switch (playback.getState()) {
+
+            case PlaybackStateCompat.STATE_PLAYING:
+                log += "PLAYING";
+
+                loading.setVisibility(View.INVISIBLE);
+                playPause.setVisibility(View.VISIBLE);
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_av_pause_dark));
+                playCircle.setVisibility(isConnected ? View.VISIBLE : View.GONE);
+                break;
+
+            case PlaybackStateCompat.STATE_NONE:
+                log += "NONE";
+
+                playCircle.setVisibility(View.VISIBLE);
+                controllers.setVisibility(View.GONE);
+                coverArt.setVisibility(View.VISIBLE);
+                videoView.setVisibility(View.INVISIBLE);
+
+                break;
+
+            case PlaybackStateCompat.STATE_PAUSED:
+                log += "PAUSED";
+
+                loading.setVisibility(View.INVISIBLE);
+                playPause.setVisibility(View.VISIBLE);
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_av_play_dark));
+                playCircle.setVisibility(isConnected ? View.VISIBLE : View.GONE);
+
+                break;
+
+            case PlaybackStateCompat.STATE_BUFFERING:
+                log += "BUFFERING";
+
+                playPause.setVisibility(View.INVISIBLE);
+                loading.setVisibility(View.VISIBLE);
+                break;
+
+            default:
+                log += "DEFAULT";
+                break;
+        }
+
+        Log.d(TAG, log);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        Log.d(TAG, "onConfigurationChanged()");
+
+        getSupportActionBar().show();
+        updateConfiguration(newConfig);
+    }
+
+    private void updateConfiguration(Configuration config) {
+        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+            updateMetadata(false);
+            container.setBackgroundColor(getResources().getColor(R.color.black));
         } else {
-            initialiseVideo();
-        }
-
-        // Surface is ready
-        ready = true;
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // Do nothing.
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        if (player != null) {
-            ready = false;
-            player.release();
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+            updateMetadata(true);
+            container.setBackgroundColor(getResources().getColor(R.color.white));
         }
     }
 
-    //
-    // Helper Functions
-    //
+    private void updateMetadata(boolean visible) {
+        Point displaySize;
 
-    private String stringForTime(long timeMs) {
-        long totalSeconds = timeMs / 1000;
-
-        int seconds = (int)totalSeconds % 60;
-        int minutes = (int)(totalSeconds / 60) % 60;
-        int hours   = (int)totalSeconds / 3600;
-
-        formatBuilder.setLength(0);
-        if (hours > 0) {
-            return formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
+        if (!visible) {
+            descriptionView.setVisibility(View.GONE);
+            titleView.setVisibility(View.GONE);
+            subtitleView.setVisibility(View.GONE);
+            displaySize = InterfaceUtils.getDisplaySize(this);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(displaySize.x, displaySize.y + getSupportActionBar().getHeight());
+            lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+            videoView.setLayoutParams(lp);
+            videoView.invalidate();
         } else {
-            return formatter.format("%02d:%02d", minutes, seconds).toString();
+            descriptionView.setText(currentMedia.getDescription().getDescription());
+            titleView.setText(currentMedia.getDescription().getTitle());
+            subtitleView.setText(currentMedia.getDescription().getSubtitle());
+            descriptionView.setVisibility(View.VISIBLE);
+            titleView.setVisibility(View.VISIBLE);
+            subtitleView.setVisibility(View.VISIBLE);
+            displaySize = InterfaceUtils.getDisplaySize(this);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(displaySize.x, (int) (displaySize.x * aspectRatio));
+            lp.addRule(RelativeLayout.BELOW, R.id.toolbar);
+            videoView.setLayoutParams(lp);
+            videoView.invalidate();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+
+        getMenuInflater().inflate(R.menu.menu_video_player, menu);
+        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu,
+                R.id.media_route_menu_item);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
+        if (item.getItemId() == android.R.id.home) {
+            ActivityCompat.finishAfterTransition(this);
+        }
+        return true;
+    }
+
+    private void setupActionBar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(currentMedia.getDescription().getTitle());
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

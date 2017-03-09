@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../sms-android-lib/lib/ExoPlayer/extensions/flac/flac.iml" filepath="$PROJECT_DIR$/../sms-android-lib/lib/ExoPlayer/extensions/flac/flac.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../sms-android-lib/lib/ExoPlayer/library/library.iml" filepath="$PROJECT_DIR$/../sms-android-lib/lib/ExoPlayer/library/library.iml" />
       <module fileurl="file://$PROJECT_DIR$/sms-android.iml" filepath="$PROJECT_DIR$/sms-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/../sms-android-lib/sms-android-lib.iml" filepath="$PROJECT_DIR$/../sms-android-lib/sms-android-lib.iml" />
     </modules>

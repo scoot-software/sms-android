@@ -10,18 +10,14 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <!-- App Theme -->
-    <style name="AppThemeBase" parent="@style/Theme.AppCompat.Light.DarkActionBar" />
-
-    <style name="AppTheme" parent="@style/AppThemeBase">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
-        <item name="actionBarStyle">@style/ActionBar</item>
-        <item name="android:windowActionBarOverlay">true</item>
+        <item name="alertDialogTheme">@style/Theme.AppCompat.Dialog.Alert</item>
     </style>
 
-    <style name="VideoPlayerTheme" parent="@style/AppThemeBase">
+    <style name="VideoPlayerTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowFullscreen">true</item>
@@ -47,6 +43,19 @@
     <style name="AudioPlayerButton" parent="android:Widget.Holo.ImageButton">
         <item name="android:background">?android:attr/actionBarItemBackground</item>
         <item name="android:minHeight">@dimen/audio_player_button_height</item>
+    </style>
+
+    <style name="CarTheme" parent="AppTheme">
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
+    <style name="WearTheme" parent="AppTheme">
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+    </style>
+
+
+    <style name="TVTheme" parent="Theme.Leanback">
     </style>
 
 </resources>

@@ -1,57 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
-    <SurfaceView android:id="@+id/video_surface"
+    <com.google.android.exoplayer2.ui.SimpleExoPlayerView
+        android:id="@+id/videoView"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/toolbar"
+        android:layout_centerInParent="true" />
+
+    <RelativeLayout
+        android:layout_alignBottom="@+id/videoView"
+        android:layout_alignStart="@+id/videoView"
+        android:layout_alignEnd="@+id/videoView"
+        android:layout_alignTop="@+id/videoView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/coverArtView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scaleType="fitXY"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/play_circle"
+            android:src="@drawable/ic_play_circle_white_80dp"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/controllers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"/>
+        android:layout_alignBottom="@+id/videoView"
+        android:layout_alignStart="@+id/videoView"
+        android:layout_alignEnd="@+id/videoView"
+        android:layout_alignTop="@+id/videoView"
+        android:visibility="visible"
+        android:background="@drawable/player_bg_gradient_dark" >
 
-    <ImageView android:id="@+id/video_overlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:background="@null"/>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone"
+            android:progressTint="@color/primary"
+            android:thumbTint="@color/primary"/>
 
-    <LinearLayout
-        android:id="@+id/video_controller"
-        android:layout_height="wrap_content"
+        <RelativeLayout
+            android:id="@+id/control_bar"
+            android:layout_width="fill_parent"
+            android:layout_height="45dp"
+            android:layout_alignParentBottom="true" >
+
+            <ImageView
+                android:id="@+id/playPauseImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_av_pause_dark" />
+
+            <TextView
+                android:id="@+id/startText"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_marginStart="5dp"
+                android:layout_toEndOf="@+id/playPauseImageView"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="00:00"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/endText"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="16dp"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="0:00"
+                android:textColor="@color/white" />
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_gravity="center"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_toStartOf="@+id/endText"
+                android:layout_toEndOf="@+id/startText"
+                android:indeterminateTint="@color/primary"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/titleText"
         android:layout_width="fill_parent"
-        android:orientation="horizontal"
-        android:background="@color/video_controller_background"
-        android:visibility="gone"
-        android:layout_alignParentBottom="true" >
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/videoView"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
-        <ImageButton android:id="@+id/video_controller_play"
-            android:src="@drawable/ic_play_light"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:background="@null"
-            android:enabled="false"
-            android:contentDescription="@string/video_controller_play_button_description"/>
+    <TextView
+        android:id="@+id/subtitleText"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/titleText"
+        android:layout_alignEnd="@+id/titleText"
+        android:layout_below="@+id/titleText"
+        android:layout_marginTop="2dp"
+        android:lines="1"
+        android:textSize="15sp" />
 
-        <TextView
-            android:id="@+id/video_controller_current_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/VideoControllerText" />
+    <TextView
+        android:id="@+id/descriptionText"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/titleText"
+        android:layout_alignEnd="@+id/titleText"
+        android:layout_below="@+id/subtitleText"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="10dp"
+        android:fontFamily="sans-serif-light"
+        android:lines="50"
+        android:scrollbars="vertical"
+        android:textSize="15sp" />
 
-        <SeekBar android:id="@+id/video_controller_timeline"
-            style="?android:attr/seekBarStyle"
-            android:layout_width="0px"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:progressBackgroundTint="@color/video_controller_seekbar"
-            android:layout_gravity="center_vertical|center_horizontal" />
-
-        <TextView
-            android:id="@+id/video_controller_duration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/VideoControllerText" />
-
-    </LinearLayout>
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:minHeight="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
 </RelativeLayout>

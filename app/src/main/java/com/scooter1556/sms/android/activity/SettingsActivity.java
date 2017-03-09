@@ -26,28 +26,71 @@ package com.scooter1556.sms.android.activity;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
+import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.fragment.ConnectionFragment;
 import com.scooter1556.sms.android.fragment.SettingsFragment;
 
 public class SettingsActivity extends AppCompatActivity {
 
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            getFragmentManager().beginTransaction().replace(android.R.id.content, new SettingsFragment()).commit();
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(false);
-        }
+    // Toolbar
+    private Toolbar toolbar;
 
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            switch (item.getItemId()) {
-                // Respond to the action bar's Up/Home button
-                case android.R.id.home:
-                    NavUtils.navigateUpFromSameTask(this);
-                    return true;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_settings);
+
+        initialiseToolbar();
+
+        if (findViewById(R.id.container) != null) {
+            if (savedInstanceState != null) {
+                return;
             }
-            return super.onOptionsItemSelected(item);
+
+            getFragmentManager().beginTransaction().replace(R.id.container, new SettingsFragment()).commit();
         }
     }
+
+    protected void initialiseToolbar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        if (toolbar != null) {
+            toolbar.inflateMenu(R.menu.menu_connections);
+            setSupportActionBar(toolbar);
+        }
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        toolbar.setTitle(title);
+    }
+
+    @Override
+    public void setTitle(int titleId) {
+        super.setTitle(titleId);
+        toolbar.setTitle(titleId);
+    }
+}

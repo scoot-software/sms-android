@@ -39,7 +39,7 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.lib.android.domain.MediaElement;
-import com.scooter1556.sms.lib.android.service.RESTService;
+import com.scooter1556.sms.android.service.RESTService;
 
 import org.json.JSONArray;
 import org.json.JSONException;

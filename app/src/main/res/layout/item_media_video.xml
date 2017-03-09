@@ -1,0 +1,54 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/card_media_width"
+    android:layout_height="@dimen/card_media_video_height">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/card_margin"
+        android:elevation="3dp"
+        card_view:cardCornerRadius="@dimen/card_radius">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/card_media_video_image_height"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="false"
+                android:scaleType="fitXY" />
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/image"
+                android:paddingLeft="@dimen/card_media_title_padding"
+                android:paddingRight="@dimen/card_media_title_padding"
+                android:paddingTop="@dimen/card_media_title_padding"
+                android:textColor="@color/media_title"
+                android:textSize="@dimen/card_media_title"
+                android:maxLines="2" />
+
+            <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/title"
+                android:paddingBottom="@dimen/card_media_subtitle_padding_bottom"
+                android:paddingLeft="@dimen/card_media_title_padding"
+                android:paddingRight="@dimen/card_media_title_padding"
+                android:textSize="@dimen/card_media_subtitle"
+                android:singleLine="true" />
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>

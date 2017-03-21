@@ -30,9 +30,9 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.loopj.android.http.*;
 import com.scooter1556.sms.android.utils.URLUtils;
-import com.scooter1556.sms.lib.android.domain.Connection;
-import com.scooter1556.sms.lib.android.domain.Session;
-import com.scooter1556.sms.lib.android.domain.TranscodeProfile;
+import com.scooter1556.sms.android.domain.Connection;
+import com.scooter1556.sms.android.domain.Session;
+import com.scooter1556.sms.android.domain.TranscodeProfile;
 
 import java.util.UUID;
 

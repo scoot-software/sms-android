@@ -33,7 +33,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaElement;
 
 import java.util.List;
 

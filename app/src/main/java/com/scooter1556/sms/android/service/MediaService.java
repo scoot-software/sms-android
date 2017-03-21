@@ -66,10 +66,10 @@ import com.scooter1556.sms.android.utils.AutoUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
 import com.scooter1556.sms.android.utils.ResourceUtils;
 import com.scooter1556.sms.android.utils.TVUtils;
-import com.scooter1556.sms.lib.android.database.ConnectionDatabase;
-import com.scooter1556.sms.lib.android.domain.Connection;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
-import com.scooter1556.sms.lib.android.domain.MediaFolder;
+import com.scooter1556.sms.android.database.ConnectionDatabase;
+import com.scooter1556.sms.android.domain.Connection;
+import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaFolder;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
 import org.json.JSONArray;

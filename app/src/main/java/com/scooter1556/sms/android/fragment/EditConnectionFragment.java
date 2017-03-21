@@ -40,7 +40,7 @@ import android.widget.Toast;
 
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.Connection;
+import com.scooter1556.sms.android.domain.Connection;
 import com.scooter1556.sms.android.service.RESTService;
 
 public class EditConnectionFragment extends Fragment {

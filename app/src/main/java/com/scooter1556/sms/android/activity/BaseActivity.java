@@ -43,8 +43,8 @@ import com.scooter1556.sms.android.fragment.PlaybackControlsFragment;
 import com.scooter1556.sms.android.provider.MediaBrowserProvider;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.NetworkUtils;
-import com.scooter1556.sms.lib.android.database.ConnectionDatabase;
-import com.scooter1556.sms.lib.android.domain.Connection;
+import com.scooter1556.sms.android.database.ConnectionDatabase;
+import com.scooter1556.sms.android.domain.Connection;
 import com.scooter1556.sms.android.service.RESTService;
 
 /**

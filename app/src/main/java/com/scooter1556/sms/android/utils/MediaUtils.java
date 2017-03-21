@@ -31,7 +31,7 @@ import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.common.images.WebImage;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaElement;
 
 import java.util.ArrayList;
 import java.util.List;

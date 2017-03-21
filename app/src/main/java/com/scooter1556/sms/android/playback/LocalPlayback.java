@@ -50,8 +50,8 @@ import com.scooter1556.sms.android.activity.VideoPlayerActivity;
 import com.scooter1556.sms.android.activity.tv.TvPlaybackActivity;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
-import com.scooter1556.sms.lib.android.domain.TranscodeProfile;
+import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.service.RESTService;
 
 import org.json.JSONObject;

@@ -37,7 +37,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
 
 import java.util.List;

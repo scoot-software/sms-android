@@ -39,7 +39,7 @@ import android.widget.ListView;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.PlaylistAdapter;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaElement;
 
 import java.util.ArrayList;
 

@@ -26,7 +26,7 @@ package com.scooter1556.sms.android.playback;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.scooter1556.sms.lib.android.domain.MediaElement;
+import com.scooter1556.sms.android.domain.MediaElement;
 
 import java.util.UUID;
 

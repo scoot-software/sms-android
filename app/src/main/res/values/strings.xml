@@ -145,6 +145,28 @@
     <string name="heading_home">Home</string>
     <string name="heading_tracklist">Tracklist</string>
 
+    <string name="error_media_playback">Unable to play media</string>
+    <string name="error_server">Operation failed with status code: </string>
+    <string name="error_server_not_found">Unable to contact server</string>
+    <string name="error_unauthenticated">Username or Password is incorrect</string>
+    <string name="error_parsing_media">Unable to parse media list</string>
+    <string name="error_loading_media">Unable to load media</string>
+    <string name="error_media_unavailable">No media found</string>
+    <string name="error_unsupported_server_version">Server version unsupported</string>
+    <string name="error_check_connection">Check your connection and try again.</string>
+
+    <string name="notification_please_wait">Please Wait&#8230;</string>
+
+    <string name="connections_url_default">http://</string>
+    <string name="connections_testing">Test Connection</string>
+    <string name="connections_no_name">Enter a name</string>
+    <string name="connections_no_username">Enter a username</string>
+    <string name="connections_no_password">Enter a password</string>
+    <string name="connections_invalid_url">Enter a valid server address</string>
+    <string name="connections_empty">No connections have been added&#8230;</string>
+
+    <string name="media_folder_subtitle">%1$d Files %2$d Directories</string>
+
     <string name="state_loading">Loading</string>
 
     <string name="dialogue_ok">OK</string>

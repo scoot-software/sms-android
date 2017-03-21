@@ -41,8 +41,8 @@ import android.widget.ListView;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.ConnectionListAdapter;
-import com.scooter1556.sms.lib.android.database.ConnectionDatabase;
-import com.scooter1556.sms.lib.android.domain.Connection;
+import com.scooter1556.sms.android.database.ConnectionDatabase;
+import com.scooter1556.sms.android.domain.Connection;
 
 import java.util.List;
 

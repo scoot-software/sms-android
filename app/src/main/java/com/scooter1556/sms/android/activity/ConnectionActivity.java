@@ -39,8 +39,8 @@ import android.view.MenuItem;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.fragment.ConnectionFragment;
 import com.scooter1556.sms.android.fragment.EditConnectionFragment;
-import com.scooter1556.sms.lib.android.database.ConnectionDatabase;
-import com.scooter1556.sms.lib.android.domain.Connection;
+import com.scooter1556.sms.android.database.ConnectionDatabase;
+import com.scooter1556.sms.android.domain.Connection;
 
 public class ConnectionActivity extends AppCompatActivity implements ConnectionFragment.ConnectionListener {
 

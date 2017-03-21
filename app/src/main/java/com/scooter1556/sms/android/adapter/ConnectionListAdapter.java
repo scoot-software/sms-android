@@ -32,7 +32,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.Connection;
+import com.scooter1556.sms.android.domain.Connection;
 
 import java.util.List;
 

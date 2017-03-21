@@ -33,7 +33,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.lib.android.domain.MediaFolder;
+import com.scooter1556.sms.android.domain.MediaFolder;
 
 import java.util.List;
 

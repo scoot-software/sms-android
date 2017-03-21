@@ -1,6 +1,10 @@
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
-.DS_Store
+/.gradle
+/gradle
+/.idea
+/.DS_Store
+/projectFilesBackup
 /build
+local.properties
+gradlew.bat
+gradlew
+*.iml

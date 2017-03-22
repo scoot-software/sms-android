@@ -227,6 +227,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         String currentMediaID = playback.getCurrentMediaId();
 
         playback.stop(false);
+        playback.destroy();
 
         Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
                 " Resume: " + resumePlaying +
@@ -359,7 +360,9 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         Log.d(TAG, "onDestroy() is called");
         stopControllersTimer();
         stopTrickplayTimer();
+
         playback.stop(true);
+        playback.destroy();
 
         // Allow screen to turn off
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

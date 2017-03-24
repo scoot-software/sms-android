@@ -74,11 +74,13 @@ public class SimpleMediaFragment extends BaseFragment {
     private MediaBrowserCompat mediaBrowser;
     private MediaFragmentListener mediaFragmentListener;
 
+    private View view;
     private RecyclerView recyclerView;
     private ComposedAdapter adapter;
     private MediaItemAdapter mediaAdapter;
     private List<MediaBrowserCompat.MediaItem> items;
     OnListItemClickListener clickListener;
+    private int lastFirstVisiblePosition = -1;
 
     private String mediaId;
 
@@ -216,6 +218,9 @@ public class SimpleMediaFragment extends BaseFragment {
                     mediaAdapter.setHasStableIds(true);
                     adapter.addAdapter(mediaAdapter);
                     adapter.notifyDataSetChanged();
+
+                    // Restore scroll position
+                    recyclerView.getLayoutManager().scrollToPosition(lastFirstVisiblePosition);
                 }
 
                 @Override
@@ -275,44 +280,46 @@ public class SimpleMediaFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView()");
 
-        View view = inflater.inflate(R.layout.fragment_simple_media, container, false);
+        if(savedInstanceState == null) {
+            view = inflater.inflate(R.layout.fragment_simple_media, container, false);
 
-        clickListener = new OnListItemClickListener() {
-            @Override
-            public void onItemClicked(MediaBrowserCompat.MediaItem item) {
-                Log.d(TAG, "Item selected: " + item.getMediaId());
-                mediaFragmentListener.onMediaItemSelected(item);
-            }
-        };
+            clickListener = new OnListItemClickListener() {
+                @Override
+                public void onItemClicked(MediaBrowserCompat.MediaItem item) {
+                    Log.d(TAG, "Item selected: " + item.getMediaId());
+                    mediaFragmentListener.onMediaItemSelected(item);
+                }
+            };
 
-        // Initialisation
-        items = new ArrayList<>();
-        adapter = new ComposedAdapter();
-        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
+            // Initialisation
+            items = new ArrayList<>();
+            adapter = new ComposedAdapter();
+            final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
 
-        // Initialise UI
-        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
+            // Initialise UI
+            recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
 
-        recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(
-                new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        int viewWidth = recyclerView.getMeasuredWidth();
-                        float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
-                        int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
-                        lm.setSpanCount(newSpanCount);
-                        lm.requestLayout();
-                    }
-                });
+            recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(
+                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                            int viewWidth = recyclerView.getMeasuredWidth();
+                            float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
+                            int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
+                            lm.setSpanCount(newSpanCount);
+                            lm.requestLayout();
+                        }
+                    });
 
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(lm);
+            recyclerView.setAdapter(adapter);
+            recyclerView.setLayoutManager(lm);
 
-        // Subscribe to relevant media service callbacks
-        mediaBrowser = new MediaBrowserCompat(getActivity(),
-                new ComponentName(getActivity(), MediaService.class),
-                connectionCallback, null);
+            // Subscribe to relevant media service callbacks
+            mediaBrowser = new MediaBrowserCompat(getActivity(),
+                    new ComponentName(getActivity(), MediaService.class),
+                    connectionCallback, null);
+        }
 
         return view;
     }
@@ -333,6 +340,23 @@ public class SimpleMediaFragment extends BaseFragment {
         Log.d(TAG, "onStop()");
 
         mediaBrowser.disconnect();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        Log.d(TAG, "onPause()");
+
+        // Store scroll position
+        lastFirstVisiblePosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d(TAG, "onResume()");
     }
 
     @Override

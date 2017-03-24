@@ -33,7 +33,8 @@
         android:id="@+id/recyclerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fastScrollEnabled="true"
-        android:fastScrollAlwaysVisible="true">
-    </android.support.v7.widget.RecyclerView>
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="true"/>
+
 </LinearLayout>

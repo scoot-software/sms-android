@@ -1,9 +1,9 @@
 package com.scooter1556.sms.android.playback;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -11,15 +11,12 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
 
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Manage the interactions among the container service, the queue manager and the actual playback.
@@ -27,6 +24,8 @@ import java.util.UUID;
 public class PlaybackManager implements Playback.Callback {
 
     private static final String TAG = "PlaybackManager";
+
+    private static final PlaybackManager instance = new PlaybackManager();
 
     private Context ctx;
     private QueueManager queueManager;
@@ -36,13 +35,25 @@ public class PlaybackManager implements Playback.Callback {
 
     private boolean randomMode = false;
 
-    public PlaybackManager(Context ctx, PlaybackServiceCallback serviceCallback, QueueManager queueManager, Playback playback) {
+    public PlaybackManager() {}
+
+    public static PlaybackManager getInstance() {
+        return instance;
+    }
+
+    public void initialise(Context ctx, PlaybackServiceCallback serviceCallback, QueueManager queueManager) {
         this.ctx = ctx;
         this.serviceCallback = serviceCallback;
         this.queueManager = queueManager;
         this.mediaSessionCallback = new MediaSessionCallback();
+    }
+
+    public void setPlayback(Playback playback) {
+        if(this.playback != null) {
+            this.playback.destroy();
+        }
+
         this.playback = playback;
-        this.playback.setCallback(this);
     }
 
     public Playback getPlayback() {
@@ -61,10 +72,42 @@ public class PlaybackManager implements Playback.Callback {
 
         MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
 
-        if (currentMedia != null) {
-            serviceCallback.onPlaybackStart();
-            playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+        if (currentMedia == null || currentMedia.getDescription() == null) {
+            return;
         }
+
+        // Check current playback
+        if(MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
+            if(playback instanceof VideoPlaybackActivity) {
+                playback.destroy();
+                playback = null;
+            }
+
+            if(playback == null) {
+                playback = new AudioPlayback(ctx);
+                playback.setCallback(this);
+            }
+
+            playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+
+        } else if(MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+            if(playback instanceof AudioPlayback) {
+                playback.destroy();
+                playback = null;
+            }
+
+            if(playback == null) {
+                // Start video playback activity
+                Intent intent = new Intent(ctx, VideoPlaybackActivity.class)
+                        .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, currentMedia);
+                ctx.startActivity(intent);
+            } else {
+                playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+            }
+        }
+
+        // Notify service callback
+        serviceCallback.onPlaybackStart();
     }
 
     /**
@@ -97,7 +140,7 @@ public class PlaybackManager implements Playback.Callback {
      * Handle a request to pause media
      */
     public void handlePauseRequest() {
-        if (playback.isPlaying()) {
+        if (playback != null && playback.isPlaying()) {
             playback.pause();
             serviceCallback.onPlaybackStop();
         }
@@ -107,9 +150,12 @@ public class PlaybackManager implements Playback.Callback {
      * Handle a request to stop media
      */
     public void handleStopRequest(String error) {
-        playback.stop(true);
+        if(playback != null) {
+            playback.stop(true);
+            updatePlaybackState(error);
+        }
+
         serviceCallback.onPlaybackStop();
-        updatePlaybackState(error);
     }
 
 
@@ -159,7 +205,7 @@ public class PlaybackManager implements Playback.Callback {
                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
 
-        if (playback.isPlaying()) {
+        if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
         } else {
             actions |= PlaybackStateCompat.ACTION_PLAY;
@@ -326,13 +372,8 @@ public class PlaybackManager implements Playback.Callback {
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             Log.d(TAG, "onPlayFromMediaId(" + mediaId + ")");
 
-            if(MediaUtils.getMediaTypeFromID(mediaId).equals(MediaElement.MediaElementType.AUDIO)) {
-                queueManager.setQueueFromMediaId(mediaId);
-                randomMode = false;
-            } else if(MediaUtils.getMediaTypeFromID(mediaId).equals(MediaElement.MediaElementType.VIDEO)) {
-                serviceCallback.onPlaybackStart();
-                playback.play(mediaId, !randomMode);
-            }
+            queueManager.setQueueFromMediaId(mediaId);
+            randomMode = false;
         }
 
         /**

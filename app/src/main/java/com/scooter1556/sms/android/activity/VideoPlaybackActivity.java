@@ -3,13 +3,13 @@ package com.scooter1556.sms.android.activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -27,6 +27,12 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.gms.cast.CastDevice;
@@ -35,18 +41,21 @@ import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.playback.AudioPlayback;
 import com.scooter1556.sms.android.playback.CastPlayback;
 import com.scooter1556.sms.android.playback.Playback;
+import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.InterfaceUtils;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
 
-public class VideoPlayerActivity extends AppCompatActivity implements Playback.Callback {
+public class VideoPlaybackActivity extends BaseActivity implements Playback, AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
     private static final String TAG = "VideoPlayerActivity";
 
     private SimpleExoPlayerView videoView;
@@ -67,11 +76,16 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
     private Timer controllersTimer;
     private final Handler handler = new Handler();
     private final float aspectRatio = 72f / 128;
-    private MediaBrowserCompat.MediaItem currentMedia;
+    private MediaSessionCompat.QueueItem currentMedia;
     private boolean controllersVisible;
     private int duration;
 
-    private Playback playback;
+    private volatile UUID currentJobId;
+    private UUID sessionId;
+    private int playbackState;
+
+    private Callback callback;
+    private PlaybackManager playbackManager;
 
     private CastContext castContext;
     private CastSession castSession;
@@ -111,22 +125,20 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         // Setup UI for orientation
         updateConfiguration(getResources().getConfiguration());
 
-        setupCastListener();
         castContext = CastContext.getSharedInstance(this);
         castSession = castContext.getSessionManager().getCurrentCastSession();
 
-        if (castSession != null && castSession.isConnected()) {
-            playback = new CastPlayback(this);
-        } else {
-            playback = new AudioPlayback(this);
-        }
+        // Set playback instance in our playback manager
+        playbackManager = PlaybackManager.getInstance();
+        playbackManager.setPlayback(this);
 
-        playback.setCallback(this);
+        // Set playback manager callback
+        this.setCallback(playbackManager);
 
         playCircle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playback.play(currentMedia.getMediaId(), true);
+                play(currentMedia.getDescription().getMediaId(), true);
             }
         });
 
@@ -134,152 +146,6 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
 
         if (titleView != null) {
             updateMetadata(true);
-        }
-    }
-
-    private void setupCastListener() {
-        sessionManagerListener = new SessionManagerListener<CastSession>() {
-
-            @Override
-            public void onSessionEnded(CastSession session, int error) {
-                Log.d(TAG, "onSessionEnded()");
-                // Setup new playback
-                switchToPlayback(new AudioPlayback(getApplicationContext()), true);
-
-                updatePlayButton();
-                invalidateOptionsMenu();
-            }
-
-            @Override
-            public void onSessionResumed(CastSession session, boolean wasSuspended) {
-                Log.d(TAG, "onSessionResumed()");
-                castSession = castSession;
-
-                if(!(playback instanceof CastPlayback)) {
-                    Playback playback = new CastPlayback(getApplicationContext());
-                    switchToPlayback(playback, !wasSuspended);
-                }
-            }
-
-            @Override
-            public void onSessionResumeFailed(CastSession session, int error) {
-                Log.d(TAG, "onSessionResumeFailed()");
-                onApplicationDisconnected();
-            }
-
-            @Override
-            public void onSessionStarted(CastSession session, String sessionId) {
-                Log.d(TAG, "onSessionStarted()");
-                castSession = castSession;
-
-                // Check device is capable of playing video
-                if(castSession.getCastDevice().hasCapability(CastDevice.CAPABILITY_VIDEO_OUT)) {
-                    // Setup new playback
-                    switchToPlayback(new CastPlayback(getApplicationContext()), true);
-
-                    updatePlayButton();
-                    invalidateOptionsMenu();
-                }
-            }
-
-            @Override
-            public void onSessionStartFailed(CastSession session, int error) {
-                Log.d(TAG, "onSessionStartFailed()");
-                onApplicationDisconnected();
-            }
-
-            @Override
-            public void onSessionStarting(CastSession session) {
-                Log.d(TAG, "onSessionStarting()");
-            }
-
-            @Override
-            public void onSessionEnding(CastSession session) {
-                Log.d(TAG, "onSessionEnding()");
-                playback.updateLastKnownStreamPosition();
-            }
-
-            @Override
-            public void onSessionResuming(CastSession session, String sessionId) {
-                Log.d(TAG, "onSessionResuming()");
-            }
-
-            @Override
-            public void onSessionSuspended(CastSession session, int reason) {
-                Log.d(TAG, "onSessionSuspended()");
-            }
-
-            private void onApplicationDisconnected() {
-                updatePlayButton();
-                invalidateOptionsMenu();
-            }
-        };
-    }
-
-    /**
-     * Switch to a different Playback instance, maintaining all playback state, if possible.
-     */
-    public void switchToPlayback(Playback newPlayback, boolean resumePlaying) {
-        // Suspend the current playback
-        int oldState = playback.getState();
-        long pos = playback.getCurrentStreamPosition();
-        String currentMediaID = playback.getCurrentMediaId();
-
-        playback.stop(false);
-        playback.destroy();
-
-        Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
-                " Resume: " + resumePlaying +
-                " State: " + oldState +
-                " Position: " + pos +
-                " Media ID: " + currentMediaID +
-                ")");
-
-        // End old job if needed
-        if(playback.getCurrentJobId() != null) {
-            RESTService.getInstance().endJob(playback.getCurrentJobId());
-        }
-
-        // End session if needed
-        if(playback.getSessionId() != null) {
-            RESTService.getInstance().endSession(playback.getSessionId());
-        }
-
-        // Setup new playback
-        newPlayback.setCallback(this);
-        newPlayback.setCurrentStreamPosition(pos < 0 ? 0 : pos);
-        newPlayback.setCurrentMediaId(currentMediaID);
-        newPlayback.start();
-
-        // Finally swap the instance
-        playback = newPlayback;
-
-
-        switch (oldState) {
-
-            case PlaybackStateCompat.STATE_BUFFERING:
-
-            case PlaybackStateCompat.STATE_CONNECTING:
-
-            case PlaybackStateCompat.STATE_PAUSED:
-                playback.pause();
-                break;
-
-            case PlaybackStateCompat.STATE_PLAYING:
-                if (resumePlaying && currentMedia != null) {
-                    playback.play(currentMedia.getDescription().getMediaId(), true);
-                } else if (!resumePlaying) {
-                    playback.pause();
-                } else {
-                    playback.stop(true);
-                }
-                break;
-
-            case PlaybackStateCompat.STATE_NONE:
-                break;
-
-            default:
-                Log.d(TAG, "Default called. Old state is " + oldState);
         }
     }
 
@@ -328,7 +194,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause() was called");
 
@@ -341,7 +207,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         }
         // since we are playing locally, we need to stop the playback of
         // video (if user is not watching, pause it!)
-        playback.pause();
+        pause();
         updatePlayButton();
 
         castContext.getSessionManager().removeSessionManagerListener(
@@ -360,8 +226,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         stopControllersTimer();
         stopTrickplayTimer();
 
-        playback.stop(true);
-        playback.destroy();
+        stop(true);
+        destroy();
 
         // Allow screen to turn off
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -376,7 +242,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         Log.d(TAG, "onResume() was called");
         castContext.getSessionManager().addSessionManagerListener(sessionManagerListener, CastSession.class);
 
@@ -390,6 +256,215 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
     @Override
     public boolean dispatchKeyEvent(@NonNull KeyEvent event) {
         return castContext.onDispatchVolumeKeyEventBeforeJellyBean(event) || super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void stop(boolean notifyListeners) {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
+    @Override
+    public void setState(int state) {
+
+    }
+
+    @Override
+    public int getState() {
+        return 0;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return false;
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return false;
+    }
+
+    @Override
+    public long getCurrentStreamPosition() {
+        return 0;
+    }
+
+    @Override
+    public void setCurrentStreamPosition(long pos) {
+
+    }
+
+    @Override
+    public void updateLastKnownStreamPosition() {
+
+    }
+
+    @Override
+    public void play(String mediaId, boolean update) {
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void seekTo(long position) {
+
+    }
+
+    @Override
+    public void setCurrentMediaId(String mediaId) {
+
+    }
+
+    @Override
+    public String getCurrentMediaId() {
+        return null;
+    }
+
+    @Override
+    public void setSessionId(UUID sessionId) {
+
+    }
+
+    @Override
+    public UUID getSessionId() {
+        return null;
+    }
+
+    @Override
+    public void setCurrentJobId(UUID jobId) {
+
+    }
+
+    @Override
+    public UUID getCurrentJobId() {
+        return null;
+    }
+
+    @Override
+    public MediaElement getCurrentMediaElement() {
+        return null;
+    }
+
+    @Override
+    public SimpleExoPlayer getMediaPlayer() {
+        return null;
+    }
+
+    @Override
+    public void setCallback(Callback callback) {
+
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+
+    }
+
+    @Override
+    public void onTimelineChanged(Timeline timeline, Object manifest) {
+
+    }
+
+    @Override
+    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+
+    }
+
+    @Override
+    public void onLoadingChanged(boolean isLoading) {
+
+    }
+
+    @Override
+    public void onPlayerStateChanged(boolean playWhenReady, int state) {
+        switch(state) {
+            case ExoPlayer.STATE_BUFFERING:
+                Log.d(TAG, "onPlayerStateChanged(BUFFERING)");
+
+                videoView.setPlayer(getMediaPlayer());
+                videoView.setUseController(false);
+                videoView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+                // Update state
+                playbackState = PlaybackStateCompat.STATE_BUFFERING;
+                break;
+
+            case ExoPlayer.STATE_ENDED:
+                Log.d(TAG, "onPlayerStateChanged(ENDED)");
+
+                // End job if required
+                if (currentJobId != null) {
+                    Log.d(TAG, "Ending job with id " + currentJobId);
+                    RESTService.getInstance().endJob(currentJobId);
+                    currentJobId = null;
+                }
+
+                // The media player finished playing the current item, so we go ahead and start the next.
+                if (callback != null) {
+                    callback.onCompletion();
+                }
+
+                // Allow screen to turn off
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            case ExoPlayer.STATE_IDLE:
+                Log.d(TAG, "onPlayerStateChanged(IDLE)");
+
+                // Allow screen to turn off
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+                break;
+
+            case ExoPlayer.STATE_READY:
+                Log.d(TAG, "onPlayerStateChanged(READY)");
+
+                if (playWhenReady) {
+                    startControllersTimer();
+                    restartTrickplayTimer();
+                    updatePlayButton();
+                    duration = getCurrentMediaElement().getDuration();
+                    endText.setText(DateUtils.formatElapsedTime(duration));
+                    seekbar.setMax(duration);
+
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+                    playbackState = PlaybackStateCompat.STATE_PLAYING;
+                }
+
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onPlayerError(ExoPlaybackException error) {
+        updatePlayButton();
+        InterfaceUtils.showErrorDialog(VideoPlaybackActivity.this, error.toString());
+
+        // Allow screen to turn off
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public void onPositionDiscontinuity() {
+
     }
 
     private class HideControllersTask extends TimerTask {
@@ -415,7 +490,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
 
                 @Override
                 public void run() {
-                    int currentPos = (int) (playback.getCurrentStreamPosition() * 0.001);
+                    int currentPos = (int) (getCurrentStreamPosition() * 0.001);
                     updateSeekbar(currentPos, duration);
                 }
             });
@@ -444,8 +519,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
             public void onStopTrackingTouch(SeekBar seekBar) {
                 Log.d(TAG, "onStopTrackingTouch()");
 
-                if (playback.isPlaying()) {
-                    playback.seekTo(seekBar.getProgress() * 1000);
+                if (isPlaying()) {
+                    seekTo(seekBar.getProgress() * 1000);
                 }
 
                 startControllersTimer();
@@ -471,91 +546,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
             public void onClick(View v) {
                 Log.d(TAG, "onClick(" + v.toString() + ")");
 
-                if(playback.isPlaying()) {
-                    playback.pause();
+                if(isPlaying()) {
+                    pause();
                 } else {
-                    playback.play(currentMedia.getMediaId(), true);
+                    play(currentMedia.getDescription().getMediaId(), true);
                 }
             }
         });
-    }
-
-    @Override
-    public void onCompletion() {
-        Log.d(TAG, "onCompletion()");
-
-        // Allow screen to turn off
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-    }
-
-    @Override
-    public void onPlaybackStatusChanged(int state) {
-        String log = "onPlaybackStatusChanged(): ";
-
-        switch (state) {
-            case PlaybackStateCompat.STATE_BUFFERING:
-                log += "BUFFERING";
-
-                videoView.setPlayer(playback.getMediaPlayer());
-                videoView.setUseController(false);
-                videoView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
-
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                break;
-
-            case PlaybackStateCompat.STATE_STOPPED:
-                log += "STOPPED";
-
-                stopTrickplayTimer();
-                updatePlayButton();
-
-                // Allow screen to turn off
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                break;
-
-            case PlaybackStateCompat.STATE_NONE:
-                log += "NONE";
-
-                // Allow screen to turn off
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                break;
-
-            case PlaybackStateCompat.STATE_PLAYING:
-                log += "PLAYING";
-
-                startControllersTimer();
-                restartTrickplayTimer();
-                updatePlayButton();
-                duration = playback.getCurrentMediaElement().getDuration();
-                endText.setText(DateUtils.formatElapsedTime(duration));
-                seekbar.setMax(duration);
-
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                break;
-
-            default:
-                log += "DEFAULT";
-                break;
-        }
-    }
-
-    @Override
-    public void onError(String error) {
-        Log.d(TAG, "onError(" + error + ")");
-
-        updatePlayButton();
-        InterfaceUtils.showErrorDialog(VideoPlayerActivity.this, error);
-
-        // Allow screen to turn off
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-    }
-
-    @Override
-    public void setCurrentMediaID(String mediaID) {
-
     }
 
     private void updateSeekbar(int position, int duration) {
@@ -572,7 +569,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements Playback.C
         controllers.setVisibility(isConnected ? View.GONE : View.VISIBLE);
         playCircle.setVisibility(isConnected ? View.GONE : View.VISIBLE);
 
-        switch (playback.getState()) {
+        switch (getState()) {
 
             case PlaybackStateCompat.STATE_PLAYING:
                 log += "PLAYING";

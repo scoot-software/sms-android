@@ -24,7 +24,9 @@
 package com.scooter1556.sms.android.utils;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
 import com.google.android.gms.cast.MediaMetadata;
@@ -211,5 +213,73 @@ public class MediaUtils {
         } else {
             return -1;
         }
+    }
+
+    public static String getSubtitle(@NonNull MediaElement element) {
+        switch(element.getType()) {
+
+            case MediaElement.MediaElementType.AUDIO:
+                if (element.getArtist() == null) {
+                    return "";
+                } else {
+                    return element.getArtist();
+                }
+
+            case MediaElement.MediaElementType.VIDEO:
+                if (element.getCollection() == null) {
+                    return "";
+                } else {
+                    return element.getCollection();
+                }
+
+            case MediaElement.MediaElementType.DIRECTORY:
+                if (element.getType() == MediaElement.DirectoryMediaType.AUDIO) {
+                    if (element.getArtist() == null) {
+                        return "";
+                    } else {
+                        return element.getArtist();
+                    }
+                } else if (element.getDirectoryType() == MediaElement.DirectoryMediaType.VIDEO) {
+                    if (element.getCollection() == null) {
+                        return "";
+                    } else {
+                        return element.getCollection();
+                    }
+                } else {
+                    return "";
+                }
+
+            default:
+                return "";
+
+        }
+    }
+
+    public static MediaDescriptionCompat getMediaDescription(@NonNull MediaElement element) {
+        String mediaId = getMediaIDFromMediaElement(element);
+
+        if(mediaId == null) { return null; }
+
+        Bundle extras = new Bundle();
+        if(element.getYear() != null) { extras.putShort("Year", element.getYear()); }
+        if(element.getDuration() != null) { extras.putInt("Duration", element.getDuration()); }
+        if(element.getTrackNumber() != null) { extras.putShort("TrackNumber", element.getTrackNumber()); }
+        if(element.getDiscNumber() != null) { extras.putShort("DiscNumber", element.getDiscNumber()); }
+        if(element.getDiscSubtitle() != null) { extras.putString("DiscSubtitle", element.getDiscSubtitle()); }
+        if(element.getGenre() != null) { extras.putString("Genre", element.getGenre()); }
+        if(element.getRating() != null) { extras.putFloat("Rating", element.getRating()); }
+        if(element.getCertificate() != null) { extras.putString("Certificate", element.getCertificate()); }
+        if(element.getTagline() != null) { extras.putString("Tagline", element.getTagline()); }
+
+        MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
+                .setMediaId(mediaId)
+                .setTitle(element.getTitle() == null ? "" : element.getTitle())
+                .setSubtitle(getSubtitle(element))
+                .setDescription(element.getDescription() == null ? "" : element.getDescription())
+                .setExtras(extras)
+                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover/200"))
+                .build();
+
+        return description;
     }
 }

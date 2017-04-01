@@ -6,13 +6,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
-import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -29,16 +27,12 @@ import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.source.dash.DashMediaSource;
-import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -46,8 +40,6 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
-import com.scooter1556.sms.android.activity.VideoPlayerActivity;
-import com.scooter1556.sms.android.activity.tv.TvPlaybackActivity;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
@@ -64,17 +56,17 @@ import cz.msebera.android.httpclient.Header;
 /**
  * A class that implements local media playback
  */
-public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
+public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
 
-    private static final String TAG = "LocalPlayback";
+    private static final String TAG = "AudioPlayback";
 
     private static final String CLIENT_ID = "android";
     public static final String USER_AGENT = "SMSAndroidPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
     static final String FORMAT = "hls";
-    static final String SUPPORTED_FILES = "mkv,webm,mp3,m4a,mp4,oga,ogg,wav";
-    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis,pcm";
+    static final String SUPPORTED_FILES = "mp3,m4a,mp4,oga,ogg,wav";
+    static final String SUPPORTED_CODECS = "aac,mp3,vorbis,pcm";
     static final String MCH_CODECS = "ac3";
 
     static final int MAX_SAMPLE_RATE = 48000;
@@ -109,8 +101,6 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     private final AudioManager audioManager;
 
     private SimpleExoPlayer mediaPlayer;
-    private DataSource.Factory mediaDataSourceFactory;
-    private DefaultTrackSelector trackSelector;
 
     private final IntentFilter audioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
@@ -130,7 +120,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
     };
 
-    public LocalPlayback(Context context) {
+    public AudioPlayback(Context context) {
         this.context = context;
         this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         this.playbackState = PlaybackStateCompat.STATE_NONE;
@@ -530,7 +520,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             }
         }
 
-        if (callback != null && oldState != playbackState) {
+        if (callback != null) {
             callback.onPlaybackStatusChanged(playbackState);
         }
 

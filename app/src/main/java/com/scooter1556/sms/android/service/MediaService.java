@@ -57,8 +57,8 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.NowPlayingActivity;
 import com.scooter1556.sms.android.manager.MediaNotificationManager;
+import com.scooter1556.sms.android.playback.AudioPlayback;
 import com.scooter1556.sms.android.playback.CastPlayback;
-import com.scooter1556.sms.android.playback.LocalPlayback;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.playback.QueueManager;
@@ -123,7 +123,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
     // REST Client
     RESTService restService = null;
-    UUID sessionId = null;
 
     private final BroadcastReceiver connectivityChangeReceiver = new BroadcastReceiver() {
         @Override
@@ -197,8 +196,9 @@ public class MediaService extends MediaBrowserServiceCompat
                     }
                 });
 
-        LocalPlayback playback = new LocalPlayback(this);
-        playbackManager = new PlaybackManager(getApplicationContext(), this, queueManager, playback);
+        // Initialise playback manager
+        playbackManager = PlaybackManager.getInstance();
+        playbackManager.initialise(getApplicationContext(), this, queueManager);
 
         // Start a new Media Session
         mediaSession = new MediaSessionCompat(this, MediaService.class.getSimpleName());
@@ -215,8 +215,6 @@ public class MediaService extends MediaBrowserServiceCompat
         mediaSession.setExtras(mediaSessionExtras);
 
         setSessionToken(mediaSession.getSessionToken());
-
-        playbackManager.updatePlaybackState(null);
 
         try {
             mediaNotificationManager = new MediaNotificationManager(this);
@@ -382,7 +380,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
             mediaSessionExtras.remove(EXTRA_CONNECTED_CAST);
             mediaSession.setExtras(mediaSessionExtras);
-            Playback playback = new LocalPlayback(MediaService.this);
+            Playback playback = new AudioPlayback(MediaService.this);
             mediaRouter.setMediaSessionCompat(null);
             playbackManager.switchToPlayback(playback, true);
         }
@@ -434,8 +432,9 @@ public class MediaService extends MediaBrowserServiceCompat
         public void onSessionEnding(CastSession session) {
             Log.d(TAG, "Cast: onSessionEnding()");
 
-            // This is our final chance to update the underlying stream position
-            playbackManager.getPlayback().updateLastKnownStreamPosition();
+            // This is our final chance to update the current stream position
+            long pos = session.getRemoteMediaClient().getApproximateStreamPosition();
+            playbackManager.getPlayback().setCurrentStreamPosition(pos);
         }
 
         @Override

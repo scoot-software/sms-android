@@ -90,14 +90,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            if(MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
-                // Start video playback
-                Intent intent = new Intent(BrowseActivity.this, VideoPlayerActivity.class)
-                        .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, item);
-                startActivityForResult(intent, RESULT_CODE_BROWSE);
-            } else {
-                getSupportMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
-            }
+            getSupportMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             SimpleMediaFragment fragment = SimpleMediaFragment.newInstance(item.getMediaId());
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

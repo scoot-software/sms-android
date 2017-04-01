@@ -151,16 +151,9 @@ public class QueueManager {
                     throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
                 }
 
-                String mediaId = MediaUtils.getMediaIDFromMediaElement(element);
+                MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
-                if(mediaId != null) {
-                    MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
-                            .setMediaId(mediaId)
-                            .setTitle(element.getTitle())
-                            .setSubtitle(element.getArtist())
-                            .setDescription(element.getTrackNumber().toString())
-                            .build();
-
+                if(description != null) {
                     List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
                     queue.add(new MediaSessionCompat.QueueItem(description, elementId));
                 }
@@ -183,16 +176,13 @@ public class QueueManager {
                     try {
                         MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
 
-                        String mediaId = MediaUtils.getMediaIDFromMediaElement(element);
+                        if(element == null) {
+                            throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                        }
 
-                        if(mediaId != null) {
-                            MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
-                                    .setMediaId(mediaId)
-                                    .setTitle(element.getTitle())
-                                    .setSubtitle(element.getArtist())
-                                    .setDescription(element.getTrackNumber().toString())
-                                    .build();
+                        MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
+                        if(description != null) {
                             queue.add(new MediaSessionCompat.QueueItem(description, elementId));
                         }
                     } catch (JSONException e) {

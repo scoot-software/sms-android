@@ -50,6 +50,7 @@ public class PlaybackManager implements Playback.Callback {
 
     public void setPlayback(Playback playback) {
         if(this.playback != null) {
+            this.playback.stop(true);
             this.playback.destroy();
         }
 
@@ -252,12 +253,14 @@ public class PlaybackManager implements Playback.Callback {
      */
     public void switchToPlayback(Playback newPlayback, boolean resumePlaying) {
         // Suspend the current playback
-        int oldState = playback.getState();
-        long pos = playback.getCurrentStreamPosition();
-        String currentMediaID = playback.getCurrentMediaId();
+        int oldState = playback == null ? PlaybackStateCompat.STATE_NONE : playback.getState();
+        long pos = playback == null ? 0 : playback.getCurrentStreamPosition();
+        String currentMediaID = playback == null ? "" : playback.getCurrentMediaId();
 
-        playback.stop(false);
-        playback.destroy();
+        if(playback != null) {
+            playback.stop(false);
+            playback.destroy();
+        }
 
         Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
                 " Resume: " + resumePlaying +

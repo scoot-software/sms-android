@@ -280,46 +280,44 @@ public class SimpleMediaFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView()");
 
-        if(savedInstanceState == null) {
-            view = inflater.inflate(R.layout.fragment_simple_media, container, false);
+        view = inflater.inflate(R.layout.fragment_simple_media, container, false);
 
-            clickListener = new OnListItemClickListener() {
-                @Override
-                public void onItemClicked(MediaBrowserCompat.MediaItem item) {
-                    Log.d(TAG, "Item selected: " + item.getMediaId());
-                    mediaFragmentListener.onMediaItemSelected(item);
-                }
-            };
+        clickListener = new OnListItemClickListener() {
+            @Override
+            public void onItemClicked(MediaBrowserCompat.MediaItem item) {
+                Log.d(TAG, "Item selected: " + item.getMediaId());
+                mediaFragmentListener.onMediaItemSelected(item);
+            }
+        };
 
-            // Initialisation
-            items = new ArrayList<>();
-            adapter = new ComposedAdapter();
-            final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
+        // Initialisation
+        items = new ArrayList<>();
+        adapter = new ComposedAdapter();
+        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
 
-            // Initialise UI
-            recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
+        // Initialise UI
+        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
 
-            recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(
-                    new ViewTreeObserver.OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                            int viewWidth = recyclerView.getMeasuredWidth();
-                            float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
-                            int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
-                            lm.setSpanCount(newSpanCount);
-                            lm.requestLayout();
-                        }
-                    });
+        recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        int viewWidth = recyclerView.getMeasuredWidth();
+                        float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
+                        int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
+                        lm.setSpanCount(newSpanCount);
+                        lm.requestLayout();
+                    }
+                });
 
-            recyclerView.setAdapter(adapter);
-            recyclerView.setLayoutManager(lm);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(lm);
 
-            // Subscribe to relevant media service callbacks
-            mediaBrowser = new MediaBrowserCompat(getActivity(),
-                    new ComponentName(getActivity(), MediaService.class),
-                    connectionCallback, null);
-        }
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
 
         return view;
     }
@@ -339,7 +337,9 @@ public class SimpleMediaFragment extends BaseFragment {
 
         Log.d(TAG, "onStop()");
 
-        mediaBrowser.disconnect();
+        if(mediaBrowser.isConnected()) {
+            mediaBrowser.disconnect();
+        }
     }
 
     @Override

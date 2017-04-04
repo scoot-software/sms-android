@@ -85,6 +85,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import cz.msebera.android.httpclient.Header;
+
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
 
 public class VideoPlaybackActivity extends AppCompatActivity implements Playback, ExoPlayer.EventListener {
@@ -597,6 +599,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
                 if (playWhenReady) {
+                    playbackState = PlaybackStateCompat.STATE_PLAYING;
+
                     startControllersTimer();
                     restartTrickplayTimer();
                     updatePlayButton();
@@ -605,8 +609,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
                     seekbar.setMax(duration);
 
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                    playbackState = PlaybackStateCompat.STATE_PLAYING;
                 }
 
                 break;
@@ -899,6 +901,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
 
             @Override
             public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                error("Error initialising stream", null);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String error, Throwable throwable) {
                 error("Error initialising stream", null);
             }
         });

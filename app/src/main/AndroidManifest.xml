@@ -151,12 +151,13 @@
 
         <activity
             android:name=".activity.VideoPlaybackActivity"
-            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|uiMode"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
-            android:launchMode="singleTask">
+            android:theme="@style/VideoPlayerTheme" >
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="com.google.android.exoplayer.demo.action.VIEW"/>
             </intent-filter>
         </activity>
 

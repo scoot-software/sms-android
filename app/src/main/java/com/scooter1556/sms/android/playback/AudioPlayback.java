@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
@@ -410,7 +411,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
                     MediaSource sampleSource;
 
-                    if(profile.getType() == TranscodeProfile.StreamType.ADAPTIVE) {
+                    if(profile.getType() == TranscodeProfile.StreamType.TRANSCODE) {
                         sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
                     } else {
                         sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);
@@ -630,6 +631,11 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
     @Override
     public void onPositionDiscontinuity() {
+
+    }
+
+    @Override
+    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
 
     }
 

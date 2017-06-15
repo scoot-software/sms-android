@@ -154,6 +154,8 @@
     <string name="error_media_unavailable">No media found</string>
     <string name="error_unsupported_server_version">Server version unsupported</string>
     <string name="error_check_connection">Check your connection and try again.</string>
+    <string name="error_unsupported_video">Media includes video tracks, but none are playable by this device</string>
+    <string name="error_unsupported_audio">Media includes audio tracks, but none are playable by this device</string>
 
     <string name="notification_please_wait">Please Wait&#8230;</string>
 
@@ -171,6 +173,15 @@
 
     <string name="dialogue_ok">OK</string>
     <string name="dialogue_error">Error</string>
+
+    <string name="selection_disabled">Disabled</string>
+    <string name="selection_default">Default</string>
+    <string name="selection_default_none">Default (None)</string>
+    <string name="enable_random_adaptation">Enable random adaptation</string>
+
+    <string name="video">Video</string>
+    <string name="audio">Audio</string>
+    <string name="text">Text</string>
 
     <string-array
         name="preferences_audio_quality_names">

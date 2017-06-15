@@ -17,7 +17,11 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -34,6 +38,7 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
@@ -54,6 +59,7 @@ import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.InterfaceUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
+import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import org.json.JSONObject;
 
@@ -64,7 +70,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
 
-public class VideoPlaybackActivity extends AppCompatActivity implements Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
+public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
     private static final String TAG = "VideoPlaybackActivity";
 
     private static final String CLIENT_ID = "android";
@@ -73,12 +79,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
 
     static final String FORMAT = "hls";
     static final String SUPPORTED_FILES = "mkv,webm,mp4";
-    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis,ac3";
+    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
     static final String MCH_CODECS = "ac3";
 
     static final int MAX_SAMPLE_RATE = 48000;
 
     private SimpleExoPlayerView videoView;
+    private LinearLayout settingsRootView;
 
     private MediaSessionCompat.QueueItem currentMedia;
 
@@ -96,6 +103,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
     private PlaybackManager playbackManager;
 
     private SimpleExoPlayer mediaPlayer;
+    private DefaultTrackSelector trackSelector;
+    private TrackSelectionUtils trackSelectionUtils;
+    private TrackGroupArray lastSeenTrackGroupArray;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,6 +114,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_video_player);
+
+        settingsRootView = (LinearLayout) findViewById(R.id.settingsRoot);
 
         videoView = (SimpleExoPlayerView) findViewById(R.id.videoView);
         videoView.setControllerVisibilityListener(this);
@@ -386,7 +398,20 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+        updateButtonVisibilities();
 
+        if (trackGroups != lastSeenTrackGroupArray) {
+            MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+            if (mappedTrackInfo != null) {
+                if (mappedTrackInfo.getTrackTypeRendererSupport(C.TRACK_TYPE_VIDEO) == MappingTrackSelector.MappedTrackInfo.RENDERER_SUPPORT_UNSUPPORTED_TRACKS) {
+                    Toast.makeText(getApplicationContext(), R.string.error_unsupported_video, Toast.LENGTH_LONG).show();
+                }
+                if (mappedTrackInfo.getTrackTypeRendererSupport(C.TRACK_TYPE_AUDIO) == MappingTrackSelector.MappedTrackInfo.RENDERER_SUPPORT_UNSUPPORTED_TRACKS) {
+                    Toast.makeText(getApplicationContext(), R.string.error_unsupported_audio, Toast.LENGTH_LONG).show();
+                }
+            }
+            lastSeenTrackGroupArray = trackGroups;
+        }
     }
 
     @Override
@@ -480,6 +505,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
             default:
                 break;
         }
+
+        updateButtonVisibilities();
     }
 
     @Override
@@ -509,6 +536,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
             int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
             decorView.setSystemUiVisibility(uiOptions);
         }
+
+        settingsRootView.setVisibility(visibility);
     }
 
     /**
@@ -523,6 +552,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
         if (releaseMediaPlayer && mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
+            trackSelector = null;
+            trackSelectionUtils = null;
         }
 
         // End job if required
@@ -616,6 +647,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
 
                     mediaPlayer.prepare(sampleSource);
 
+                    updateButtonVisibilities();
+
                     if (callback != null) {
                         callback.onPlaybackStatusChanged(playbackState);
                     }
@@ -647,10 +680,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
     public void createMediaPlayerIfRequired() {
         Log.d(TAG, "createMediaPlayerIfRequired()");
 
-        TrackSelection.Factory videoTrackSelectionFactory =
-                new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
-        TrackSelector trackSelector =
-                new DefaultTrackSelector(videoTrackSelectionFactory);
+        TrackSelection.Factory adaptiveTrackSelectionFactory = new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
+        trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
+        trackSelectionUtils = new TrackSelectionUtils(trackSelector, adaptiveTrackSelectionFactory);
+        lastSeenTrackGroupArray = null;
 
         LoadControl loadControl = new DefaultLoadControl();
 
@@ -662,5 +695,62 @@ public class VideoPlaybackActivity extends AppCompatActivity implements Playback
         // Create player
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
         mediaPlayer.addListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getParent() == settingsRootView) {
+            MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+
+            if (mappedTrackInfo != null) {
+                trackSelectionUtils.showSelectionDialog(this, ((Button) view).getText(),
+                        trackSelector.getCurrentMappedTrackInfo(), (int) view.getTag());
+            }
+        }
+    }
+
+    private void updateButtonVisibilities() {
+        settingsRootView.removeAllViews();
+
+        if (mediaPlayer == null) {
+            return;
+        }
+
+        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+
+        if (mappedTrackInfo == null) {
+            return;
+        }
+
+        for (int i = 0; i < mappedTrackInfo.length; i++) {
+            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
+
+            if (trackGroups.length != 0) {
+                Button button = new Button(this);
+                int label;
+                switch (mediaPlayer.getRendererType(i)) {
+                    case C.TRACK_TYPE_AUDIO:
+                        label = R.string.audio;
+                        break;
+                    case C.TRACK_TYPE_VIDEO:
+                        label = R.string.video;
+                        break;
+                    case C.TRACK_TYPE_TEXT:
+                        label = R.string.text;
+                        break;
+                    default:
+                        continue;
+                }
+
+                button.setText(label);
+                button.setTag(i);
+                button.setOnClickListener(this);
+                settingsRootView.addView(button, settingsRootView.getChildCount() - 1);
+            }
+        }
+    }
+
+    private void showControls() {
+        settingsRootView.setVisibility(View.VISIBLE);
     }
 }

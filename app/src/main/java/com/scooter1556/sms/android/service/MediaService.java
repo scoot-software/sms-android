@@ -56,6 +56,7 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.NowPlayingActivity;
+import com.scooter1556.sms.android.domain.Playlist;
 import com.scooter1556.sms.android.manager.MediaNotificationManager;
 import com.scooter1556.sms.android.playback.AudioPlayback;
 import com.scooter1556.sms.android.playback.CastPlayback;
@@ -467,6 +468,8 @@ public class MediaService extends MediaBrowserServiceCompat
 
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+        Log.d(TAG, "MEDIA ID: " + parentId);
+
         List<String> mediaId = MediaUtils.parseMediaId(parentId);
 
         if(mediaId.isEmpty()) {
@@ -475,8 +478,6 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         String root = mediaId.get(0);
-
-        Log.d(TAG, "MEDIA ID: " + root);
 
         switch(root) {
             case MediaUtils.MEDIA_ID_COLLECTIONS:
@@ -617,6 +618,19 @@ public class MediaService extends MediaBrowserServiceCompat
             case MediaUtils.MEDIA_ID_VIDEO:
                 break;
 
+            case MediaUtils.MEDIA_ID_PLAYLISTS:
+                result.detach();
+                getPlaylists(result);
+                break;
+
+            case MediaUtils.MEDIA_ID_PLAYLIST:
+                if(mediaId.size() > 1) {
+                    result.detach();
+                    getPlaylistContents(UUID.fromString(mediaId.get(1)), result);
+                }
+
+                break;
+
             default:
                 Log.w(TAG, "Media ID not recognised: " + parentId);
                 break;
@@ -709,6 +723,112 @@ public class MediaService extends MediaBrowserServiceCompat
             @Override
             public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
                 Log.w(TAG, "Failed to retrieve media folder contents");
+            }
+        });
+    }
+
+    /**
+     * Fetch a list of playlists.
+     */
+    private void getPlaylists(@NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
+
+        restService.getPlaylists(getApplicationContext(), new JsonHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                Gson parser = new Gson();
+                List<MediaBrowserCompat.MediaItem> playlists = new ArrayList<>();
+
+                Playlist playlist = parser.fromJson(response.toString(), Playlist.class);
+                MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
+                        .setMediaId(MediaUtils.MEDIA_ID_PLAYLIST + MediaUtils.SEPARATOR + playlist.getID())
+                        .setTitle(playlist.getName())
+                        .setSubtitle(playlist.getDescription() == null ? "" : playlist.getDescription())
+                        .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_playlist))
+                        .build();
+
+                playlists.add(new MediaBrowserCompat.MediaItem(description, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+
+                Log.d(TAG, "Playlist: " + playlist.getName());
+                result.sendResult(playlists);
+            }
+
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                Gson parser = new Gson();
+                List<MediaBrowserCompat.MediaItem> playlists = new ArrayList<>();
+
+                for(int i=0; i<response.length(); i++) {
+                    try {
+                        Playlist playlist = parser.fromJson(response.getJSONObject(i).toString(), Playlist.class);
+                        MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
+                                .setMediaId(MediaUtils.MEDIA_ID_PLAYLIST + MediaUtils.SEPARATOR + playlist.getID())
+                                .setTitle(playlist.getName())
+                                .setSubtitle(playlist.getDescription() == null ? "" : playlist.getDescription())
+                                .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_playlist))
+                                .build();
+
+                        playlists.add(new MediaBrowserCompat.MediaItem(description, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Failed to process JSON", e);
+                    }
+                }
+
+                result.sendResult(playlists);
+            }
+
+            @Override
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                Log.w(TAG, "Failed to retrieve playlists");
+            }
+
+            @Override
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
+                Log.w(TAG, "Failed to retrieve playlists");
+            }
+        });
+    }
+
+    /**
+     * Fetch the contents of a given Playlist.
+     */
+    private void getPlaylistContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
+        restService.getPlaylistContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                Gson parser = new Gson();
+                List<MediaBrowserCompat.MediaItem> elements = new ArrayList<>();
+                MediaElement element = parser.fromJson(response.toString(), MediaElement.class);
+                elements.add(createMediaItemFromMediaElement(element));
+                result.sendResult(elements);
+            }
+
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                Gson parser = new Gson();
+                List<MediaBrowserCompat.MediaItem> elements = new ArrayList<>();
+
+                for (int i = 0; i < response.length(); i++) {
+                    try {
+                        MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+                        elements.add(createMediaItemFromMediaElement(element));
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Failed to process JSON", e);
+                    }
+                }
+
+                result.sendResult(elements);
+            }
+
+            @Override
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                Log.w(TAG, "Failed to retrieve playlist contents");
+            }
+
+            @Override
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
+                Log.w(TAG, "Failed to retrieve playlist contents");
             }
         });
     }
@@ -1472,6 +1592,12 @@ public class MediaService extends MediaBrowserServiceCompat
         descriptions.add(new MediaDescriptionCompat.Builder()
                 .setMediaId(MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO)
                 .setTitle(getString(R.string.heading_recently_played))
+                .build());
+
+        // Playlists
+        descriptions.add(new MediaDescriptionCompat.Builder()
+                .setMediaId(MediaUtils.MEDIA_ID_PLAYLISTS)
+                .setTitle(getString(R.string.heading_playlists))
                 .build());
 
         // Artists

@@ -113,7 +113,7 @@ public class SimpleMediaFragment extends BaseFragment {
                     items.addAll(children);
 
                     switch(id) {
-                        case MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO: case MediaUtils.MEDIA_ID_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTIST: case MediaUtils.MEDIA_ID_ARTIST: case MediaUtils.MEDIA_ID_ALBUMS: case MediaUtils.MEDIA_ID_ALBUM: case MediaUtils.MEDIA_ID_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_ALBUM_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_DIRECTORY:
+                        case MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO: case MediaUtils.MEDIA_ID_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTIST: case MediaUtils.MEDIA_ID_ARTIST: case MediaUtils.MEDIA_ID_ALBUMS: case MediaUtils.MEDIA_ID_ALBUM: case MediaUtils.MEDIA_ID_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_ALBUM_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_DIRECTORY: case MediaUtils.MEDIA_ID_PLAYLISTS: case MediaUtils.MEDIA_ID_PLAYLIST:
                             mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
                             break;
 

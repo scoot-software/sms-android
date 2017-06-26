@@ -67,6 +67,8 @@ public class MediaUtils {
     public static final String MEDIA_ID_ALBUM = "__ALBUM__";
     public static final String MEDIA_ID_ARTIST_ALBUM = "__ARTIST_ALBUM__";
     public static final String MEDIA_ID_ALBUM_ARTIST_ALBUM = "__ALBUM_ARTIST_ALBUM__";
+    public static final String MEDIA_ID_PLAYLISTS = "__PLAYLISTS__";
+    public static final String MEDIA_ID_PLAYLIST = "__PLAYLIST__";
     public static final String MEDIA_ID_FOLDERS = "__FOLDERS__";
     public static final String MEDIA_ID_FOLDERS_AUDIO = "__FOLDERS_AUDIO__";
     public static final String MEDIA_ID_FOLDERS_VIDEO = "__FOLDERS_VIDEO__";

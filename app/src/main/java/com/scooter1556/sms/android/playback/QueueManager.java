@@ -49,6 +49,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Simple data provider for queues. Keeps track of a current queue and a current index in the
@@ -137,72 +138,142 @@ public class QueueManager {
             return;
         }
 
-        final long elementId = Long.parseLong(parsedMediaId.get(1));
+        // Handle Playlist
+        if(parsedMediaId.get(0).equals(MediaUtils.MEDIA_ID_PLAYLIST)) {
+            final UUID playlistId = UUID.fromString(parsedMediaId.get(1));
 
-        RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                MediaElement element;
-                Gson parser = new Gson();
+            RESTService.getInstance().getPlaylistContents(ctx, playlistId, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                    MediaElement element;
+                    Gson parser = new Gson();
 
-                element = parser.fromJson(response.toString(), MediaElement.class);
+                    element = parser.fromJson(response.toString(), MediaElement.class);
 
-                if(element == null) {
-                    throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
-                }
+                    if (element == null) {
+                        throw new IllegalArgumentException("Failed to fetch contents of playlist with ID: " + playlistId);
+                    }
 
-                MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+                    MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
-                if(description != null) {
-                    List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
-                    queue.add(new MediaSessionCompat.QueueItem(description, elementId));
-                }
+                    if (description != null) {
+                        List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
+                        queue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                    }
 
-                if(!queue.isEmpty()) {
-                    setCurrentQueue(queue, id);
-                    updateMetadata();
-                } else {
-                    Log.e(TAG, "No media items to add to queue after processing media id: " + id);
-                }
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                List<MediaElement> elements = new ArrayList<>();
-                List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
-                Gson parser = new Gson();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
-
-                        if(element == null) {
-                            throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
-                        }
-
-                        MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
-
-                        if(description != null) {
-                            queue.add(new MediaSessionCompat.QueueItem(description, elementId));
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Failed to process JSON", e);
+                    if (!queue.isEmpty()) {
+                        setCurrentQueue(queue, id);
+                        updateMetadata();
+                    } else {
+                        Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
                     }
                 }
 
-                if(!queue.isEmpty()) {
-                    setCurrentQueue(queue, id);
-                    updateMetadata();
-                } else {
-                    Log.e(TAG, "No media items to add to queue after processing media id: " + id);
-                }
-            }
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                    List<MediaElement> elements = new ArrayList<>();
+                    List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
+                    Gson parser = new Gson();
 
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
-            }
-        });
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                            if (element == null) {
+                                throw new IllegalArgumentException("Failed to fetch contents of playlist with ID: " + playlistId);
+                            }
+
+                            MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                            if (description != null) {
+                                queue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                            }
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Failed to process JSON", e);
+                        }
+                    }
+
+                    if (!queue.isEmpty()) {
+                        setCurrentQueue(queue, id);
+                        updateMetadata();
+                    } else {
+                        Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                    throw new IllegalArgumentException("Failed to fetch contents for playlist with ID: " + playlistId);
+                }
+            });
+        } else {
+            final long elementId = Long.parseLong(parsedMediaId.get(1));
+
+            RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                    MediaElement element;
+                    Gson parser = new Gson();
+
+                    element = parser.fromJson(response.toString(), MediaElement.class);
+
+                    if (element == null) {
+                        throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                    }
+
+                    MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                    if (description != null) {
+                        List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
+                        queue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                    }
+
+                    if (!queue.isEmpty()) {
+                        setCurrentQueue(queue, id);
+                        updateMetadata();
+                    } else {
+                        Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                    }
+                }
+
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                    List<MediaElement> elements = new ArrayList<>();
+                    List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
+                    Gson parser = new Gson();
+
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                            if (element == null) {
+                                throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                            }
+
+                            MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                            if (description != null) {
+                                queue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                            }
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Failed to process JSON", e);
+                        }
+                    }
+
+                    if (!queue.isEmpty()) {
+                        setCurrentQueue(queue, id);
+                        updateMetadata();
+                    } else {
+                        Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                    throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                }
+            });
+        }
     }
 
     public void addToQueueFromMediaElement(@NonNull final MediaElement element) {

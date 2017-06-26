@@ -144,6 +144,7 @@
     <string name="heading_collections">Collections</string>
     <string name="heading_home">Home</string>
     <string name="heading_tracklist">Tracklist</string>
+    <string name="heading_playlists">Playlists</string>
 
     <string name="error_media_playback">Unable to play media</string>
     <string name="error_server">Operation failed with status code: </string>

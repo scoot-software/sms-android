@@ -258,6 +258,29 @@ public class RESTService {
     }
 
     //
+    // Playlists
+    //
+
+    // Returns playlists for current user
+    public void getPlaylists(Context context, JsonHttpResponseHandler responseHandler) {
+        if(connection != null) {
+            client.get(context, getAddress() + "/playlist", responseHandler);
+        }
+    }
+
+    // Returns a list of media elements for a playlist
+    public void getPlaylistContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
+        if(connection != null) {
+            URIBuilder uri = new URIBuilder();
+            uri.setScheme("http")
+                    .setHost(getBaseAddress())
+                    .setPath("/playlist/" + id + "/contents");
+
+            client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
+        }
+    }
+
+    //
     // Stream
     //
 

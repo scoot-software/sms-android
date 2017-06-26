@@ -80,6 +80,7 @@ public class MusicActivity extends BaseActivity implements SimpleMediaFragment.M
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO), getString(R.string.heading_recently_added));
         adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO), getString(R.string.heading_recently_played));
+        adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_PLAYLISTS), getString(R.string.heading_playlists));
         adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_ARTISTS), getString(R.string.heading_artists));
         adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_ALBUM_ARTISTS), getString(R.string.heading_album_artists));
         adapter.addFragment(SimpleMediaFragment.newInstance(MediaUtils.MEDIA_ID_ALBUMS), getString(R.string.heading_albums));

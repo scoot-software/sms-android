@@ -649,8 +649,11 @@ public class MediaService extends MediaBrowserServiceCompat
                 Gson parser = new Gson();
                 List<MediaBrowserCompat.MediaItem> folders = new ArrayList<>();
                 MediaFolder folder = parser.fromJson(response.toString(), MediaFolder.class);
-                folders.add(createMediaItemFromMediaFolder(folder));
-                Log.d(TAG, "Media Folder: " + folder.getName());
+
+                if(folder.getType() != MediaFolder.ContentType.PLAYLIST) {
+                    folders.add(createMediaItemFromMediaFolder(folder));
+                }
+
                 result.sendResult(folders);
             }
 
@@ -662,7 +665,10 @@ public class MediaService extends MediaBrowserServiceCompat
                 for(int i=0; i<response.length(); i++) {
                     try {
                         MediaFolder folder = parser.fromJson(response.getJSONObject(i).toString(), MediaFolder.class);
-                        folders.add(createMediaItemFromMediaFolder(folder));
+
+                        if(folder.getType() != MediaFolder.ContentType.PLAYLIST) {
+                            folders.add(createMediaItemFromMediaFolder(folder));
+                        }
                     } catch (JSONException e) {
                         Log.e(TAG, "Failed to process JSON", e);
                     }

@@ -33,8 +33,6 @@ public class PlaybackManager implements Playback.Callback {
     private PlaybackServiceCallback serviceCallback;
     private MediaSessionCallback mediaSessionCallback;
 
-    private boolean randomMode = false;
-
     public PlaybackManager() {}
 
     public static PlaybackManager getInstance() {
@@ -78,63 +76,37 @@ public class PlaybackManager implements Playback.Callback {
         }
 
         // Check current playback
-        if(MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
-            if(playback instanceof VideoPlaybackActivity) {
+        if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
+            if (playback instanceof VideoPlaybackActivity) {
                 playback.destroy();
                 playback = null;
             }
 
-            if(playback == null) {
+            if (playback == null) {
                 playback = new AudioPlayback(ctx);
                 playback.setCallback(this);
             }
 
-            playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+            playback.play(currentMedia.getDescription().getMediaId());
 
-        } else if(MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
-            if(playback instanceof AudioPlayback) {
+        } else if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+            if (playback instanceof AudioPlayback) {
                 playback.destroy();
                 playback = null;
             }
 
-            if(playback == null) {
+            if (playback == null) {
                 // Start video playback activity
                 Intent intent = new Intent(ctx, VideoPlaybackActivity.class)
                         .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, currentMedia);
                 ctx.startActivity(intent);
             } else {
-                playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+                playback.play(currentMedia.getDescription().getMediaId());
             }
         }
 
         // Notify service callback
         serviceCallback.onPlaybackStart();
-    }
-
-    /**
-     * Handle a request to play random media
-     */
-    public void handleRandomRequest() {
-        RESTService.getInstance().getRandomAudioElement(ctx, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                MediaElement element;
-                Gson parser = new Gson();
-
-                element = parser.fromJson(response.toString(), MediaElement.class);
-
-                if (element == null) {
-                    throw new IllegalArgumentException("Failed to fetch random audio element.");
-                }
-
-                queueManager.addToQueueFromMediaElement(element);
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                throw new IllegalArgumentException("Failed to fetch random audio element.");
-            }
-        });
     }
 
     /**
@@ -225,8 +197,6 @@ public class PlaybackManager implements Playback.Callback {
         if (queueManager.skipQueuePosition(1)) {
             handlePlayRequest();
             queueManager.updateMetadata();
-        } else if(randomMode) {
-            handleRandomRequest();
         } else {
             handleStopRequest(null);
         }
@@ -292,7 +262,7 @@ public class PlaybackManager implements Playback.Callback {
                 MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
 
                 if (resumePlaying && currentMedia != null) {
-                    playback.play(currentMedia.getDescription().getMediaId(), !randomMode);
+                    playback.play(currentMedia.getDescription().getMediaId());
                 } else if (!resumePlaying) {
                     playback.pause();
                 } else {
@@ -349,8 +319,6 @@ public class PlaybackManager implements Playback.Callback {
 
             if(queueManager.skipQueuePosition(1)) {
                 handlePlayRequest();
-            } else if(randomMode) {
-                handleRandomRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
@@ -376,7 +344,6 @@ public class PlaybackManager implements Playback.Callback {
             Log.d(TAG, "onPlayFromMediaId(" + mediaId + ")");
 
             queueManager.setQueueFromMediaId(mediaId);
-            randomMode = false;
         }
 
         /**
@@ -389,9 +356,7 @@ public class PlaybackManager implements Playback.Callback {
             if (TextUtils.isEmpty(query)) {
                 // The user provided generic string e.g. 'Play music'
                 // Play random music
-                randomMode = true;
-                queueManager.initialiseQueue("Shuffle All");
-                handleRandomRequest();
+                queueManager.setQueueFromMediaId(MediaUtils.MEDIA_ID_RANDOM_AUDIO);
             }
         }
     }

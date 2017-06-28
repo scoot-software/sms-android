@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -47,8 +48,11 @@ import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.service.RESTService;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -218,7 +222,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
-    public void play(String mediaId, boolean update) {
+    public void play(String mediaId) {
         Log.d(TAG, "Play media item with id " + mediaId);
 
         playOnFocusGain = true;
@@ -237,7 +241,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         } else {
             playbackState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false);
-            loadMedia(mediaId, update);
+            loadMedia(mediaId);
         }
     }
 
@@ -335,7 +339,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         return this.sessionId;
     }
 
-    private void loadMedia(final String parentID, final boolean update) {
+    private void loadMedia(final String parentID) {
         Log.d(TAG, "loadMedia(" + parentID + ")");
 
         // Get Media Element ID from Media ID
@@ -352,22 +356,21 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 Gson parser = new Gson();
-
                 element = parser.fromJson(response.toString(), MediaElement.class);
 
-                if(element != null) {
-                    initialiseStream(update);
+                if (element != null) {
+                    initialiseStream();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                error("Exception loading media", null);
+                error("Exception loading media: " + statusCode, null);
             }
         });
     }
 
-    private void initialiseStream(boolean update) {
+    private void initialiseStream() {
         Log.d(TAG, "Initialising stream for media item with id " + element.getID());
 
         // Check session ID
@@ -389,7 +392,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
 
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(context, sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), update, new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(context, sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

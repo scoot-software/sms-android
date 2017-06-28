@@ -78,6 +78,7 @@ public class MediaUtils {
     public static final String MEDIA_ID_DIRECTORY_VIDEO = "__DIRECTORY_VIDEO__";
     public static final String MEDIA_ID_VIDEO = "__VIDEO__";
     public static final String MEDIA_ID_AUDIO = "__AUDIO__";
+    public static final String MEDIA_ID_RANDOM_AUDIO = "__RANDOM_AUDIO__";
 
 
     /*

@@ -154,10 +154,10 @@ public class CastPlayback implements Playback {
     }
 
     @Override
-    public void play(String mediaId, boolean update) {
+    public void play(String mediaId) {
         Log.d(TAG, "play(" + mediaId + ")");
 
-        loadMedia(mediaId, true, update);
+        loadMedia(mediaId, true);
         playbackState = PlaybackStateCompat.STATE_BUFFERING;
 
         if (callback != null) {
@@ -173,7 +173,7 @@ public class CastPlayback implements Playback {
             remoteMediaClient.pause();
             currentPosition = (int) remoteMediaClient.getApproximateStreamPosition();
         } else {
-            loadMedia(currentMediaId, false, false);
+            loadMedia(currentMediaId, false);
         }
     }
 
@@ -194,7 +194,7 @@ public class CastPlayback implements Playback {
             currentPosition = position;
         } else {
             currentPosition = position;
-            loadMedia(currentMediaId, false, false);
+            loadMedia(currentMediaId, true);
         }
     }
 
@@ -279,7 +279,7 @@ public class CastPlayback implements Playback {
         return playbackState;
     }
 
-    private void loadMedia(final String parentId, final boolean autoPlay, final boolean update) {
+    private void loadMedia(final String parentId, final boolean autoPlay) {
         Log.d(TAG, "loadMedia(" + parentId + ", " + autoPlay + ")");
 
         if (!TextUtils.equals(parentId, currentMediaId)) {
@@ -305,7 +305,7 @@ public class CastPlayback implements Playback {
                 element = parser.fromJson(response.toString(), MediaElement.class);
 
                 if(element != null) {
-                    initialiseStream(parentId, autoPlay, update);
+                    initialiseStream(parentId, autoPlay);
                 }
             }
 
@@ -316,7 +316,7 @@ public class CastPlayback implements Playback {
         });
     }
 
-    private void initialiseStream(final String mediaId, final boolean autoPlay, boolean update) {
+    private void initialiseStream(final String mediaId, final boolean autoPlay) {
         Log.d(TAG, "initialiseStream(" + mediaId + ", " + element.getID() + ", " + autoPlay + ")");
 
         // Get settings

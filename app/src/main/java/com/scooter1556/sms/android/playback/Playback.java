@@ -85,7 +85,7 @@ public interface Playback {
     void updateLastKnownStreamPosition();
 
 
-    void play(String mediaId, boolean update);
+    void play(String mediaId);
 
     /**
      * Pause the current playing item

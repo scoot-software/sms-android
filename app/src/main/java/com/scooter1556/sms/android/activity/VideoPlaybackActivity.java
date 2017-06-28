@@ -158,7 +158,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 Log.d(TAG, "New session ID: " + sessionId);
 
                 // Start Playback
-                play(currentMedia.getDescription().getMediaId(), true);
+                play(currentMedia.getDescription().getMediaId());
             }
         });
     }
@@ -285,7 +285,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
-    public void play(String mediaId, boolean update) {
+    public void play(String mediaId) {
         Log.d(TAG, "Play media item with id " + mediaId);
 
         boolean mediaHasChanged = !TextUtils.equals(mediaId, currentMediaID);
@@ -300,7 +300,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         } else {
             playbackState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false);
-            loadMedia(mediaId, update);
+            loadMedia(mediaId);
         }
     }
 
@@ -573,7 +573,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         }
     }
 
-    private void loadMedia(final String parentID, final boolean update) {
+    private void loadMedia(final String parentID) {
         Log.d(TAG, "loadMedia(" + parentID + ")");
 
         // Get Media Element ID from Media ID
@@ -594,7 +594,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 element = parser.fromJson(response.toString(), MediaElement.class);
 
                 if(element != null) {
-                    initialiseStream(update);
+                    initialiseStream();
                 }
             }
 
@@ -605,7 +605,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         });
     }
 
-    private void initialiseStream(boolean update) {
+    private void initialiseStream() {
         Log.d(TAG, "Initialising stream for media item with id " + element.getID());
 
         // Check session ID
@@ -621,7 +621,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         int quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
 
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), update, new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

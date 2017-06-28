@@ -130,16 +130,18 @@ public class RESTService {
     }
 
     // Returns a Media Element by ID
-    public void getMediaElement(Context context, Long id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElement(Context context, long id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/" + id, responseHandler);
+            String url = getAddress() + "/media/" + id;
+            Log.d(TAG, url);
+            client.get(context, url, responseHandler);
         }
     }
 
-    // Returns a random audio element
-    public void getRandomAudioElement(Context context, JsonHttpResponseHandler responseHandler) {
+    // Returns random media elements
+    public void getRandomMediaElements(Context context, int limit, Byte type, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/audio/random", responseHandler);
+            client.get(context, getAddress() + "/media/random/" + limit + (type == null ? "" : "?type=" + type.toString()), responseHandler);
         }
     }
 
@@ -285,7 +287,7 @@ public class RESTService {
     //
 
     // Initialise Stream
-    public void initialiseStream(Context context, UUID sessionId, long mediaElementId, String client_id, String files, String codecs, String mchCodecs, String format, int quality, int sampleRate, Integer aTrack, Integer sTrack, boolean direct, boolean update, AsyncHttpResponseHandler responseHandler) {
+    public void initialiseStream(Context context, UUID sessionId, long mediaElementId, String client_id, String files, String codecs, String mchCodecs, String format, int quality, int sampleRate, Integer aTrack, Integer sTrack, boolean direct, AsyncHttpResponseHandler responseHandler) {
         if(connection != null) {
             String url = getAddress() + "/stream/initialise/" + sessionId.toString() + "/" + mediaElementId + "?";
             url += client_id == null ? "" : "client=" + client_id + "&";
@@ -297,8 +299,9 @@ public class RESTService {
             url += "samplerate=" + String.valueOf(sampleRate) + "&";
             url += aTrack == null ? "" : "atrack=" + aTrack + "&";
             url += sTrack == null ? "" : "strack=" + sTrack + "&";
-            url += "direct=" + String.valueOf(direct) + "&";
-            url += "update=" + String.valueOf(update);
+            url += "direct=" + String.valueOf(direct);
+
+            Log.d(TAG, url);
 
             client.get(context, url, responseHandler);
         }

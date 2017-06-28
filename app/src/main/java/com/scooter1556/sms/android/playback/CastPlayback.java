@@ -237,11 +237,6 @@ public class CastPlayback implements Playback {
     }
 
     @Override
-    public MediaElement getCurrentMediaElement() {
-        return element;
-    }
-
-    @Override
     public SimpleExoPlayer getMediaPlayer() {
         return null;
     }

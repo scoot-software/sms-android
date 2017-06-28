@@ -100,7 +100,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     private volatile String currentMediaID;
     private volatile UUID currentJobId;
     private UUID sessionId;
-    private MediaElement element;
 
     private int audioFocus = AUDIO_NO_FOCUS_NO_DUCK;
     private final AudioManager audioManager;
@@ -241,7 +240,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         } else {
             playbackState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false);
-            loadMedia(mediaId);
+            initialiseStream();
         }
     }
 
@@ -320,11 +319,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
-    public MediaElement getCurrentMediaElement() {
-        return element;
-    }
-
-    @Override
     public SimpleExoPlayer getMediaPlayer() {
         return mediaPlayer;
     }
@@ -339,11 +333,15 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         return this.sessionId;
     }
 
-    private void loadMedia(final String parentID) {
-        Log.d(TAG, "loadMedia(" + parentID + ")");
+    private void initialiseStream() {
+        // Check session ID
+        if(sessionId == null) {
+            Log.d(TAG, "Session ID not set, unable to initialise stream!");
+            return;
+        }
 
         // Get Media Element ID from Media ID
-        List<String> mediaID = MediaUtils.parseMediaId(parentID);
+        List<String> mediaID = MediaUtils.parseMediaId(currentMediaID);
 
         if(mediaID.size() <= 1) {
             error("Error initialising stream", null);
@@ -352,47 +350,16 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
         final long id = Long.parseLong(mediaID.get(1));
 
-        RESTService.getInstance().getMediaElement(context, id, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                element = parser.fromJson(response.toString(), MediaElement.class);
-
-                if (element != null) {
-                    initialiseStream();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                error("Exception loading media: " + statusCode, null);
-            }
-        });
-    }
-
-    private void initialiseStream() {
-        Log.d(TAG, "Initialising stream for media item with id " + element.getID());
-
-        // Check session ID
-        if(sessionId == null) {
-            Log.d(TAG, "Session ID not set, unable to initialise stream!");
-            return;
-        }
+        Log.d(TAG, "Initialising stream for media item with id " + id);
 
         // Get settings
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
 
         // Get quality
-        int quality = 0;
-
-        if(element.getType() == MediaElement.MediaElementType.AUDIO) {
-            quality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
-        } else if(element.getType() == MediaElement.MediaElementType.VIDEO) {
-            quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
-        }
+        int quality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
 
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(context, sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(context, sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

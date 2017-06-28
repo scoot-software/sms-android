@@ -128,11 +128,6 @@ public interface Playback {
     UUID getCurrentJobId();
 
     /**
-     * @return the current media element.
-     */
-    MediaElement getCurrentMediaElement();
-
-    /**
      * @return the current media player.
      */
     SimpleExoPlayer getMediaPlayer();

@@ -94,7 +94,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     private volatile long currentPosition = 0;
     private volatile String currentMediaID;
-    private MediaElement element;
     private volatile UUID currentJobId;
     private UUID sessionId;
     private int playbackState;
@@ -300,7 +299,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         } else {
             playbackState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false);
-            loadMedia(mediaId);
+            initialiseStream();
         }
     }
 
@@ -374,11 +373,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public UUID getCurrentJobId() {
         return this.currentJobId;
-    }
-
-    @Override
-    public MediaElement getCurrentMediaElement() {
-        return element;
     }
 
     @Override
@@ -573,46 +567,25 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         }
     }
 
-    private void loadMedia(final String parentID) {
-        Log.d(TAG, "loadMedia(" + parentID + ")");
+    private void initialiseStream() {
+        // Check session ID
+        if(sessionId == null) {
+            Log.d(TAG, "Session ID not set, unable to initialise stream!");
+            return;
+        }
 
         // Get Media Element ID from Media ID
-        List<String> mediaID = MediaUtils.parseMediaId(parentID);
+        List<String> mediaID = MediaUtils.parseMediaId(currentMediaID);
 
         if(mediaID.size() <= 1) {
             error("Error initialising stream", null);
             return;
         }
 
+        // Get media element ID
         final long id = Long.parseLong(mediaID.get(1));
 
-        RESTService.getInstance().getMediaElement(getApplicationContext(), id, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-
-                element = parser.fromJson(response.toString(), MediaElement.class);
-
-                if(element != null) {
-                    initialiseStream();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                error("Exception loading media", null);
-            }
-        });
-    }
-
-    private void initialiseStream() {
-        Log.d(TAG, "Initialising stream for media item with id " + element.getID());
-
-        // Check session ID
-        if(sessionId == null) {
-            Log.d(TAG, "Session ID not set, unable to initialise stream!");
-            return;
-        }
+        Log.d(TAG, "Initialising stream for media item with id " + id);
 
         // Get settings
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -621,7 +594,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         int quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
 
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, element.getID(), CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, null, FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

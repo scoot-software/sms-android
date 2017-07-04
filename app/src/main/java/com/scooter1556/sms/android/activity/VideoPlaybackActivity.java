@@ -157,7 +157,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 Log.d(TAG, "New session ID: " + sessionId);
 
                 // Start Playback
-                play(currentMedia.getDescription().getMediaId());
+                play(currentMedia);
             }
         });
     }
@@ -284,14 +284,14 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
-    public void play(String mediaId) {
-        Log.d(TAG, "Play media item with id " + mediaId);
+    public void play(MediaSessionCompat.QueueItem item) {
+        Log.d(TAG, "Play media item with id " + item.getDescription().getMediaId());
 
-        boolean mediaHasChanged = !TextUtils.equals(mediaId, currentMediaID);
+        boolean mediaHasChanged = !TextUtils.equals(item.getDescription().getMediaId(), currentMediaID);
 
         if (mediaHasChanged) {
             currentPosition = 0;
-            currentMediaID = mediaId;
+            currentMediaID = item.getDescription().getMediaId();
         }
 
         if (playbackState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mediaPlayer != null) {

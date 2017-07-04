@@ -85,7 +85,7 @@ public interface Playback {
     void updateLastKnownStreamPosition();
 
 
-    void play(String mediaId);
+    void play(MediaSessionCompat.QueueItem item);
 
     /**
      * Pause the current playing item

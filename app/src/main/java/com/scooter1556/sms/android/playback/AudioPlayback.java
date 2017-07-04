@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -136,22 +137,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         // Create Wake lock
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "sms_lock");
-
-        // Get session ID
-        RESTService.getInstance().createSession(new TextHttpResponseHandler()  {
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response, Throwable throwable) {
-                Log.e(TAG, "Failed to initialise session");
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response) {
-                // Parse result
-                sessionId = UUID.fromString(response);
-                Log.d(TAG, "New session ID: " + sessionId);
-            }
-        });
     }
 
     @Override
@@ -221,18 +206,18 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
-    public void play(String mediaId) {
-        Log.d(TAG, "Play media item with id " + mediaId);
+    public void play(MediaSessionCompat.QueueItem item) {
+        Log.d(TAG, "Play media item with id " + item.getDescription().getMediaId());
 
         playOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
 
-        boolean mediaHasChanged = !TextUtils.equals(mediaId, currentMediaID);
+        boolean mediaHasChanged = !TextUtils.equals(item.getDescription().getMediaId(), currentMediaID);
 
         if (mediaHasChanged) {
             currentPosition = 0;
-            currentMediaID = mediaId;
+            currentMediaID = item.getDescription().getMediaId();
         }
 
         if (playbackState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mediaPlayer != null) {
@@ -240,7 +225,28 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         } else {
             playbackState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false);
-            initialiseStream();
+
+            if(sessionId == null) {
+                // Get session ID
+                RESTService.getInstance().createSession(new TextHttpResponseHandler()  {
+
+                    @Override
+                    public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response, Throwable throwable) {
+                        Log.e(TAG, "Failed to initialise session");
+                    }
+
+                    @Override
+                    public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response) {
+                        // Parse result
+                        sessionId = UUID.fromString(response);
+                        Log.d(TAG, "New session ID: " + sessionId);
+
+                        initialiseStream();
+                    }
+                });
+            } else {
+                initialiseStream();
+            }
         }
     }
 
@@ -334,12 +340,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     private void initialiseStream() {
-        // Check session ID
-        if(sessionId == null) {
-            Log.d(TAG, "Session ID not set, unable to initialise stream!");
-            return;
-        }
-
         // Get Media Element ID from Media ID
         List<String> mediaID = MediaUtils.parseMediaId(currentMediaID);
 

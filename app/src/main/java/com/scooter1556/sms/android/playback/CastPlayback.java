@@ -81,7 +81,6 @@ public class CastPlayback implements Playback {
     private volatile long currentPosition;
     private volatile String currentMediaId;
     private volatile UUID currentJobId;
-    private MediaElement element;
 
     private boolean finished = false;
 
@@ -154,10 +153,10 @@ public class CastPlayback implements Playback {
     }
 
     @Override
-    public void play(String mediaId) {
-        Log.d(TAG, "play(" + mediaId + ")");
+    public void play(MediaSessionCompat.QueueItem item) {
+        Log.d(TAG, "play(" + item.getDescription().getMediaId() + ")");
 
-        loadMedia(mediaId, true);
+        loadMedia(item, true);
         playbackState = PlaybackStateCompat.STATE_BUFFERING;
 
         if (callback != null) {
@@ -172,8 +171,6 @@ public class CastPlayback implements Playback {
         if (remoteMediaClient.hasMediaSession()) {
             remoteMediaClient.pause();
             currentPosition = (int) remoteMediaClient.getApproximateStreamPosition();
-        } else {
-            loadMedia(currentMediaId, false);
         }
     }
 
@@ -192,9 +189,6 @@ public class CastPlayback implements Playback {
         if (remoteMediaClient.hasMediaSession()) {
             remoteMediaClient.seek(position);
             currentPosition = position;
-        } else {
-            currentPosition = position;
-            loadMedia(currentMediaId, true);
         }
     }
 
@@ -274,45 +268,42 @@ public class CastPlayback implements Playback {
         return playbackState;
     }
 
-    private void loadMedia(final String parentId, final boolean autoPlay) {
-        Log.d(TAG, "loadMedia(" + parentId + ", " + autoPlay + ")");
+    private void loadMedia(final MediaSessionCompat.QueueItem item, final boolean autoPlay) {
+        Log.d(TAG, "loadMedia(" + item.getDescription().getMediaId() + ", " + autoPlay + ")");
 
-        if (!TextUtils.equals(parentId, currentMediaId)) {
-            currentMediaId = parentId;
+        if (!TextUtils.equals(item.getDescription().getMediaId(), currentMediaId)) {
+            currentMediaId = item.getDescription().getMediaId();
             currentPosition = 0;
         }
 
         // Get Media Element ID from Media ID
-        List<String> mediaID = MediaUtils.parseMediaId(parentId);
+        List<String> mediaID = MediaUtils.parseMediaId(currentMediaId);
 
         if(mediaID.size() <= 1) {
             error("Error initialising stream", null);
             return;
         }
 
-        final long id = Long.parseLong(mediaID.get(1));
-
-        RESTService.getInstance().getMediaElement(appContext, id, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-
-                element = parser.fromJson(response.toString(), MediaElement.class);
-
-                if(element != null) {
-                    initialiseStream(parentId, autoPlay);
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                error("Error loading media", null);
-            }
-        });
+        initialiseStream(item, autoPlay);
     }
 
-    private void initialiseStream(final String mediaId, final boolean autoPlay) {
-        Log.d(TAG, "initialiseStream(" + mediaId + ", " + element.getID() + ", " + autoPlay + ")");
+    private void initialiseStream(final MediaSessionCompat.QueueItem item, final boolean autoPlay) {
+        Log.d(TAG, "initialiseStream(" + item.getDescription().getMediaId() + ", " + autoPlay + ")");
+
+        if (!TextUtils.equals(item.getDescription().getMediaId(), currentMediaId)) {
+            currentMediaId = item.getDescription().getMediaId();
+            currentPosition = 0;
+        }
+
+        // Get Media Element ID from Media ID
+        List<String> mediaID = MediaUtils.parseMediaId(currentMediaId);
+
+        if(mediaID.size() <= 1) {
+            error("Error initialising stream", null);
+            return;
+        }
+
+        Long id = Long.parseLong(mediaID.get(1));
 
         // Get settings
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(appContext);
@@ -320,26 +311,27 @@ public class CastPlayback implements Playback {
         // Get quality
         int quality = 0;
 
-        if(element.getType() == MediaElement.MediaElementType.AUDIO) {
+        if(MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.AUDIO) {
             quality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
-        } else if(element.getType() == MediaElement.MediaElementType.VIDEO) {
+        } else if(MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.VIDEO) {
             quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
         }
 
         // Set custom data
         JSONObject customData = new JSONObject();
+
         try {
-            customData.put(MEDIA_ID, mediaId);
+            customData.put(MEDIA_ID, currentMediaId);
             customData.put(QUALITY, quality);
             customData.put(SERVER_URL, RESTService.getInstance().getAddress());
         } catch (JSONException e) {
             error("Error setting custom parameters for stream", e);
         }
 
-        MediaInfo media = new MediaInfo.Builder(element.getID().toString())
+        MediaInfo media = new MediaInfo.Builder(id.toString())
                 .setContentType("media")
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setMetadata(MediaUtils.getMediaMetadataFromMediaElement(element))
+                .setMetadata(MediaUtils.getMediaMetadataFromMediaDescription(item.getDescription()))
                 .setCustomData(customData)
                 .build();
 

@@ -23,6 +23,7 @@
  */
 package com.scooter1556.sms.android.utils;
 
+import android.media.MediaDescription;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -178,6 +179,37 @@ public class MediaUtils {
         if(RESTService.getInstance().getAddress() != null) {
             metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover/500")));
             metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart/1280")));
+        }
+
+        return metadata;
+    }
+
+    public static MediaMetadata getMediaMetadataFromMediaDescription(MediaDescriptionCompat description) {
+        MediaMetadata metadata = new MediaMetadata(getMediaTypeFromID(description.getMediaId()));
+
+        // Get Media Element ID from Media ID
+        List<String> mediaID = parseMediaId(description.getMediaId());
+
+        if(mediaID.size() <= 1) {
+            return null;
+        }
+
+        Long id = Long.parseLong(mediaID.get(1));
+
+        if(description.getTitle() != null) {
+            metadata.putString(MediaMetadata.KEY_TITLE, description.getTitle().toString());
+        }
+
+        if(description.getSubtitle() != null) {
+            metadata.putString(MediaMetadata.KEY_SUBTITLE, description.getSubtitle().toString());
+        }
+
+        metadata.putInt(MediaMetadata.KEY_TRACK_NUMBER, description.getExtras().getShort("TrackNumber"));
+        metadata.putInt(MediaMetadata.KEY_DISC_NUMBER, description.getExtras().getShort("DiscNumber"));
+
+        if(RESTService.getInstance().getAddress() != null) {
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/cover/500")));
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/fanart/1280")));
         }
 
         return metadata;

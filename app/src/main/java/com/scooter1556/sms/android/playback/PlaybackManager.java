@@ -87,7 +87,7 @@ public class PlaybackManager implements Playback.Callback {
                 playback.setCallback(this);
             }
 
-            playback.play(currentMedia.getDescription().getMediaId());
+            playback.play(currentMedia);
 
         } else if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
             if (playback instanceof AudioPlayback) {
@@ -101,7 +101,7 @@ public class PlaybackManager implements Playback.Callback {
                         .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, currentMedia);
                 ctx.startActivity(intent);
             } else {
-                playback.play(currentMedia.getDescription().getMediaId());
+                playback.play(currentMedia);
             }
         }
 
@@ -262,7 +262,7 @@ public class PlaybackManager implements Playback.Callback {
                 MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
 
                 if (resumePlaying && currentMedia != null) {
-                    playback.play(currentMedia.getDescription().getMediaId());
+                    playback.play(currentMedia);
                 } else if (!resumePlaying) {
                     playback.pause();
                 } else {

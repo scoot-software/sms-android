@@ -83,7 +83,6 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
     private Drawable playDrawable;
     private ImageView backgroundImage;
 
-    private String currentArtUrl;
     private final Handler handler = new Handler();
     private MediaBrowserCompat mediaBrowser;
 
@@ -154,7 +153,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         skipNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaControllerCompat.TransportControls controls = getSupportMediaController().getTransportControls();
+                MediaControllerCompat.TransportControls controls = MediaControllerCompat.getMediaController(getParent()).getTransportControls();
                 controls.skipToNext();
             }
         });
@@ -162,7 +161,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         skipPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaControllerCompat.TransportControls controls = getSupportMediaController().getTransportControls();
+                MediaControllerCompat.TransportControls controls = MediaControllerCompat.getMediaController(getParent()).getTransportControls();
                 controls.skipToPrevious();
             }
         });
@@ -170,9 +169,9 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PlaybackStateCompat state = getSupportMediaController().getPlaybackState();
+                PlaybackStateCompat state = MediaControllerCompat.getMediaController(getParent()).getPlaybackState();
                 if (state != null) {
-                    MediaControllerCompat.TransportControls controls = getSupportMediaController().getTransportControls();
+                    MediaControllerCompat.TransportControls controls = MediaControllerCompat.getMediaController(getParent()).getTransportControls();
                     switch (state.getState()) {
                         case PlaybackStateCompat.STATE_PLAYING: // fall through
                         case PlaybackStateCompat.STATE_BUFFERING:
@@ -202,7 +201,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                getSupportMediaController().getTransportControls().seekTo(seekBar.getProgress());
+                MediaControllerCompat.getMediaController(getParent()).getTransportControls().seekTo(seekBar.getProgress());
                 scheduleSeekbarUpdate();
             }
         });
@@ -224,7 +223,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
             return;
         }
 
-        setSupportMediaController(mediaController);
+        MediaControllerCompat.setMediaController(this, mediaController);
         mediaController.registerCallback(callback);
         PlaybackStateCompat state = mediaController.getPlaybackState();
         updatePlaybackState(state);
@@ -287,8 +286,8 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
             mediaBrowser.disconnect();
         }
 
-        if (getSupportMediaController() != null) {
-            getSupportMediaController().unregisterCallback(callback);
+        if (MediaControllerCompat.getMediaController(this) != null) {
+            MediaControllerCompat.getMediaController(this).unregisterCallback(callback);
         }
     }
 
@@ -331,8 +330,8 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         }
 
         lastPlaybackState = state;
-        if (getSupportMediaController() != null && getSupportMediaController().getExtras() != null) {
-            String castName = getSupportMediaController().getExtras().getString(MediaService.EXTRA_CONNECTED_CAST);
+        if (MediaControllerCompat.getMediaController(this) != null && MediaControllerCompat.getMediaController(this).getExtras() != null) {
+            String castName = MediaControllerCompat.getMediaController(this).getExtras().getString(MediaService.EXTRA_CONNECTED_CAST);
             String extraInfo = castName == null ? "" : getResources().getString(R.string.cast_to_device, castName);
             extra.setText(extraInfo);
         }

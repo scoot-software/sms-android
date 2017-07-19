@@ -71,6 +71,8 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
     private ImageView skipPrev;
     private ImageView skipNext;
     private ImageView playPause;
+    private ImageView shuffle;
+    private ImageView repeat;
     private TextView start;
     private TextView end;
     private SeekBar seekbar;
@@ -82,6 +84,9 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
     private Drawable pauseDrawable;
     private Drawable playDrawable;
     private ImageView backgroundImage;
+
+    private static boolean shuffleEnabled = false;
+    private static int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
 
     private final Handler handler = new Handler();
     private MediaBrowserCompat mediaBrowser;
@@ -143,6 +148,8 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         playPause = (ImageView) findViewById(R.id.play_pause);
         skipNext = (ImageView) findViewById(R.id.next);
         skipPrev = (ImageView) findViewById(R.id.prev);
+        shuffle = (ImageView) findViewById(R.id.shuffle);
+        repeat = (ImageView) findViewById(R.id.repeat);
         start = (TextView) findViewById(R.id.startText);
         end = (TextView) findViewById(R.id.endText);
         seekbar = (SeekBar) findViewById(R.id.seekBar);
@@ -186,6 +193,45 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
                             scheduleSeekbarUpdate();
                             break;
                     }
+                }
+            }
+        });
+
+        shuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+
+                if(shuffleEnabled) {
+                    shuffle.clearColorFilter();
+                    controls.setShuffleModeEnabled(false);
+                    shuffleEnabled = false;
+                } else {
+                    shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    controls.setShuffleModeEnabled(true);
+                    shuffleEnabled = true;
+                }
+
+            }
+        });
+
+        repeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+
+                switch(repeatMode) {
+                    case PlaybackStateCompat.REPEAT_MODE_NONE:
+                        controls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
+                        repeatMode = PlaybackStateCompat.REPEAT_MODE_ALL;
+                        repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                        break;
+
+                    default:
+                        controls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
+                        repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
+                        repeat.clearColorFilter();
+                        break;
                 }
             }
         });

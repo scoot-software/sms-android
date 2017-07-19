@@ -128,6 +128,8 @@
     <string name="description_play_pause">Play/Pause</string>
     <string name="description_skip_next">Skip to next</string>
     <string name="description_skip_prev">Skip to previous</string>
+    <string name="description_shuffle">Shuffle Playlist</string>
+    <string name="description_repeat">Repeat Playlist</string>
     <string name="description_background_image">Background image for cover art</string>
 
     <string name="error_no_metadata">Unable to retrieve metadata.</string>

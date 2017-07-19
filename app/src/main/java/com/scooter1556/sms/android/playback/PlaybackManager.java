@@ -33,6 +33,8 @@ public class PlaybackManager implements Playback.Callback {
     private PlaybackServiceCallback serviceCallback;
     private MediaSessionCallback mediaSessionCallback;
 
+    private int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
+
     public PlaybackManager() {}
 
     public static PlaybackManager getInstance() {
@@ -176,7 +178,9 @@ public class PlaybackManager implements Playback.Callback {
                        PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
                        PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH |
                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED |
+                       PlaybackStateCompat.ACTION_SET_REPEAT_MODE;
 
         if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
@@ -194,12 +198,18 @@ public class PlaybackManager implements Playback.Callback {
     public void onCompletion() {
         Log.d(TAG, "onCompletion()");
 
-        if (queueManager.skipQueuePosition(1)) {
+        if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE) {
             handlePlayRequest();
-            queueManager.updateMetadata();
+        } else if(queueManager.skipQueuePosition(1)) {
+            handlePlayRequest();
+        } else if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
+            queueManager.setCurrentQueueIndex(0);
+            handlePlayRequest();
         } else {
             handleStopRequest(null);
         }
+
+        queueManager.updateMetadata();
     }
 
     @Override
@@ -319,6 +329,9 @@ public class PlaybackManager implements Playback.Callback {
 
             if(queueManager.skipQueuePosition(1)) {
                 handlePlayRequest();
+            } else if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
+                queueManager.setCurrentQueueIndex(0);
+                handlePlayRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
@@ -359,16 +372,32 @@ public class PlaybackManager implements Playback.Callback {
                 queueManager.setQueueFromMediaId(MediaUtils.MEDIA_ID_RANDOM_AUDIO);
             }
         }
+
+        @Override
+        public void onSetShuffleModeEnabled(boolean enabled) {
+            Log.d(TAG, "onSetShuffleModeEnabled(" + enabled + ")");
+
+            queueManager.setShuffleMode(enabled);
+
+            super.onSetShuffleModeEnabled(enabled);
+        }
+
+        @Override
+        public void onSetRepeatMode(int mode) {
+            Log.d(TAG, "onSetRepeatMode(" + mode + ")");
+
+            repeatMode = mode;
+
+            super.onSetRepeatMode(mode);
+
+        }
     }
 
 
     public interface PlaybackServiceCallback {
         void onPlaybackStart();
-
         void onNotificationRequired();
-
         void onPlaybackStop();
-
         void onPlaybackStateUpdated(PlaybackStateCompat newState);
     }
 }

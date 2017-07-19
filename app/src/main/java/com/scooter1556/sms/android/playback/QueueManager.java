@@ -62,33 +62,38 @@ public class QueueManager {
     private MetadataUpdateListener metadataListener;
 
     private List<MediaSessionCompat.QueueItem> queue;
+    private List<MediaSessionCompat.QueueItem> currentQueue;
     private int currentIndex;
+
+    private boolean shuffle = false;
+
 
     public QueueManager(@NonNull Context ctx, @NonNull MetadataUpdateListener listener) {
         this.ctx = ctx;
         this.metadataListener = listener;
 
         queue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        currentQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
         currentIndex = 0;
     }
 
-    private void setCurrentQueueIndex(int index) {
-        if (index >= 0 && index < queue.size()) {
+    public void setCurrentQueueIndex(int index) {
+        if (index >= 0 && index < currentQueue.size()) {
             currentIndex = index;
             metadataListener.onCurrentQueueIndexUpdated(currentIndex);
         }
     }
 
     public boolean setCurrentQueueItem(long queueID) {
-        // Set the current index on queue from queue ID:
-        int index = QueueUtils.getIndexByQueueID(queue, queueID);
+        // Set the current index on queue from queue ID
+        int index = QueueUtils.getIndexByQueueID(currentQueue, queueID);
         setCurrentQueueIndex(index);
         return index >= 0;
     }
 
     public boolean setCurrentQueueItem(String mediaID) {
-        // Set the current index on queue from media ID:
-        int index = QueueUtils.getIndexByMediaID(queue, mediaID);
+        // Set the current index on queue from media ID
+        int index = QueueUtils.getIndexByMediaID(currentQueue, mediaID);
         setCurrentQueueIndex(index);
         return index >= 0;
     }
@@ -101,7 +106,7 @@ public class QueueManager {
             index = 0;
         }
 
-        if (!QueueUtils.isIndexPlayable(index, queue)) {
+        if (!QueueUtils.isIndexPlayable(index, currentQueue)) {
             Log.d(TAG, "Cannot increment queue index by " + amount + ". Out of range.");
             return false;
         }
@@ -110,27 +115,55 @@ public class QueueManager {
         return true;
     }
 
+    public void setShuffleMode(boolean enabled) {
+        // Update flag
+        shuffle = enabled;
+
+        List<MediaSessionCompat.QueueItem> newQueue = new ArrayList<>();
+        MediaSessionCompat.QueueItem currentItem = getCurrentMedia();
+
+        if(currentQueue == null || currentQueue.isEmpty()) {
+            return;
+        }
+
+        // Process queue
+        if(enabled) {
+            newQueue.addAll(currentQueue);
+            Collections.shuffle(newQueue);
+            newQueue.remove(currentItem);
+            newQueue.add(0, currentItem);
+
+            //Update current queue
+            currentQueue.clear();
+            currentQueue.addAll(newQueue);
+            currentIndex = 0;
+        } else {
+            currentQueue.clear();
+            currentQueue.addAll(queue);
+            currentIndex = currentQueue.indexOf(currentItem);
+        }
+    }
+
     public MediaSessionCompat.QueueItem getCurrentMedia() {
-        if (!QueueUtils.isIndexPlayable(currentIndex, queue)) {
+        if (!QueueUtils.isIndexPlayable(currentIndex, currentQueue)) {
             return null;
         }
 
-        return queue.get(currentIndex);
+        return currentQueue.get(currentIndex);
     }
 
     public int getCurrentQueueSize() {
-        if (queue == null) {
+        if (currentQueue == null) {
             return 0;
         }
 
-        return queue.size();
+        return currentQueue.size();
     }
 
     public void setQueueFromMediaId(final String id) {
         Log.d(TAG, "setQueueFromMediaId(" + id + ")");
 
-        final List<MediaSessionCompat.QueueItem> newQueue = new ArrayList<>();
-
+        final List<MediaSessionCompat.QueueItem> newQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
         List<String> parsedMediaId = MediaUtils.parseMediaId(id);
 
         if(parsedMediaId.isEmpty()) {
@@ -167,7 +200,8 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
-                        setCurrentQueue(newQueue, id);
+                        setQueue(newQueue);
+                        setCurrentQueue(newQueue);
                         updateMetadata();
                     } else {
                         Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
@@ -176,8 +210,6 @@ public class QueueManager {
 
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                    List<MediaElement> elements = new ArrayList<>();
-                    List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
                     Gson parser = new Gson();
 
                     for (int i = 0; i < response.length(); i++) {
@@ -199,7 +231,15 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
-                        setCurrentQueue(newQueue, id);
+                        // Update master queue
+                        setQueue(newQueue);
+
+                        // Handle Shuffle
+                        if(shuffle) {
+                            Collections.shuffle(newQueue);
+                        }
+
+                        setCurrentQueue(newQueue);
                         updateMetadata();
                     } else {
                         Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
@@ -227,12 +267,12 @@ public class QueueManager {
                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                     if (description != null) {
-                        List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
                         newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
                     }
 
                     if (!newQueue.isEmpty()) {
-                        setCurrentQueue(newQueue, id);
+                        setQueue(newQueue);
+                        setCurrentQueue(newQueue);
                         updateMetadata();
                     } else {
                         Log.e(TAG, "No media items to add to queue.");
@@ -241,7 +281,6 @@ public class QueueManager {
 
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                    List<MediaElement> elements = new ArrayList<>();
                     Gson parser = new Gson();
 
                     for (int i = 0; i < response.length(); i++) {
@@ -263,7 +302,8 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
-                        setCurrentQueue(newQueue, id);
+                        setQueue(newQueue);
+                        setCurrentQueue(newQueue);
                         updateMetadata();
                     } else {
                         Log.e(TAG, "No media items to add to queue");
@@ -303,6 +343,7 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
+                        setQueue(newQueue);
                         setCurrentQueue(newQueue, id);
                         updateMetadata();
                     } else {
@@ -312,7 +353,6 @@ public class QueueManager {
 
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                    List<MediaElement> elements = new ArrayList<>();
                     Gson parser = new Gson();
 
                     for (int i = 0; i < response.length(); i++) {
@@ -334,6 +374,17 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
+                        // Update master queue
+                        setQueue(newQueue);
+
+                        // Handle Shuffle
+                        if(shuffle) {
+                            MediaSessionCompat.QueueItem currentItem = newQueue.get(QueueUtils.getIndexByMediaID(newQueue, id));
+                            Collections.shuffle(newQueue);
+                            newQueue.remove(currentItem);
+                            newQueue.add(0, currentItem);
+                        }
+
                         setCurrentQueue(newQueue, id);
                         updateMetadata();
                     } else {
@@ -349,52 +400,36 @@ public class QueueManager {
         }
     }
 
-    public void addToQueueFromMediaElement(@NonNull final MediaElement element) {
-        Log.d(TAG, "addToQueueFromMediaElement(" + element.getID() + ")");
-
-        MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
-                .setMediaId(MediaUtils.MEDIA_ID_AUDIO + MediaUtils.SEPARATOR + String.valueOf(element.getID()))
-                .setTitle(element.getTitle())
-                .setSubtitle(element.getArtist())
-                .setDescription(element.getTrackNumber().toString())
-                .build();
-
-        if(this.queue == null) {
-            initialiseQueue(ctx.getString(R.string.app_name));
-        }
-
-        queue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
-
-        // Get index in queue
-        int index = QueueUtils.getIndexByQueueID(queue, element.getID());
-        currentIndex = Math.max(index, 0);
-
-        metadataListener.onQueueUpdated(this.queue);
-
-        updateMetadata();
+    protected void setQueue(List<MediaSessionCompat.QueueItem> newQueue) {
+        queue.clear();
+        queue.addAll(newQueue);
     }
 
     protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue) {
         setCurrentQueue(newQueue, null);
     }
 
+    protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, int index) {
+        currentQueue.clear();
+        currentQueue.addAll(newQueue);
+        currentIndex = Math.max(index, 0);
+
+        metadataListener.onQueueUpdated(currentQueue);
+    }
+
     protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, String initialMediaID) {
-        queue = newQueue;
+        currentQueue.clear();
+        currentQueue.addAll(newQueue);
+
         int index = 0;
 
         if (initialMediaID != null) {
-            index = QueueUtils.getIndexByMediaID(queue, initialMediaID);
+            index = QueueUtils.getIndexByMediaID(currentQueue, initialMediaID);
         }
 
         currentIndex = Math.max(index, 0);
-        metadataListener.onQueueUpdated(newQueue);
-    }
 
-    protected void initialiseQueue(String title) {
-        currentIndex = 0;
-        queue = new ArrayList<>();
-
-        metadataListener.onQueueUpdated(queue);
+        metadataListener.onQueueUpdated(currentQueue);
     }
 
     public void updateMetadata() {

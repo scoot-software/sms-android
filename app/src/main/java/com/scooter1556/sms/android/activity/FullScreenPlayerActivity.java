@@ -200,38 +200,59 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+                PlaybackStateCompat state = mediaController.getPlaybackState();
 
-                if(shuffleEnabled) {
-                    shuffle.clearColorFilter();
-                    controls.setShuffleModeEnabled(false);
-                    shuffleEnabled = false;
-                } else {
-                    shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
-                    controls.setShuffleModeEnabled(true);
-                    shuffleEnabled = true;
+                if(state == null) {
+                    return;
                 }
 
+                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+
+                for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
+                    switch (action.getAction()) {
+                        case MediaService.ACTION_SHUFFLE_ENABLE:
+                            controls.sendCustomAction(MediaService.ACTION_SHUFFLE_ENABLE, null);
+                            shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                            break;
+
+                        case MediaService.ACTION_SHUFFLE_DISABLE:
+                            controls.sendCustomAction(MediaService.ACTION_SHUFFLE_DISABLE, null);
+                            shuffle.clearColorFilter();
+                            break;
+                    }
+                }
             }
         });
 
         repeat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                PlaybackStateCompat state = mediaController.getPlaybackState();
+
+                if(state == null) {
+                    return;
+                }
+
                 MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
 
-                switch(repeatMode) {
-                    case PlaybackStateCompat.REPEAT_MODE_NONE:
-                        controls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
-                        repeatMode = PlaybackStateCompat.REPEAT_MODE_ALL;
-                        repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
-                        break;
+                for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
+                    switch (action.getAction()) {
+                        case MediaService.ACTION_REPEAT_DISABLE:
+                            controls.sendCustomAction(MediaService.ACTION_REPEAT_ALL, null);
+                            repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                            break;
 
-                    default:
-                        controls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
-                        repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
-                        repeat.clearColorFilter();
-                        break;
+                        case MediaService.ACTION_REPEAT_ALL:
+                            controls.sendCustomAction(MediaService.ACTION_REPEAT_ONE, null);
+                            repeat.setImageResource(R.drawable.ic_repeat_one_white_24dp);
+                            break;
+
+                        case MediaService.ACTION_REPEAT_ONE:
+                            controls.sendCustomAction(MediaService.ACTION_REPEAT_DISABLE, null);
+                            repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
+                            repeat.clearColorFilter();
+                            break;
+                    }
                 }
             }
         });

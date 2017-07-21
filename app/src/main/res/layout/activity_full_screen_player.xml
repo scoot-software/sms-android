@@ -141,7 +141,7 @@
                     android:layout_weight="1"
                     android:background="?selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_shuffle_white_24dp"
-                    android:contentDescription="@string/description_shuffle"/>
+                    android:contentDescription="@string/description_shuffle_playlist"/>
 
                 <ImageView
                     android:id="@+id/prev"

@@ -11,7 +11,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
@@ -34,6 +36,7 @@ public class PlaybackManager implements Playback.Callback {
     private MediaSessionCallback mediaSessionCallback;
 
     private int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
+    private boolean shuffleMode = false;
 
     public PlaybackManager() {}
 
@@ -145,8 +148,29 @@ public class PlaybackManager implements Playback.Callback {
         }
 
         //noinspection ResourceType
-        PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-                .setActions(getAvailableActions());
+        PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
+        stateBuilder.setActions(getAvailableActions());
+
+        // Shuffle
+        stateBuilder.addCustomAction(shuffleMode ? MediaService.ACTION_SHUFFLE_DISABLE : MediaService.ACTION_SHUFFLE_ENABLE,
+                                     shuffleMode ? ctx.getResources().getString(R.string.description_shuffle_enable) : ctx.getResources().getString(R.string.description_shuffle_enable),
+                                     shuffleMode ?  R.drawable.ic_shuffle_enabled_white_48dp : R.drawable.ic_shuffle_white_48dp);
+
+        // Repeat
+        switch(repeatMode) {
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
+                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_ALL, ctx.getResources().getString(R.string.description_repeat_disable), R.drawable.ic_repeat_white_48dp);
+                break;
+
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_ONE, ctx.getResources().getString(R.string.description_repeat_all), R.drawable.ic_repeat_enable_white_48dp);
+                break;
+
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_DISABLE, ctx.getResources().getString(R.string.description_repeat_one), R.drawable.ic_repeat_one_white_48dp);
+                break;
+        }
+
 
         int state = playback.getState();
 
@@ -178,9 +202,7 @@ public class PlaybackManager implements Playback.Callback {
                        PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
                        PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH |
                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED |
-                       PlaybackStateCompat.ACTION_SET_REPEAT_MODE;
+                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
 
         if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
@@ -374,22 +396,36 @@ public class PlaybackManager implements Playback.Callback {
         }
 
         @Override
-        public void onSetShuffleModeEnabled(boolean enabled) {
-            Log.d(TAG, "onSetShuffleModeEnabled(" + enabled + ")");
+        public void onCustomAction(String action, Bundle extras) {
+            Log.d(TAG, "onCustomAction(" + action + ")");
 
-            queueManager.setShuffleMode(enabled);
+            switch(action) {
 
-            super.onSetShuffleModeEnabled(enabled);
-        }
+                case MediaService.ACTION_SHUFFLE_ENABLE:
+                    shuffleMode = true;
+                    queueManager.setShuffleMode(true);
+                    break;
 
-        @Override
-        public void onSetRepeatMode(int mode) {
-            Log.d(TAG, "onSetRepeatMode(" + mode + ")");
+                case MediaService.ACTION_SHUFFLE_DISABLE:
+                    shuffleMode = false;
+                    queueManager.setShuffleMode(false);
+                    break;
 
-            repeatMode = mode;
+                case MediaService.ACTION_REPEAT_DISABLE:
+                    repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
+                    break;
 
-            super.onSetRepeatMode(mode);
+                case MediaService.ACTION_REPEAT_ALL:
+                    repeatMode = PlaybackStateCompat.REPEAT_MODE_ALL;
+                    break;
 
+                case MediaService.ACTION_REPEAT_ONE:
+                    repeatMode = PlaybackStateCompat.REPEAT_MODE_ONE;
+                    break;
+
+            }
+
+            updatePlaybackState(null);
         }
     }
 

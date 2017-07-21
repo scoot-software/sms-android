@@ -101,6 +101,13 @@ public class MediaService extends MediaBrowserServiceCompat
     // A value of a CMD_NAME key that indicates that the music playback should switch
     // to local playback from cast playback.
     public static final String CMD_STOP_CASTING = "CMD_STOP_CASTING";
+
+    public static final String ACTION_SHUFFLE_ENABLE = "action_shuffle_enable";
+    public static final String ACTION_SHUFFLE_DISABLE = "action_shuffle_disable";
+    public static final String ACTION_REPEAT_DISABLE = "action_repeat_disable";
+    public static final String ACTION_REPEAT_ALL = "action_repeat_all";
+    public static final String ACTION_REPEAT_ONE = "action_repeat_one";
+
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
 
@@ -204,7 +211,7 @@ public class MediaService extends MediaBrowserServiceCompat
         // Start a new Media Session
         mediaSession = new MediaSessionCompat(this, MediaService.class.getSimpleName());
         mediaSession.setCallback(playbackManager.getMediaSessionCallback());
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
 
         Context context = getApplicationContext();
         Intent intent = new Intent(context, NowPlayingActivity.class);

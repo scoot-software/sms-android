@@ -201,26 +201,25 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
             @Override
             public void onClick(View v) {
                 PlaybackStateCompat state = mediaController.getPlaybackState();
+                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
 
                 if(state == null) {
                     return;
                 }
 
-                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
-
                 for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
                     switch (action.getAction()) {
-                        case MediaService.ACTION_SHUFFLE_ENABLE:
-                            controls.sendCustomAction(MediaService.ACTION_SHUFFLE_ENABLE, null);
-                            shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                        case MediaService.STATE_SHUFFLE_ON:
+                            controls.sendCustomAction(MediaService.STATE_SHUFFLE_ON, null);
                             break;
 
-                        case MediaService.ACTION_SHUFFLE_DISABLE:
-                            controls.sendCustomAction(MediaService.ACTION_SHUFFLE_DISABLE, null);
-                            shuffle.clearColorFilter();
+                        case MediaService.STATE_SHUFFLE_OFF:
+                            controls.sendCustomAction(MediaService.STATE_SHUFFLE_OFF, null);
                             break;
                     }
                 }
+
+                updatePlaybackState(state);
             }
         });
 
@@ -228,32 +227,21 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
             @Override
             public void onClick(View v) {
                 PlaybackStateCompat state = mediaController.getPlaybackState();
+                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
 
                 if(state == null) {
                     return;
                 }
 
-                MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
-
                 for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
                     switch (action.getAction()) {
-                        case MediaService.ACTION_REPEAT_DISABLE:
-                            controls.sendCustomAction(MediaService.ACTION_REPEAT_ALL, null);
-                            repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
-                            break;
-
-                        case MediaService.ACTION_REPEAT_ALL:
-                            controls.sendCustomAction(MediaService.ACTION_REPEAT_ONE, null);
-                            repeat.setImageResource(R.drawable.ic_repeat_one_white_24dp);
-                            break;
-
-                        case MediaService.ACTION_REPEAT_ONE:
-                            controls.sendCustomAction(MediaService.ACTION_REPEAT_DISABLE, null);
-                            repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
-                            repeat.clearColorFilter();
+                        case MediaService.STATE_REPEAT_NONE: case MediaService.STATE_REPEAT_ALL: case MediaService.STATE_REPEAT_ONE:
+                            controls.sendCustomAction(action.getAction(), null);
                             break;
                     }
                 }
+
+                updatePlaybackState(state);
             }
         });
 
@@ -447,6 +435,38 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
                 ? INVISIBLE : VISIBLE );
         skipPrev.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) == 0
                 ? INVISIBLE : VISIBLE );
+        shuffle.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED) == 0
+                ? INVISIBLE : VISIBLE );
+        repeat.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_REPEAT_MODE) == 0
+                ? INVISIBLE : VISIBLE );
+
+        // Custom Actions
+        for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
+            switch (action.getAction()) {
+                case MediaService.STATE_SHUFFLE_ON:
+                    shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    break;
+
+                case MediaService.STATE_SHUFFLE_OFF:
+                    shuffle.clearColorFilter();
+                    break;
+
+                case MediaService.STATE_REPEAT_NONE:
+                    repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
+                    repeat.clearColorFilter();
+                    break;
+
+                case MediaService.STATE_REPEAT_ALL:
+                    repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
+                    repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    break;
+
+                case MediaService.STATE_REPEAT_ONE:
+                    repeat.setImageResource(R.drawable.ic_repeat_one_white_24dp);
+                    repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    break;
+            }
+        }
     }
 
     private void updateProgress() {

@@ -152,22 +152,22 @@ public class PlaybackManager implements Playback.Callback {
         stateBuilder.setActions(getAvailableActions());
 
         // Shuffle
-        stateBuilder.addCustomAction(shuffleMode ? MediaService.ACTION_SHUFFLE_DISABLE : MediaService.ACTION_SHUFFLE_ENABLE,
-                                     shuffleMode ? ctx.getResources().getString(R.string.description_shuffle_enable) : ctx.getResources().getString(R.string.description_shuffle_enable),
+        stateBuilder.addCustomAction(shuffleMode ? MediaService.STATE_SHUFFLE_ON : MediaService.STATE_SHUFFLE_OFF,
+                                     shuffleMode ? ctx.getResources().getString(R.string.description_shuffle_on) : ctx.getResources().getString(R.string.description_shuffle_off),
                                      shuffleMode ?  R.drawable.ic_shuffle_enabled_white_48dp : R.drawable.ic_shuffle_white_48dp);
 
         // Repeat
         switch(repeatMode) {
             case PlaybackStateCompat.REPEAT_MODE_NONE:
-                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_ALL, ctx.getResources().getString(R.string.description_repeat_disable), R.drawable.ic_repeat_white_48dp);
+                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_NONE, ctx.getResources().getString(R.string.description_repeat_none), R.drawable.ic_repeat_white_48dp);
                 break;
 
             case PlaybackStateCompat.REPEAT_MODE_ALL:
-                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_ONE, ctx.getResources().getString(R.string.description_repeat_all), R.drawable.ic_repeat_enable_white_48dp);
+                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_ALL, ctx.getResources().getString(R.string.description_repeat_all), R.drawable.ic_repeat_enable_white_48dp);
                 break;
 
             case PlaybackStateCompat.REPEAT_MODE_ONE:
-                stateBuilder.addCustomAction(MediaService.ACTION_REPEAT_DISABLE, ctx.getResources().getString(R.string.description_repeat_one), R.drawable.ic_repeat_one_white_48dp);
+                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_ONE, ctx.getResources().getString(R.string.description_repeat_one), R.drawable.ic_repeat_one_white_48dp);
                 break;
         }
 
@@ -202,7 +202,9 @@ public class PlaybackManager implements Playback.Callback {
                        PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
                        PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH |
                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+                       PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
+                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED;
 
         if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
@@ -401,26 +403,26 @@ public class PlaybackManager implements Playback.Callback {
 
             switch(action) {
 
-                case MediaService.ACTION_SHUFFLE_ENABLE:
-                    shuffleMode = true;
-                    queueManager.setShuffleMode(true);
-                    break;
-
-                case MediaService.ACTION_SHUFFLE_DISABLE:
+                case MediaService.STATE_SHUFFLE_ON:
                     shuffleMode = false;
                     queueManager.setShuffleMode(false);
                     break;
 
-                case MediaService.ACTION_REPEAT_DISABLE:
-                    repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
+                case MediaService.STATE_SHUFFLE_OFF:
+                    shuffleMode = true;
+                    queueManager.setShuffleMode(true);
                     break;
 
-                case MediaService.ACTION_REPEAT_ALL:
+                case MediaService.STATE_REPEAT_NONE:
                     repeatMode = PlaybackStateCompat.REPEAT_MODE_ALL;
                     break;
 
-                case MediaService.ACTION_REPEAT_ONE:
+                case MediaService.STATE_REPEAT_ALL:
                     repeatMode = PlaybackStateCompat.REPEAT_MODE_ONE;
+                    break;
+
+                case MediaService.STATE_REPEAT_ONE:
+                    repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
                     break;
 
             }

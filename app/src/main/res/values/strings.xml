@@ -129,10 +129,10 @@
     <string name="description_skip_next">Skip to next</string>
     <string name="description_skip_prev">Skip to previous</string>
     <string name="description_shuffle_playlist">Shuffle Playlist</string>
-    <string name="description_shuffle_enable">Enable Shuffle Mode</string>
-    <string name="description_shuffle_disable">Disable Shuffle Mode</string>
+    <string name="description_shuffle_on">Shuffle Mode On</string>
+    <string name="description_shuffle_off">Shuffle Mode Off</string>
     <string name="description_repeat">Repeat Playlist</string>
-    <string name="description_repeat_disable">Disable Repeat Mode</string>
+    <string name="description_repeat_none">Disable Repeat Mode</string>
     <string name="description_repeat_all">Repeat All</string>
     <string name="description_repeat_one">Repeat One</string>
     <string name="description_background_image">Background image for cover art</string>

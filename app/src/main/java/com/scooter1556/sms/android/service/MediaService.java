@@ -102,11 +102,16 @@ public class MediaService extends MediaBrowserServiceCompat
     // to local playback from cast playback.
     public static final String CMD_STOP_CASTING = "CMD_STOP_CASTING";
 
-    public static final String ACTION_SHUFFLE_ENABLE = "action_shuffle_enable";
-    public static final String ACTION_SHUFFLE_DISABLE = "action_shuffle_disable";
-    public static final String ACTION_REPEAT_DISABLE = "action_repeat_disable";
-    public static final String ACTION_REPEAT_ALL = "action_repeat_all";
-    public static final String ACTION_REPEAT_ONE = "action_repeat_one";
+    // Shuffle
+    public static final String ACTION_SHUFFLE_TOGGLE = "action_shuffle";
+    public static final String STATE_SHUFFLE_ON = "state_shuffle_on";
+    public static final String STATE_SHUFFLE_OFF = "state_shuffle_off";
+
+    // Repeat
+    public static final String ACTION_REPEAT_TOGGLE = "action_repeat";
+    public static final String STATE_REPEAT_NONE = "state_repeat_none";
+    public static final String STATE_REPEAT_ALL = "state_repeat_all";
+    public static final String STATE_REPEAT_ONE = "state_repeat_one";
 
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;

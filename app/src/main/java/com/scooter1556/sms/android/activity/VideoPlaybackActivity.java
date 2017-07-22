@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
@@ -70,6 +71,8 @@ import java.util.UUID;
 
 import cz.msebera.android.httpclient.Header;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
 
 public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
@@ -86,8 +89,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     static final int MAX_SAMPLE_RATE = 48000;
 
+    static final int CONTROLLER_TIMEOUT = 4000;
+
     private SimpleExoPlayerView videoView;
     private LinearLayout settingsRootView;
+    private ProgressBar loading;
 
     private MediaSessionCompat.QueueItem currentMedia;
 
@@ -121,6 +127,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         videoView = (SimpleExoPlayerView) findViewById(R.id.videoView);
         videoView.setControllerVisibilityListener(this);
         videoView.requestFocus();
+
+        loading = (ProgressBar) findViewById(R.id.loading);
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -264,7 +272,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.getPlayWhenReady();
+        return mediaPlayer != null && playbackState == PlaybackStateCompat.STATE_PLAYING;
     }
 
     @Override
@@ -415,11 +423,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onLoadingChanged(boolean isLoading) {
         Log.d(TAG, "onLoadingChanged(" + isLoading + ")");
-
-        if(!isLoading) {
-            // The media player is done preparing. That means we can start playing if we have audio focus.
-            configMediaPlayerState();
-        }
     }
 
     private void configMediaPlayerState() {
@@ -457,7 +460,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             case ExoPlayer.STATE_BUFFERING:
                 Log.d(TAG, "onPlayerStateChanged(BUFFERING)");
 
+                loading.setVisibility(VISIBLE);
+
                 videoView.setPlayer(getMediaPlayer());
+                videoView.showController();
+                videoView.setControllerShowTimeoutMs(-1);
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
                 // Update state
@@ -466,6 +473,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
             case ExoPlayer.STATE_ENDED:
                 Log.d(TAG, "onPlayerStateChanged(ENDED)");
+
+                loading.setVisibility(INVISIBLE);
+                videoView.setControllerShowTimeoutMs(-1);
 
                 // End job if required
                 if (currentJobId != null) {
@@ -485,6 +495,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             case ExoPlayer.STATE_IDLE:
                 Log.d(TAG, "onPlayerStateChanged(IDLE)");
 
+                loading.setVisibility(INVISIBLE);
+                videoView.showController();
+                videoView.setControllerShowTimeoutMs(-1);
+
                 // Allow screen to turn off
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -493,9 +507,12 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             case ExoPlayer.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
+                loading.setVisibility(INVISIBLE);
+                videoView.setControllerShowTimeoutMs(CONTROLLER_TIMEOUT);
+
                 if (playWhenReady) {
-                    playbackState = PlaybackStateCompat.STATE_PLAYING;
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    configMediaPlayerState();
                 }
 
                 break;
@@ -671,6 +688,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         // Create player
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+        mediaPlayer.setPlayWhenReady(true);
         mediaPlayer.addListener(this);
     }
 
@@ -724,9 +742,5 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 settingsRootView.addView(button, settingsRootView.getChildCount() - 1);
             }
         }
-    }
-
-    private void showControls() {
-        settingsRootView.setVisibility(View.VISIBLE);
     }
 }

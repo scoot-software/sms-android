@@ -2,6 +2,7 @@ package com.scooter1556.sms.android.activity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -396,6 +398,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         if (trackGroups != lastSeenTrackGroupArray) {
             MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+
             if (mappedTrackInfo != null) {
                 if (mappedTrackInfo.getTrackTypeRendererSupport(C.TRACK_TYPE_VIDEO) == MappingTrackSelector.MappedTrackInfo.RENDERER_SUPPORT_UNSUPPORTED_TRACKS) {
                     Toast.makeText(getApplicationContext(), R.string.error_unsupported_video, Toast.LENGTH_LONG).show();
@@ -404,6 +407,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                     Toast.makeText(getApplicationContext(), R.string.error_unsupported_audio, Toast.LENGTH_LONG).show();
                 }
             }
+
             lastSeenTrackGroupArray = trackGroups;
         }
     }
@@ -676,8 +680,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
 
             if (mappedTrackInfo != null) {
-                trackSelectionUtils.showSelectionDialog(this, ((Button) view).getText(),
-                        trackSelector.getCurrentMappedTrackInfo(), (int) view.getTag());
+                trackSelectionUtils.showSelectionDialog(this, trackSelector.getCurrentMappedTrackInfo(), (int) view.getTag());
             }
         }
     }
@@ -699,24 +702,24 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
 
             if (trackGroups.length != 0) {
-                Button button = new Button(this);
-                int label;
+                ImageButton button = new ImageButton(this);
                 switch (mediaPlayer.getRendererType(i)) {
+
                     case C.TRACK_TYPE_AUDIO:
-                        label = R.string.audio;
+                        button.setImageResource(R.drawable.ic_surround_sound_white_36dp);
                         break;
                     case C.TRACK_TYPE_VIDEO:
-                        label = R.string.video;
+                        button.setImageResource(R.drawable.ic_settings_white_36dp);
                         break;
                     case C.TRACK_TYPE_TEXT:
-                        label = R.string.text;
+                        button.setImageResource(R.drawable.ic_subtitles_white_36dp);
                         break;
                     default:
                         continue;
                 }
 
-                button.setText(label);
                 button.setTag(i);
+                button.setBackgroundColor(Color.TRANSPARENT);
                 button.setOnClickListener(this);
                 settingsRootView.addView(button, settingsRootView.getChildCount() - 1);
             }

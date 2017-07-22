@@ -50,7 +50,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
 
     private CheckedTextView disableView;
     private CheckedTextView defaultView;
-    private CheckedTextView enableRandomAdaptationView;
     private CheckedTextView[][] trackViews;
 
     /**
@@ -72,8 +71,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
      * @param trackInfo The current track information.
      * @param rendererIndex The index of the renderer.
      */
-    public void showSelectionDialog(Activity activity, CharSequence title, MappedTrackInfo trackInfo,
-                                    int rendererIndex) {
+    public void showSelectionDialog(Activity activity, MappedTrackInfo trackInfo, int rendererIndex) {
         this.trackInfo = trackInfo;
         this.rendererIndex = rendererIndex;
 
@@ -89,7 +87,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         override = selector.getSelectionOverride(rendererIndex, trackGroups);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle(title)
+        builder
                 .setView(buildView(builder.getContext()))
                 .setPositiveButton(android.R.string.ok, this)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -164,15 +162,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         if (!haveSupportedTracks) {
             // Indicate that the default selection will be nothing.
             defaultView.setText(R.string.selection_default_none);
-        } else if (haveAdaptiveTracks) {
-            // View for using random adaptation.
-            enableRandomAdaptationView = (CheckedTextView) inflater.inflate(
-                    android.R.layout.simple_list_item_multiple_choice, root, false);
-            enableRandomAdaptationView.setBackgroundResource(selectableItemBackgroundResourceId);
-            enableRandomAdaptationView.setText(R.string.enable_random_adaptation);
-            enableRandomAdaptationView.setOnClickListener(this);
-            root.addView(inflater.inflate(R.layout.list_divider, root, false));
-            root.addView(enableRandomAdaptationView);
         }
 
         updateViews();
@@ -186,15 +175,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
             for (int j = 0; j < trackViews[i].length; j++) {
                 trackViews[i][j].setChecked(override != null && override.groupIndex == i
                         && override.containsTrack(j));
-            }
-        }
-        if (enableRandomAdaptationView != null) {
-            boolean enableView = !isDisabled && override != null && override.length > 1;
-            enableRandomAdaptationView.setEnabled(enableView);
-            enableRandomAdaptationView.setFocusable(enableView);
-            if (enableView) {
-                enableRandomAdaptationView.setChecked(!isDisabled
-                        && override.factory instanceof RandomTrackSelection.Factory);
             }
         }
     }
@@ -221,8 +201,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         } else if (view == defaultView) {
             isDisabled = false;
             override = null;
-        } else if (view == enableRandomAdaptationView) {
-            setOverride(override.groupIndex, override.tracks, !enableRandomAdaptationView.isChecked());
         } else {
             isDisabled = false;
             @SuppressWarnings("unchecked")
@@ -243,13 +221,11 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
                         override = null;
                         isDisabled = true;
                     } else {
-                        setOverride(groupIndex, getTracksRemoving(override, trackIndex),
-                                enableRandomAdaptationView.isChecked());
+                        setOverride(groupIndex, getTracksRemoving(override, trackIndex));
                     }
                 } else {
                     // Add the track to the override.
-                    setOverride(groupIndex, getTracksAdding(override, trackIndex),
-                            enableRandomAdaptationView.isChecked());
+                    setOverride(groupIndex, getTracksAdding(override, trackIndex));
                 }
             }
         }
@@ -257,9 +233,8 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         updateViews();
     }
 
-    private void setOverride(int group, int[] tracks, boolean enableRandomAdaptation) {
-        TrackSelection.Factory factory = tracks.length == 1 ? FIXED_FACTORY
-                : (enableRandomAdaptation ? RANDOM_FACTORY : adaptiveTrackSelectionFactory);
+    private void setOverride(int group, int[] tracks) {
+        TrackSelection.Factory factory = tracks.length == 1 ? FIXED_FACTORY : adaptiveTrackSelectionFactory;
         override = new SelectionOverride(factory, group, tracks);
     }
 
@@ -294,18 +269,11 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         String trackName;
 
         if (MimeTypes.isVideo(format.sampleMimeType)) {
-            trackName = joinWithSeparator(joinWithSeparator(joinWithSeparator(
-                    buildResolutionString(format), buildBitrateString(format)), buildTrackIdString(format)),
-                    buildSampleMimeTypeString(format));
+            trackName = buildResolutionString(format) + " (" + buildBitrateString(format) + ")";
         } else if (MimeTypes.isAudio(format.sampleMimeType)) {
-            trackName = joinWithSeparator(joinWithSeparator(joinWithSeparator(joinWithSeparator(
-                    buildLanguageString(format), buildAudioPropertyString(format)),
-                    buildBitrateString(format)), buildTrackIdString(format)),
-                    buildSampleMimeTypeString(format));
+            trackName = buildTrackIdString(format) + " (" + buildLanguageString(format) + ")";
         } else {
-            trackName = joinWithSeparator(joinWithSeparator(joinWithSeparator(buildLanguageString(format),
-                    buildBitrateString(format)), buildTrackIdString(format)),
-                    buildSampleMimeTypeString(format));
+            trackName = buildTrackIdString(format) + " (" + buildLanguageString(format) + ")";
         }
 
         return trackName.length() == 0 ? "unknown" : trackName;
@@ -316,7 +284,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
                 ? "" : format.width + "x" + format.height;
     }
 
-    private static String buildAudioPropertyString(Format format) {
+    private static String buildAudioChannelString(Format format) {
         return format.channelCount == Format.NO_VALUE || format.sampleRate == Format.NO_VALUE
                 ? "" : format.channelCount + "ch, " + format.sampleRate + "Hz";
     }
@@ -330,12 +298,9 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         return format.bitrate == Format.NO_VALUE ? ""
                 : String.format(Locale.UK, "%.2fMbit", format.bitrate / 1000000f);
     }
-    private static String joinWithSeparator(String first, String second) {
-        return first.length() == 0 ? second : (second.length() == 0 ? first : first + ", " + second);
-    }
 
     private static String buildTrackIdString(Format format) {
-        return format.id == null ? "" : ("id:" + format.id);
+        return format.id == null ? "" : format.id;
     }
 
     private static String buildSampleMimeTypeString(Format format) {

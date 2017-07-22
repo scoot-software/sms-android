@@ -303,6 +303,8 @@ public class MediaService extends MediaBrowserServiceCompat
      */
     @Override
     public void onPlaybackStart() {
+        Log.d(TAG, "onPlaybackStart()");
+
         mediaSession.setActive(true);
 
         delayedStopHandler.removeCallbacksAndMessages(null);
@@ -319,6 +321,8 @@ public class MediaService extends MediaBrowserServiceCompat
      */
     @Override
     public void onPlaybackStop() {
+        Log.d(TAG, "onPlaybackStop()");
+
         mediaSession.setActive(false);
 
         // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,

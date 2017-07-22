@@ -38,7 +38,7 @@ public class PlaybackManager implements Playback.Callback {
     private int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
     private boolean shuffleMode = false;
 
-    public PlaybackManager() {}
+    private PlaybackManager() {}
 
     public static PlaybackManager getInstance() {
         return instance;
@@ -52,6 +52,8 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     public void setPlayback(Playback playback) {
+        Log.d(TAG, "setPlayback()");
+
         if(this.playback != null) {
             this.playback.stop(true);
             this.playback.destroy();
@@ -96,6 +98,7 @@ public class PlaybackManager implements Playback.Callback {
 
         } else if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
             if (playback instanceof AudioPlayback) {
+                playback.stop(true);
                 playback.destroy();
                 playback = null;
             }
@@ -192,8 +195,11 @@ public class PlaybackManager implements Playback.Callback {
 
         serviceCallback.onPlaybackStateUpdated(stateBuilder.build());
 
-        if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
-            serviceCallback.onNotificationRequired();
+        // Check if notification is required
+        if(!(playback instanceof VideoPlaybackActivity)) {
+            if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
+                serviceCallback.onNotificationRequired();
+            }
         }
     }
 
@@ -238,6 +244,8 @@ public class PlaybackManager implements Playback.Callback {
 
     @Override
     public void onPlaybackStatusChanged(int state) {
+        Log.d(TAG, "onPlaybackStatusChanged(" + state + ")");
+
         updatePlaybackState(null);
     }
 

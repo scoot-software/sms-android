@@ -114,6 +114,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     private TrackSelectionUtils trackSelectionUtils;
     private TrackGroupArray lastSeenTrackGroupArray;
 
+    private boolean initialised = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
@@ -175,20 +177,20 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause() was called");
+        Log.d(TAG, "onPause()");
 
         pause();
     }
 
     @Override
     protected void onStop() {
-        Log.d(TAG, "onStop() was called");
+        Log.d(TAG, "onStop()");
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG, "onDestroy() is called");
+        Log.d(TAG, "onDestroy()");
 
         // Stop playback
         stop(true);
@@ -209,13 +211,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     @Override
     protected void onStart() {
-        Log.d(TAG, "onStart was called");
+        Log.d(TAG, "onStart()");
         super.onStart();
     }
 
     @Override
     public void onResume() {
-        Log.d(TAG, "onResume() was called");
+        Log.d(TAG, "onResume()");
 
         super.onResume();
     }
@@ -272,7 +274,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public boolean isPlaying() {
-        return mediaPlayer != null && playbackState == PlaybackStateCompat.STATE_PLAYING;
+        return mediaPlayer != null && mediaPlayer.getPlayWhenReady();
     }
 
     @Override
@@ -322,13 +324,12 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             if (mediaPlayer != null && mediaPlayer.getPlayWhenReady()) {
                 mediaPlayer.setPlayWhenReady(false);
                 currentPosition = mediaPlayer.getCurrentPosition();
+                playbackState = PlaybackStateCompat.STATE_PAUSED;
             }
 
             // While paused, retain the Media Player but give up audio focus
             relaxResources(false);
         }
-
-        playbackState = PlaybackStateCompat.STATE_PAUSED;
 
         if (callback != null) {
             callback.onPlaybackStatusChanged(playbackState);
@@ -423,6 +424,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onLoadingChanged(boolean isLoading) {
         Log.d(TAG, "onLoadingChanged(" + isLoading + ")");
+
+        if(!isLoading && playbackState != PlaybackStateCompat.STATE_PAUSED) {
+            initialised = true;
+            configMediaPlayerState();
+        }
     }
 
     private void configMediaPlayerState() {
@@ -469,6 +475,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                 // Update state
                 playbackState = PlaybackStateCompat.STATE_BUFFERING;
+
                 break;
 
             case ExoPlayer.STATE_ENDED:
@@ -492,6 +499,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 // Allow screen to turn off
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+                break;
+
             case ExoPlayer.STATE_IDLE:
                 Log.d(TAG, "onPlayerStateChanged(IDLE)");
 
@@ -507,12 +516,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             case ExoPlayer.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
-                loading.setVisibility(INVISIBLE);
-                videoView.setControllerShowTimeoutMs(CONTROLLER_TIMEOUT);
-
-                if (playWhenReady) {
+                if(playWhenReady) {
+                    loading.setVisibility(INVISIBLE);
+                    videoView.setControllerShowTimeoutMs(CONTROLLER_TIMEOUT);
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    configMediaPlayerState();
+                    playbackState = PlaybackStateCompat.STATE_PLAYING;
+                } else if(initialised) {
+                    playbackState = PlaybackStateCompat.STATE_PAUSED;
                 }
 
                 break;
@@ -522,6 +532,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         }
 
         updateButtonVisibilities();
+
+        if (callback != null) {
+            callback.onPlaybackStatusChanged(playbackState);
+        }
     }
 
     @Override
@@ -688,7 +702,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         // Create player
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
-        mediaPlayer.setPlayWhenReady(true);
         mediaPlayer.addListener(this);
     }
 

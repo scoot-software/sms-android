@@ -51,7 +51,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/launcher_name"
         android:hardwareAccelerated="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:banner="@drawable/app_banner">
 
         <!-- Main activity for media browsing on mobile devices -->
         <activity

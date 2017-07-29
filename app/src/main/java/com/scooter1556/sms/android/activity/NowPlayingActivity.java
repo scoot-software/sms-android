@@ -7,7 +7,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.scooter1556.sms.android.activity.tv.TvPlaybackActivity;
+import com.scooter1556.sms.android.activity.tv.TvMainActivity;
 
 /**
  * The activity for the Now Playing Card Pending Intent.
@@ -27,7 +27,7 @@ public class NowPlayingActivity extends Activity {
 
         if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
             Log.d(TAG, "Running on a TV Device");
-            newIntent = new Intent(this, TvPlaybackActivity.class);
+            newIntent = new Intent(this, TvMainActivity.class);
         } else {
             Log.d(TAG, "Running on a non-TV Device");
             newIntent = new Intent(this, HomeActivity.class);

@@ -23,12 +23,15 @@
  */
 package com.scooter1556.sms.android.activity.tv;
 
-import android.support.v4.app.FragmentActivity;
+import android.app.Activity;
+import android.os.Bundle;
 
-/**
- * Activity used to display details of the currently playing song, along with playback controls
- * and the playing queue.
- */
-public class TvPlaybackActivity extends FragmentActivity {
+import com.scooter1556.sms.android.R;
 
+public class TvMediaFolderGridActivity extends Activity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_media_folder_grid);
+    }
 }

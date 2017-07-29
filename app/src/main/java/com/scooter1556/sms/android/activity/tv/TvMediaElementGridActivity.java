@@ -23,11 +23,15 @@
  */
 package com.scooter1556.sms.android.activity.tv;
 
-import android.support.v4.app.FragmentActivity;
+import android.app.Activity;
+import android.os.Bundle;
 
-/**
- * Main activity for the Android TV user interface.
- */
-public class TvBrowseActivity extends FragmentActivity {
+import com.scooter1556.sms.android.R;
 
+public class TvMediaElementGridActivity extends Activity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_media_element_grid);
+    }
 }

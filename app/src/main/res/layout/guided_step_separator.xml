@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v17.leanback.widget.NonOverlappingLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/guidedActionItemContainerStyle" >
+
+    <ImageView
+        android:id="@+id/guidedactions_item_checkmark"
+        style="?attr/guidedActionItemCheckmarkStyle"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/guidedactions_item_icon"
+        style="?attr/guidedActionItemIconStyle"
+        tools:ignore="ContentDescription" />
+
+    <android.support.v17.leanback.widget.NonOverlappingLinearLayout
+        android:id="@+id/guidedactions_item_content"
+        style="?attr/guidedActionItemContentStyle" >
+
+        <android.support.v17.leanback.widget.GuidedActionEditText
+            android:id="@+id/guidedactions_item_title"
+            style="?attr/guidedActionItemTitleStyle" />
+
+        <TextView
+            android:id="@+id/guidedactions_item_description"
+            style="?android:attr/listSeparatorTextViewStyle" />
+    </android.support.v17.leanback.widget.NonOverlappingLinearLayout>
+
+    <ImageView
+        android:id="@+id/guidedactions_item_chevron"
+        style="?attr/guidedActionItemChevronStyle"
+        tools:ignore="ContentDescription" />
+
+</android.support.v17.leanback.widget.NonOverlappingLinearLayout>

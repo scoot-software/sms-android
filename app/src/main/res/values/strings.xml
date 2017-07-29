@@ -70,6 +70,14 @@
     <string name="label_play">Play</string>
     <string name="label_previous">Previous</string>
     <string name="label_next">Next</string>
+    <string name="label_play_next">Play Next</string>
+    <string name="label_add_to_queue">Add To Queue</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_finish">Finish</string>
+    <string name="label_edit">Edit</string>
+    <string name="label_delete">Delete</string>
+    <string name="label_remove">Remove</string>
+    <string name="label_connect">Connect</string>
 
     <string name="navigation_drawer_title">Navigation</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
@@ -84,10 +92,8 @@
     <string name="connections_add_title">New Connection</string>
     <string name="connections_action_mode_title">Options</string>
     <string name="connections_name">Name</string>
-    <string name="connections_name_dialog">Enter A Name</string>
+    <string name="connections_name_dialog">Enter Connection Name</string>
     <string name="connections_url">Server Address</string>
-    <string name="connections_alt_url">Alternative Address (Optional)</string>
-    <string name="connections_alt_url_dialog">Enter Alternative Server Address</string>
     <string name="connections_url_dialog">Enter Server Address</string>
     <string name="connections_username">Username</string>
     <string name="connections_username_dialog">Enter Username</string>
@@ -96,8 +102,12 @@
     <string name="connections_password_set">Password is set.</string>
 
     <string name="preferences_title">Settings</string>
+    <string name="preferences_title_audio">Audio Settings</string>
+    <string name="preferences_title_video">Video Settings</string>
+    <string name="preferences_title_transcode">Transcode Settings</string>
     <string name="preferences_title_audio_quality">Audio Quality</string>
     <string name="preferences_title_video_quality">Video Quality</string>
+    <string name="preferences_title_audio_multichannel">Enable Audio Passthrough</string>
     <string name="preferences_title_direct_play">Enable Direct Play</string>
     <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
     <string name="preferences_summary_video_quality">Select the video resolution to use during video playback.</string>
@@ -153,6 +163,7 @@
     <string name="heading_tracklist">Tracklist</string>
     <string name="heading_playlists">Playlists</string>
     <string name="heading_track_selection">Track Selection</string>
+    <string name="heading_contents">Contents</string>
 
     <string name="error_media_playback">Unable to play media</string>
     <string name="error_server">Operation failed with status code: </string>
@@ -165,8 +176,14 @@
     <string name="error_check_connection">Check your connection and try again.</string>
     <string name="error_unsupported_video">Media includes video tracks, but none are playable by this device</string>
     <string name="error_unsupported_audio">Media includes audio tracks, but none are playable by this device</string>
+    <string name="error_search_not_implemented">The search feature is not yet implemented</string>
+    <string name="error_fetching_media_folders">Failed to fetch list of media folders</string>
+    <string name="error_fetching_recently_added">Failed to fetch recently added media</string>
+    <string name="error_fetching_recently_played">Failed to fetch recently played media</string>
 
     <string name="notification_please_wait">Please Wait&#8230;</string>
+    <string name="notification_audio_directory_play_next">Album added next in play queue</string>
+    <string name="notification_audio_directory_add_to_queue">Album added to play queue</string>
 
     <string name="connections_url_default">http://</string>
     <string name="connections_testing">Test Connection</string>

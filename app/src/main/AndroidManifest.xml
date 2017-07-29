@@ -73,21 +73,54 @@
 
         <!-- Main activity for Android TV user interface -->
         <activity
-            android:name=".activity.tv.TvBrowseActivity"
+            android:name=".activity.tv.TvMainActivity"
             android:label="@string/app_name"
-            android:theme="@style/TVTheme" >
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.Leanback.Browse">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Android TV UI when playing media -->
+        <!-- Android TV -->
         <activity
-            android:name=".activity.tv.TvPlaybackActivity"
-            android:theme="@style/TVTheme"
-            android:parentActivityName=".activity.tv.TvBrowseActivity" />
+            android:name=".activity.tv.TvConnectionActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
 
+        <activity
+            android:name=".activity.tv.TvConnectionOptionsActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
+
+        <activity
+            android:name=".activity.tv.TvEditConnectionActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
+
+        <activity
+            android:name=".activity.tv.TvAudioSettingsActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
+
+        <activity
+            android:name=".activity.tv.TvVideoSettingsActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
+
+        <activity
+            android:name=".activity.tv.TvTranscodeSettingsActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.GuidedStep" />
+
+        <!-- Mobile Devices -->
         <activity
             android:name=".activity.MusicActivity"
             android:label="@string/heading_music"

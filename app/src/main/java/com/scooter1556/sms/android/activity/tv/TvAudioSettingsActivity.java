@@ -11,6 +11,7 @@ import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidedAction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 
 import com.scooter1556.sms.android.R;
 
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TvAudioSettingsActivity extends Activity {
+    private static final String TAG = "TvAudioSettingsActivity";
+
     // Preferences
     private static SharedPreferences sharedPreferences;
 
@@ -54,12 +57,15 @@ public class TvAudioSettingsActivity extends Activity {
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
-            setActions(getActions());
+            populateActions(actions);
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
+            Log.d(TAG, "onGuidedActionClicked(" + action.getId() + ")");
+
             FragmentManager fm = getFragmentManager();
+
             if (action.getId() == AUDIO_QUALITY) {
                 GuidedStepFragment.add(fm, new AudioQualitySettingsFragment());
             } else if (action.getId() == AUDIO_MULTICHANNEL) {
@@ -70,25 +76,32 @@ public class TvAudioSettingsActivity extends Activity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            setActions(getActions());
+            Log.d(TAG, "onSharedPreferenceChanged(" + key + ")");
+
+            populateActions(getActions());
         }
 
-        public List<GuidedAction> getActions() {
-            List<GuidedAction> actions = new ArrayList<>();
+        public void populateActions(List<GuidedAction> actions) {
+            Log.d(TAG, "populateActions()");
+
+            int quality = Integer.parseInt(sharedPreferences.getString("pref_audio_quality", getString(R.string.preferences_default_audio_quality_value)));
+            String[] audioQualityNames = getResources().getStringArray(R.array.preferences_audio_quality_names);
+
+            actions.clear();
 
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(AUDIO_QUALITY)
                     .title(getString(R.string.preferences_title_audio_quality))
-                    .description(sharedPreferences.getString("pref_audio_quality_name", getString(R.string.preferences_default_audio_quality_value)))
+                    .description(audioQualityNames[quality])
                     .build());
+
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(AUDIO_MULTICHANNEL)
                     .title(getString(R.string.preferences_title_audio_multichannel))
+                    .description(sharedPreferences.getBoolean("pref_audio_multichannel", false) ? getString(R.string.state_enabled) : getString(R.string.state_disabled))
                     .build());
 
-            actions.get(AUDIO_MULTICHANNEL).setChecked(sharedPreferences.getBoolean("pref_audio_multichannel", false));
-
-            return actions;
+            setActions(actions);
         }
     }
 

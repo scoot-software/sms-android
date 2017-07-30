@@ -84,6 +84,7 @@
         </activity>
 
         <!-- Android TV -->
+
         <activity
             android:name=".activity.tv.TvConnectionActivity"
             android:exported="true"

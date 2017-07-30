@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TvVideoSettingsActivity extends Activity {
+    private static final String TAG = "TvVideoSettingsActivity";
+
     // Preferences
     private static SharedPreferences sharedPreferences;
 
@@ -53,7 +55,7 @@ public class TvVideoSettingsActivity extends Activity {
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
-            setActions(getActions());
+            populateActions(actions);
         }
 
         @Override
@@ -66,19 +68,22 @@ public class TvVideoSettingsActivity extends Activity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            setActions(getActions());
+            populateActions(getActions());
         }
 
-        public List<GuidedAction> getActions() {
-            List<GuidedAction> actions = new ArrayList<>();
+        public void populateActions(List<GuidedAction> actions) {
+            actions.clear();
+
+            int quality = Integer.parseInt(sharedPreferences.getString("pref_video_quality", getString(R.string.preferences_default_video_quality_value)));
+            String[] videoQualityNames = getResources().getStringArray(R.array.preferences_video_quality_names);
 
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(VIDEO_QUALITY)
                     .title(getString(R.string.preferences_title_video_quality))
-                    .description(sharedPreferences.getString("pref_video_quality_name", getString(R.string.preferences_default_video_quality_value)))
+                    .description(videoQualityNames[quality])
                     .build());
 
-            return actions;
+            setActions(actions);
         }
     }
 
@@ -102,7 +107,7 @@ public class TvVideoSettingsActivity extends Activity {
 
             // Add action for each quality option
             for (int i = 0; i < videoQualityValues.length; i++) {
-                GuidedAction guidedAction = new GuidedAction.Builder()
+                GuidedAction guidedAction = new GuidedAction.Builder(getActivity())
                         .id(Long.parseLong(videoQualityValues[i]))
                         .title(videoQualityNames[i])
                         .checkSetId(VIDEO_QUALITY_CHECK_SET_ID)

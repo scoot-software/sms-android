@@ -12,6 +12,7 @@ import android.support.v17.leanback.widget.GuidedAction;
 import android.support.v17.leanback.widget.GuidedActionsStylist;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.database.ConnectionDatabase;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TvConnectionActivity extends Activity {
+    private static final String TAG = "TvConnectionActivity";
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -31,11 +33,15 @@ public class TvConnectionActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
+
         super.onCreate(savedInstanceState);
     }
 
     @Override
     protected void onResume() {
+        Log.d(TAG, "onResume()");
+
         super.onResume();
 
         // Retrieve preferences if they exist
@@ -44,27 +50,33 @@ public class TvConnectionActivity extends Activity {
         // Initialisation
         db = new ConnectionDatabase(getApplicationContext());
 
-        GuidedStepFragment.addAsRoot(this, new ConnectionsFragment(), android.R.id.content);
+        GuidedStepFragment.addAsRoot(this, new TvConnectionFragment(), android.R.id.content);
     }
 
-    public static class ConnectionsFragment extends GuidedStepFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static class TvConnectionFragment extends GuidedStepFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+        private static final String TAG = "TvConnectionFragment";
+
         // Variables
         private boolean update = false;
         private List<Connection> connectionList;
 
         @Override
         public void onResume() {
+            Log.d(TAG, "onResume()");
+
             super.onResume();
 
             // Update connections list if necessary
             if(update) {
-                setActions(getActions());
+                populateActions(getActions());
             }
         }
 
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
+            Log.d(TAG, "onCreateGuidance()");
+
             String title = getString(R.string.preferences_title_manage_connections);
             String breadcrumb = getString(R.string.preferences_title);
             Drawable icon = ContextCompat.getDrawable(getActivity(), R.drawable.ic_connection_settings);
@@ -73,15 +85,19 @@ public class TvConnectionActivity extends Activity {
 
         @Override
         public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
+            Log.d(TAG, "onCreateActions()");
+
             // Register preferences listener
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
-            setActions(getActions());
+            populateActions(actions);
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
+            Log.d(TAG, "onGuidedActionClicked(" + action.toString() + ")");
+
             if (action.getId() == ADD_CONNECTION) {
                 Intent intent = new Intent(getActivity(), TvEditConnectionActivity.class);
                 startActivity(intent);
@@ -104,15 +120,19 @@ public class TvConnectionActivity extends Activity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Log.d(TAG, "onSharedPreferenceChanged(" + key + ")");
+
             update = true;
         }
 
-        public List<GuidedAction> getActions() {
+        public void populateActions(List<GuidedAction> actions) {
+            Log.d(TAG, "populateActions()");
+
             // Get connections
             connectionList = db.getAllConnections();
             long currentConnection = sharedPreferences.getLong("Connection", -1);
 
-            List<GuidedAction> actions = new ArrayList<>();
+            actions.clear();
 
             // Connections Header
             actions.add(new GuidedAction.Builder(getActivity())
@@ -157,7 +177,7 @@ public class TvConnectionActivity extends Activity {
                     .title(getString(R.string.connections_add_title))
                     .build());
 
-            return actions;
+            setActions(actions);
         }
     }
 }

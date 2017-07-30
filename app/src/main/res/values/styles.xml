@@ -59,4 +59,8 @@
     <style name="TVTheme" parent="Theme.Leanback">
     </style>
 
+    <style name="Widget.Example.Leanback.Rows.VerticalGridView" parent="Widget.Leanback.Rows.VerticalGridView">
+        <item name="android:paddingTop">96dp</item>
+    </style>
+
 </resources>

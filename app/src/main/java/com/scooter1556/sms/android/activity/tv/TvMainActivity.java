@@ -33,6 +33,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -43,6 +44,8 @@ import com.scooter1556.sms.android.service.RESTService;
 import cz.msebera.android.httpclient.Header;
 
 public class TvMainActivity extends Activity {
+    private static final String TAG = "TvMainActivity";
+
     // REST Client
     RESTService restService = null;
 
@@ -53,6 +56,8 @@ public class TvMainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
+
         setContentView(R.layout.activity_tv_main);
 
         // Retrieve preferences if they exist
@@ -74,6 +79,8 @@ public class TvMainActivity extends Activity {
 
     @Override
     public void onResume() {
+        Log.d(TAG, "onResume()");
+
         // Set connection
         long id = sharedPreferences.getLong("Connection", -1);
 
@@ -89,6 +96,8 @@ public class TvMainActivity extends Activity {
 
     // Check server version meets minimum requirement and display connections if not
     public void checkServerVersion() {
+        Log.d(TAG, "checkServerVersion()");
+
         // Get server version
         RESTService.getInstance().getVersion(this, new AsyncHttpResponseHandler() {
             @Override

@@ -13,10 +13,11 @@ import android.support.v7.preference.PreferenceManager;
 
 import com.scooter1556.sms.android.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TvTranscodeSettingsActivity extends Activity {
+    private static final String TAG = "TvTranscodeSettingsActivity";
+
     // Preferences
     private static SharedPreferences sharedPreferences;
 
@@ -50,7 +51,7 @@ public class TvTranscodeSettingsActivity extends Activity {
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
-            setActions(getActions());
+            populateActions(actions);
         }
 
         @Override
@@ -63,20 +64,19 @@ public class TvTranscodeSettingsActivity extends Activity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            setActions(getActions());
+            populateActions(getActions());
         }
 
-        public List<GuidedAction> getActions() {
-            List<GuidedAction> actions = new ArrayList<>();
+        public void populateActions(List<GuidedAction> actions) {
+            actions.clear();
 
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(DIRECT_PLAY)
                     .title(getString(R.string.preferences_title_direct_play))
+                    .description(sharedPreferences.getBoolean("pref_direct_play", false) ? getString(R.string.state_enabled) : getString(R.string.state_disabled))
                     .build());
 
-            actions.get(DIRECT_PLAY).setChecked(sharedPreferences.getBoolean("pref_direct_play", false));
-
-            return actions;
+            setActions(actions);
         }
     }
 }

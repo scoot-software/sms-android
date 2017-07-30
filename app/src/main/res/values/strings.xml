@@ -196,6 +196,8 @@
     <string name="media_folder_subtitle">%1$d Files %2$d Directories</string>
 
     <string name="state_loading">Loading</string>
+    <string name="state_enabled">Enabled</string>
+    <string name="state_disabled">Disabled</string>
 
     <string name="dialogue_ok">OK</string>
     <string name="dialogue_error">Error</string>

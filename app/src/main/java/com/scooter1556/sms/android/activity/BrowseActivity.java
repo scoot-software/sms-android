@@ -23,19 +23,16 @@
  */
 package com.scooter1556.sms.android.activity;
 
-import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.fragment.SimpleMediaFragment;
-import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
-import com.scooter1556.sms.android.domain.MediaElement;
 
 public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.MediaFragmentListener  {
 
@@ -90,7 +87,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            getSupportMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             SimpleMediaFragment fragment = SimpleMediaFragment.newInstance(item.getMediaId());
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

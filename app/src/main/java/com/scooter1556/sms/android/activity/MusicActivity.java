@@ -26,19 +26,18 @@ package com.scooter1556.sms.android.activity;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.fragment.SimpleMediaFragment;
-import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.ArrayList;
@@ -97,7 +96,7 @@ public class MusicActivity extends BaseActivity implements SimpleMediaFragment.M
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            getSupportMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(MusicActivity.this, BrowseActivity.class)
                     .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, item)
@@ -124,7 +123,7 @@ public class MusicActivity extends BaseActivity implements SimpleMediaFragment.M
             // send it to the media session and set it to null, so it won't play again
             // when the activity is stopped/started or recreated:
             String query = voiceSearchParams.getString(SearchManager.QUERY);
-            getSupportMediaController().getTransportControls().playFromSearch(query, voiceSearchParams);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromSearch(query, voiceSearchParams);
             voiceSearchParams = null;
         }
     }

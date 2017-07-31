@@ -43,9 +43,6 @@ import com.scooter1556.sms.android.fragment.PlaybackControlsFragment;
 import com.scooter1556.sms.android.provider.MediaBrowserProvider;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.NetworkUtils;
-import com.scooter1556.sms.android.database.ConnectionDatabase;
-import com.scooter1556.sms.android.domain.Connection;
-import com.scooter1556.sms.android.service.RESTService;
 
 /**
  * Base activity for activities that need to show a playback control fragment when media is playing.
@@ -109,8 +106,8 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         Log.d(TAG, "onStop()");
 
-        if (getSupportMediaController() != null) {
-            getSupportMediaController().unregisterCallback(mediaControllerCallback);
+        if (MediaControllerCompat.getMediaController(this) != null) {
+            MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
         }
 
         mediaBrowser.disconnect();
@@ -151,7 +148,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
      * Check if the Media Session is active
      */
     protected boolean shouldShowControls() {
-        MediaControllerCompat mediaController = getSupportMediaController();
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(this);
 
         if (mediaController == null || mediaController.getMetadata() == null || mediaController.getPlaybackState() == null) {
             return false;
@@ -169,7 +166,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
     private void connectToSession(MediaSessionCompat.Token token) throws RemoteException {
         MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
-        setSupportMediaController(mediaController);
+        MediaControllerCompat.setMediaController(this, mediaController);
         mediaController.registerCallback(mediaControllerCallback);
 
         if (shouldShowControls()) {

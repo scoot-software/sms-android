@@ -32,6 +32,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 
@@ -124,7 +125,7 @@ public class VideoActivity extends BaseActivity implements SimpleMediaFragment.M
             // send it to the media session and set it to null, so it won't play again
             // when the activity is stopped/started or recreated:
             String query = voiceSearchParams.getString(SearchManager.QUERY);
-            getSupportMediaController().getTransportControls().playFromSearch(query, voiceSearchParams);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromSearch(query, voiceSearchParams);
             voiceSearchParams = null;
         }
     }

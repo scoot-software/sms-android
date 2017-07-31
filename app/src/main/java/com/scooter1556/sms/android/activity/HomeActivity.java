@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 
 import com.scooter1556.sms.android.R;
@@ -90,7 +91,7 @@ public class HomeActivity extends BaseActivity implements BaseFragment.MediaFrag
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            getSupportMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(HomeActivity.this, BrowseActivity.class)
                     .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, item);
@@ -142,7 +143,7 @@ public class HomeActivity extends BaseActivity implements BaseFragment.MediaFrag
             // send it to the media session and set it to null, so it won't play again
             // when the activity is stopped/started or recreated:
             String query = voiceSearchParams.getString(SearchManager.QUERY);
-            getSupportMediaController().getTransportControls().playFromSearch(query, voiceSearchParams);
+            MediaControllerCompat.getMediaController(this).getTransportControls().playFromSearch(query, voiceSearchParams);
             voiceSearchParams = null;
         }
     }

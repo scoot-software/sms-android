@@ -27,6 +27,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -34,6 +35,9 @@ import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.MediaUtils;
+
+import java.util.List;
 
 public class MediaElementPresenter extends Presenter {
 
@@ -79,35 +83,19 @@ public class MediaElementPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder, Object item) {
-        MediaElement element = (MediaElement) item;
+        MediaBrowserCompat.MediaItem element = (MediaBrowserCompat.MediaItem) item;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         // Get title
         cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER);
-        cardView.setTitleText(element.getTitle());
-
-        // Get extra information based on type
-        if(element.getType().equals(MediaElement.MediaElementType.AUDIO) || (element.getType().equals(MediaElement.MediaElementType.DIRECTORY) && element.getDirectoryType().equals(MediaElement.DirectoryMediaType.AUDIO))) {
-            if (element.getArtist() != null) {
-                cardView.setContentText(element.getArtist());
-            } else {
-                cardView.setContentText(null);
-            }
-        } else if(element.getType().equals(MediaElement.MediaElementType.VIDEO) || (element.getType().equals(MediaElement.MediaElementType.DIRECTORY) && element.getDirectoryType().equals(MediaElement.DirectoryMediaType.VIDEO))) {
-            if (element.getCollection() != null) {
-                cardView.setContentText(element.getCollection());
-            } else {
-                cardView.setContentText(null);
-            }
-        } else {
-            cardView.setContentText(null);
-        }
+        cardView.setTitleText(element.getDescription().getTitle());
+        cardView.setContentText(element.getDescription().getSubtitle());
 
         // Get default icon
         Drawable icon;
 
-        switch(element.getType()) {
+        switch(MediaUtils.getMediaTypeFromID(((MediaBrowserCompat.MediaItem) item).getMediaId())) {
             case MediaElement.MediaElementType.AUDIO:
                 icon = defaultAudioIcon;
                 break;
@@ -125,12 +113,16 @@ public class MediaElementPresenter extends Presenter {
                 break;
         }
 
-        // Set image
-        Glide.with(viewHolder.view.getContext())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/cover/" + CARD_HEIGHT)
-                .asBitmap()
-                .error(icon)
-                .into(cardView.getMainImageView());
+        List<String> id = MediaUtils.parseMediaId(((MediaBrowserCompat.MediaItem) item).getMediaId());
+
+        if(id.size() > 1) {
+            // Set image
+            Glide.with(viewHolder.view.getContext())
+                    .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + CARD_HEIGHT)
+                    .asBitmap()
+                    .error(icon)
+                    .into(cardView.getMainImageView());
+        }
     }
 
     @Override

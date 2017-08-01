@@ -114,11 +114,6 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        //No call for super(). Bug on API Level > 11.
-    }
-
-    @Override
     public MediaBrowserCompat getMediaBrowser() {
         return mediaBrowser;
     }

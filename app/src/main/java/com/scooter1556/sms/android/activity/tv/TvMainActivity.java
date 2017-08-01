@@ -24,35 +24,21 @@
 
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.database.ConnectionDatabase;
 import com.scooter1556.sms.android.service.RESTService;
 
 import cz.msebera.android.httpclient.Header;
 
-public class TvMainActivity extends Activity {
+public class TvMainActivity extends TvBaseActivity {
     private static final String TAG = "TvMainActivity";
-
-    // REST Client
-    RESTService restService = null;
-
-    // Preferences
-    private static SharedPreferences sharedPreferences;
-
-    private static ConnectionDatabase db;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,33 +46,12 @@ public class TvMainActivity extends Activity {
 
         setContentView(R.layout.activity_tv_main);
 
-        // Retrieve preferences if they exist
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Initialisation
-        restService = RESTService.getInstance();
-        db = new ConnectionDatabase(getApplicationContext());
-
-        // Set connection
-        long id = sharedPreferences.getLong("Connection", -1);
-
-        if(id >= 0) {
-            restService.setConnection(db.getConnection(id));
-        }
-
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onResume() {
         Log.d(TAG, "onResume()");
-
-        // Set connection
-        long id = sharedPreferences.getLong("Connection", -1);
-
-        if(id >= 0) {
-            restService.setConnection(db.getConnection(id));
-        }
 
         // Check Server
         checkServerVersion();

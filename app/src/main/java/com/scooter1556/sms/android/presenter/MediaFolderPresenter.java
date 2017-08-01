@@ -26,6 +26,7 @@ package com.scooter1556.sms.android.presenter;
 import android.graphics.Color;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -51,8 +52,8 @@ public class MediaFolderPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object item) {
-        MediaFolder mediaFolder = (MediaFolder) item;
-        ((TextView) viewHolder.view).setText(mediaFolder.getName());
+        MediaBrowserCompat.MediaItem mediaFolder = (MediaBrowserCompat.MediaItem) item;
+        ((TextView) viewHolder.view).setText(((MediaBrowserCompat.MediaItem) item).getDescription().getTitle());
     }
 
     @Override

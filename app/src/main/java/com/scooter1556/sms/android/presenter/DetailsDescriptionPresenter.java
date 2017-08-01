@@ -24,41 +24,35 @@
 package com.scooter1556.sms.android.presenter;
 
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
+import android.support.v4.media.MediaBrowserCompat;
 
 import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.utils.MediaUtils;
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 
     @Override
     protected void onBindDescription(ViewHolder viewHolder, Object item) {
-        MediaElement element = (MediaElement) item;
+        MediaBrowserCompat.MediaItem element = (MediaBrowserCompat.MediaItem) item;
 
         if (element == null) {
             return;
         }
 
-        switch(element.getDirectoryType()) {
+        viewHolder.getTitle().setText(element.getDescription().getTitle());
+        viewHolder.getSubtitle().setText(element.getDescription().getSubtitle());
+        viewHolder.getBody().setText(null);
+
+        switch(MediaUtils.getMediaTypeFromID(element.getMediaId())) {
             case MediaElement.DirectoryMediaType.VIDEO:
-                viewHolder.getTitle().setText(element.getTitle());
-
-                if(element.getCollection() != null) {
-                    viewHolder.getSubtitle().setText(element.getCollection());
-                } else if (element.getYear() != null) {
-                    viewHolder.getSubtitle().setText(String.format("%d", element.getYear()));
-                }
-
-                viewHolder.getBody().setText(element.getDescription());
+                viewHolder.getBody().setText(element.getDescription().getDescription());
                 break;
 
             case MediaElement.DirectoryMediaType.AUDIO:
-                viewHolder.getTitle().setText(element.getTitle());
-                viewHolder.getSubtitle().setText(element.getArtist());
-                viewHolder.getBody().setText(String.format("%d", element.getYear()));
+                viewHolder.getBody().setText(String.valueOf(element.getDescription().getExtras().getShort("Year")));
                 break;
 
             default:
-                viewHolder.getTitle().setText(element.getTitle());
-                viewHolder.getSubtitle().setText(null);
                 viewHolder.getBody().setText(null);
         }
     }

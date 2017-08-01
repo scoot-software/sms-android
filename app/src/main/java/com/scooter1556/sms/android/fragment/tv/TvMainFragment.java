@@ -1,11 +1,13 @@
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -18,30 +20,31 @@ import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.activity.BrowseActivity;
+import com.scooter1556.sms.android.activity.HomeActivity;
 import com.scooter1556.sms.android.activity.tv.TvAudioSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvConnectionActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.domain.MediaFolder;
+import com.scooter1556.sms.android.fragment.BaseFragment;
 import com.scooter1556.sms.android.presenter.MediaElementPresenter;
 import com.scooter1556.sms.android.presenter.MediaFolderPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,17 +63,17 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private static final int ROW_RECENTLY_PLAYED = 3;
     private static final int ROW_SETTINGS = 4;
 
-    // REST Client
-    RESTService restService = null;
-
     private ArrayObjectAdapter rowsAdapter;
 
     private boolean update = false;
+    boolean online = false;
+
+    private MediaBrowserCompat mediaBrowser;
 
     // Media Lists
-    List<MediaFolder> mediaFolders;
-    List<MediaElement> recentlyAdded;
-    List<MediaElement> recentlyPlayed;
+    List<MediaBrowserCompat.MediaItem> mediaFolders;
+    List<MediaBrowserCompat.MediaItem> recentlyAdded;
+    List<MediaBrowserCompat.MediaItem> recentlyPlayed;
 
     // Background
     private final Handler handler = new Handler();
@@ -80,13 +83,85 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private String backgroundURI;
     private BackgroundManager backgroundManager;
 
+    private final MediaBrowserCompat.SubscriptionCallback subscriptionCallback =
+            new MediaBrowserCompat.SubscriptionCallback() {
+                @Override
+                public void onChildrenLoaded(@NonNull String parentId,
+                                             @NonNull List<MediaBrowserCompat.MediaItem> children) {
+                    Log.d(TAG, "onChildrenLoaded() parentId=" + parentId);
+
+                    if(children.isEmpty()) {
+                        Log.d(TAG, "Result for " + parentId + " is empty");
+                        return;
+                    }
+
+                    String id = MediaUtils.parseMediaId(parentId).get(0);
+
+                    switch(id) {
+                        case MediaUtils.MEDIA_ID_FOLDERS:
+                            mediaFolders.clear();
+                            mediaFolders.addAll(children);
+                            break;
+
+                        case MediaUtils.MEDIA_ID_RECENTLY_ADDED:
+                            recentlyAdded.clear();
+                            recentlyAdded.addAll(children);
+                            break;
+
+                        case MediaUtils.MEDIA_ID_RECENTLY_PLAYED:
+                            recentlyPlayed.clear();
+                            recentlyPlayed.addAll(children);
+                            break;
+
+                    }
+
+                    setRows();
+                }
+
+                @Override
+                public void onError(@NonNull String id) {
+                    Log.e(TAG, "Media subscription error: " + id);
+                }
+            };
+
+    private MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+
+                    if (isDetached()) {
+                        return;
+                    }
+
+                    // Subscribe to media browser event
+                    mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
+                    mediaBrowser.subscribe(MediaUtils.MEDIA_ID_RECENTLY_ADDED, subscriptionCallback);
+                    mediaBrowser.subscribe(MediaUtils.MEDIA_ID_RECENTLY_PLAYED, subscriptionCallback);
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                }
+            };
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        Log.d(TAG, "onActivityCreated()");
+
         // Initialisation
-        restService = RESTService.getInstance();
         rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
+        mediaFolders = new ArrayList<>();
+        recentlyAdded = new ArrayList<>();
+        recentlyPlayed = new ArrayList<>();
 
         // Initialise interface
         prepareBackgroundManager();
@@ -94,32 +169,23 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         initialiseEventListeners();
         prepareEntranceTransition();
 
-        // Fetch media lists from server
-        setRows();
-        getMediaFolders();
-        getRecentlyAdded();
-        getRecentlyPlayed();
-
         // Set adapter
         setAdapter(rowsAdapter);
         startEntranceTransition();
+
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
+        Log.d(TAG, "onResume()");
+
         setRows();
-
-        // Update rows if necessary
-        if(update) {
-            // Fetch media lists from server
-            getMediaFolders();
-            getRecentlyAdded();
-            getRecentlyPlayed();
-
-            update = false;
-        }
     }
 
     @Override
@@ -128,6 +194,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
             backgroundTimer.cancel();
             backgroundTimer = null;
         }
+
         backgroundManager = null;
 
         super.onDestroy();
@@ -136,17 +203,22 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     @Override
     public void onStart() {
         super.onStart();
+
+        mediaBrowser.connect();
     }
 
     @Override
     public void onStop() {
         backgroundManager.release();
+        mediaBrowser.disconnect();
 
         super.onStop();
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(TAG, "onSharedPreferencesChanged(" + key + ")");
+
         if(key.equals("Connection")) {
             update = true;
         }
@@ -193,6 +265,8 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     }
 
     private void setRows() {
+        Log.d(TAG, "setRows()");
+
         rowsAdapter.clear();
 
         /*
@@ -213,7 +287,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
             ArrayObjectAdapter mediaBrowserRowAdapter = new ArrayObjectAdapter(mediaFolderPresenter);
 
             // Add media folders to row
-            for (MediaFolder mediaFolder : mediaFolders) {
+            for (MediaBrowserCompat.MediaItem mediaFolder : mediaFolders) {
                 mediaBrowserRowAdapter.add(mediaFolder);
             }
 
@@ -227,7 +301,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
             ArrayObjectAdapter recentlyAddedRowAdapter = new ArrayObjectAdapter(recentlyAddedPresenter);
 
             // Add media elements to row
-            for (MediaElement element : recentlyAdded) {
+            for (MediaBrowserCompat.MediaItem element : recentlyAdded) {
                 recentlyAddedRowAdapter.add(element);
             }
 
@@ -241,7 +315,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
             ArrayObjectAdapter recentlyPlayedRowAdapter = new ArrayObjectAdapter(recentlyPlayedPresenter);
 
             // Add media elements to row
-            for (MediaElement element : recentlyPlayed) {
+            for (MediaBrowserCompat.MediaItem element : recentlyPlayed) {
                 recentlyPlayedRowAdapter.add(element);
             }
 
@@ -292,7 +366,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     }
 
     private class UpdateBackgroundTask extends TimerTask {
-
         @Override
         public void run() {
             handler.post(new Runnable() {
@@ -325,13 +398,19 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     Intent intent = new Intent(getActivity(), TvConnectionActivity.class);
                     startActivity(intent);
                 }
-            } else if (item instanceof MediaFolder) {
-                MediaFolder folder = (MediaFolder) item;
+            } else if (item instanceof MediaBrowserCompat.MediaItem) {
+                MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
-                // Start grid activity
-                //Intent intent = new Intent(getActivity(), MediaFolderGridActivity.class);
-                //intent.putExtra("Folder", folder);
-                //getActivity().startActivity(intent);
+                if (mediaItem.isPlayable()) {
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                } else if (mediaItem.isBrowsable()) {
+                    // Start grid activity
+                    //Intent intent = new Intent(getActivity(), MediaFolderGridActivity.class);
+                    //intent.putExtra("Folder", folder);
+                    //getActivity().startActivity(intent);
+                } else {
+                    Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
+                }
             } else if (item instanceof MediaElement) {
                 MediaElement element = (MediaElement) item;
                 Intent intent;
@@ -365,167 +444,18 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
             if (item instanceof String) {
                 backgroundManager.setDrawable(defaultBackground);
-            } else if (item instanceof MediaFolder) {
-                backgroundManager.setDrawable(defaultBackground);
-            } else if (item instanceof MediaElement) {
-                MediaElement element = (MediaElement) item;
-                backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/fanart/" + displayMetrics.widthPixels;
-                startBackgroundTimer();
+            } else if (item instanceof MediaBrowserCompat.MediaItem) {
+                MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
+
+                List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
+
+                if (id.size() > 1) {
+                    backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels;
+                    startBackgroundTimer();
+                } else {
+                    backgroundManager.setDrawable(defaultBackground);
+                }
             }
         }
-    }
-
-    //
-    // Media Lists
-    //
-
-    private void getMediaFolders() {
-
-        // Fetch media folders
-        restService.getMediaFolders(getActivity(), new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                mediaFolders = new ArrayList<>();
-
-                mediaFolders.add(parser.fromJson(response.toString(), MediaFolder.class));
-                setRows();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                Gson parser = new Gson();
-                mediaFolders = new ArrayList<>();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        mediaFolders.add(parser.fromJson(response.getJSONObject(i).toString(), MediaFolder.class));
-                    } catch (JSONException e) {
-                        Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                setRows();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                // Initialise media folders list so it can be ignored
-                mediaFolders = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_media_folders), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                // Initialise media folders list so it can be ignored
-                mediaFolders = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_media_folders), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void getRecentlyAdded() {
-
-        // Fetch recently added media
-        restService.getRecentlyAdded(getActivity(), ELEMENTS_TO_LOAD, null, new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                recentlyAdded = new ArrayList<>();
-
-                recentlyAdded.add(parser.fromJson(response.toString(), MediaElement.class));
-                setRows();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                Gson parser = new Gson();
-                recentlyAdded = new ArrayList<>();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        recentlyAdded.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
-                    } catch (JSONException e) {
-                        Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                setRows();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                // Initialise recently added list so it can be ignored
-                recentlyAdded = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                // Initialise recently added list so it can be ignored
-                recentlyAdded = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void getRecentlyPlayed() {
-
-        // Fetch recently played media
-        restService.getRecentlyPlayed(getActivity(), ELEMENTS_TO_LOAD, null, new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                recentlyPlayed = new ArrayList<>();
-
-                recentlyPlayed.add(parser.fromJson(response.toString(), MediaElement.class));
-                setRows();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                Gson parser = new Gson();
-                recentlyPlayed = new ArrayList<>();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        recentlyPlayed.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
-                    } catch (JSONException e) {
-                        Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                setRows();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                // Initialise recently played list so it can be ignored
-                recentlyPlayed = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_played), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                // Initialise recently added list so it can be ignored
-                recentlyAdded = new ArrayList<>();
-                setRows();
-
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_played), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }

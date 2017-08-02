@@ -107,6 +107,12 @@ public class TvBaseActivity extends Activity implements MediaBrowserProvider {
                 @Override
                 public void onConnected() {
                     Log.d(TAG, "onConnected()");
+
+                    try {
+                        connectToSession(mediaBrowser.getSessionToken());
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "could not connect media controller", e);
+                    }
                 }
             };
 

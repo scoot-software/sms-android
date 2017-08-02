@@ -35,7 +35,7 @@ import com.scooter1556.sms.android.fragment.tv.TvAudioDirectoryFragment;
 import com.scooter1556.sms.android.fragment.tv.TvVideoDirectoryFragment;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
-public class TvDirectoryDetailsActivity extends Activity {
+public class TvDirectoryDetailsActivity extends TvBaseActivity {
 
     private MediaBrowserCompat.MediaItem mediaItem;
 

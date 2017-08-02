@@ -47,6 +47,7 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -255,10 +256,8 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
 
                     // Find the first video element and play it
                     for(MediaBrowserCompat.MediaItem item : mediaItems) {
-                        if(MediaUtils.parseMediaId(item.getMediaId()).get(0) == MediaUtils.MEDIA_ID_VIDEO) {
-                            //Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                            //intent.putExtra("MediaElement", element);
-                            //getActivity().startActivity(intent);
+                        if(MediaUtils.parseMediaId(item.getMediaId()).get(0).equals(MediaUtils.MEDIA_ID_VIDEO)) {
+                            MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(item.getMediaId(), null);
                             break;
                         }
                     }
@@ -376,7 +375,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
 
             if (item instanceof MediaBrowserCompat.MediaItem) {
                 if(((MediaBrowserCompat.MediaItem) item).isPlayable()) {
-                    //TODO
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(((MediaBrowserCompat.MediaItem) item).getMediaId(), null);
                 } else if(((MediaBrowserCompat.MediaItem) item).isBrowsable()) {
                     Intent intent = new Intent(getActivity(), TvMediaGridActivity.class);
                     intent.putExtra(MediaUtils.EXTRA_MEDIA_ID, mediaItem.getMediaId());

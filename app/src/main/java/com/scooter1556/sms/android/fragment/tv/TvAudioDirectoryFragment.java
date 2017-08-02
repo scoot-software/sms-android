@@ -49,6 +49,7 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
@@ -249,7 +250,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
             @Override
             public void onActionClicked(Action action) {
                 if(action.getId() == ACTION_PLAY) {
-                    // TODO: Start playing
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
                 } else if (action.getId() == ACTION_ADD_AND_PLAY) {
                     // TODO: Start playing
                     Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_play_next), Toast.LENGTH_SHORT).show();
@@ -329,7 +330,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.play:
-                // TODO:
+                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(selectedMediaItem.getMediaId(), null);
                 return true;
             case R.id.play_next:
                 // TODO:
@@ -346,6 +347,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
         @Override
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
+            Log.d(TAG, "onItemClicked()");
 
             if (item instanceof MediaBrowserCompat.MediaItem) {
                 selectedMediaItem = (MediaBrowserCompat.MediaItem) item;

@@ -94,7 +94,7 @@ public class HomeActivity extends BaseActivity implements BaseFragment.MediaFrag
             MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(HomeActivity.this, BrowseActivity.class)
-                    .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, item);
+                    .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, item);
             startActivityForResult(intent, RESULT_CODE_BROWSE);
         } else {
             Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + item.getMediaId());

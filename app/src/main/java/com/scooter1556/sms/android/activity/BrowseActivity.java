@@ -40,7 +40,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
 
     public static final String TAG_FRAGMENT = "fragment_browse";
 
-    private MediaBrowserCompat.MediaItem parentMediaItem;
+    private String parentId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,7 +57,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
         if (savedInstanceState == null) {
             Intent intent = getIntent();
 
-            if (intent == null || !intent.hasExtra(MediaUtils.EXTRA_MEDIA_ITEM)) {
+            if (intent == null || !intent.hasExtra(MediaUtils.EXTRA_MEDIA_ID)) {
                 Log.e(TAG, "Browse activity started with no media id in the intent");
                 finish();
                 return;
@@ -67,10 +67,10 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
             setToolbarTitle(intent.getStringExtra(MediaUtils.EXTRA_MEDIA_TITLE));
 
             // Set parent media item
-            parentMediaItem = intent.getParcelableExtra(MediaUtils.EXTRA_MEDIA_ITEM);
+            parentId = intent.getStringExtra(MediaUtils.EXTRA_MEDIA_ID);
 
             // Initialise fragment
-            SimpleMediaFragment fragment = SimpleMediaFragment.newInstance(parentMediaItem.getMediaId());
+            SimpleMediaFragment fragment = SimpleMediaFragment.newInstance(parentId);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.container, fragment, TAG_FRAGMENT);
             transaction.commit();

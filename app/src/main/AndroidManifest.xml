@@ -84,6 +84,16 @@
         </activity>
 
         <!-- Android TV -->
+        <activity
+            android:name=".activity.tv.TvMediaGridActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback.VerticalGrid" />
+
+        <activity
+            android:name=".activity.tv.TvDirectoryDetailsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Leanback.Details" />
 
         <activity
             android:name=".activity.tv.TvConnectionActivity"

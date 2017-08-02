@@ -45,7 +45,9 @@ public class MediaUtils {
     private static final String TAG = "MediaUtils";
 
     public static final String EXTRA_MEDIA_TITLE = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_TITLE";
-    public static final String EXTRA_MEDIA_ITEM = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_ID";
+    public static final String EXTRA_MEDIA_ID = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_ID";
+    public static final String EXTRA_MEDIA_ITEM = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_ITEM";
+    public static final String EXTRA_QUEUE_ITEM = "com.scooter1556.sms.android.activity.EXTRA_QUEUE_ITEM";
 
     public static final String SEPARATOR = "|";
 

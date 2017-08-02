@@ -23,11 +23,13 @@
  */
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
@@ -38,42 +40,39 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v17.leanback.widget.VerticalGridPresenter;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
-import com.scooter1556.sms.android.activity.tv.TvMediaElementGridActivity;
-import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.domain.MediaFolder;
+import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
 import com.scooter1556.sms.android.presenter.MediaElementPresenter;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.MediaUtils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.VerticalGridFragment {
+public class TvMediaGridFragment extends android.support.v17.leanback.app.VerticalGridFragment {
     private static final String TAG = "MediaFolderGridFragment";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int NUM_COLUMNS = 5;
 
     private ArrayObjectAdapter adapter;
-    private MediaFolder folder;
-    private List<MediaElement> mediaElements;
+    private String mediaId;
+    private List<MediaBrowserCompat.MediaItem> mediaItems;
+    private MediaBrowserCompat mediaBrowser;
 
     // Background
     private final Handler handler = new Handler();
@@ -83,22 +82,76 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
     private String backgroundURI;
     private BackgroundManager backgroundManager;
 
+    private final MediaBrowserCompat.SubscriptionCallback subscriptionCallback =
+            new MediaBrowserCompat.SubscriptionCallback() {
+                @Override
+                public void onChildrenLoaded(@NonNull String parentId,
+                                             @NonNull List<MediaBrowserCompat.MediaItem> children) {
+                    Log.d(TAG, "onChildrenLoaded() parentId=" + parentId);
+
+                    if(children.isEmpty()) {
+                        Log.d(TAG, "Result for " + parentId + " is empty");
+                        return;
+                    }
+
+                    mediaItems.clear();
+                    mediaItems.addAll(children);
+
+                    setGrid();
+                }
+
+                @Override
+                public void onError(@NonNull String id) {
+                    Log.e(TAG, "Media subscription error: " + id);
+                }
+            };
+
+    private MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+
+                    if (isDetached()) {
+                        return;
+                    }
+
+                    // Subscribe to media browser event
+                    mediaBrowser.subscribe(mediaId, subscriptionCallback);
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                }
+            };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Set media folder
-        folder = (MediaFolder) getActivity().getIntent().getSerializableExtra("Folder");
+        String title = getActivity().getIntent().getStringExtra(MediaUtils.EXTRA_MEDIA_TITLE);
+        mediaId = getActivity().getIntent().getStringExtra(MediaUtils.EXTRA_MEDIA_ID);
 
-        if(folder == null) {
+        if(title == null || mediaId == null) {
             Toast.makeText(getActivity(), getString(R.string.error_loading_media), Toast.LENGTH_LONG).show();
             ActivityCompat.finishAfterTransition(getActivity());
         }
 
         if (savedInstanceState == null) {
-            setTitle(folder.getName());
+            setTitle(title);
             prepareEntranceTransition();
         }
+
+        // Initialise variables
+        mediaItems = new ArrayList<>();
+        adapter = new ArrayObjectAdapter(new MediaElementPresenter());
 
         // Initialise interface
         prepareBackgroundManager();
@@ -120,7 +173,10 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
         // Set search icon color.
         setSearchAffordanceColor(ContextCompat.getColor(getActivity(), R.color.primary_dark));
 
-        getMediaElements();
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
     }
 
     @Override
@@ -129,14 +185,23 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
             backgroundTimer.cancel();
             backgroundTimer = null;
         }
+
         backgroundManager = null;
 
         super.onDestroy();
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+
+        mediaBrowser.connect();
+    }
+
+    @Override
     public void onStop() {
         backgroundManager.release();
+        mediaBrowser.disconnect();
 
         super.onStop();
     }
@@ -155,58 +220,16 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
     }
 
-    private void getMediaElements() {
-        adapter = new ArrayObjectAdapter(new MediaElementPresenter());
-
-        // Fetch directory contents
-        RESTService.getInstance().getMediaFolderContents(getActivity(), folder.getID(), new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                mediaElements = new ArrayList<>();
-
-                mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
-                setGrid();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                Gson parser = new Gson();
-                mediaElements = new ArrayList<>();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        mediaElements.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
-                    } catch (JSONException e) {
-                        Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                setGrid();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-    }
-
     private void setGrid() {
-        if(!mediaElements.isEmpty()) {
+        adapter.clear();
+
+        if(!mediaItems.isEmpty()) {
             // Add media elements to grid
-            for (MediaElement element : mediaElements) {
-                adapter.add(element);
+            for (MediaBrowserCompat.MediaItem item : mediaItems) {
+                adapter.add(item);
             }
         }
+
         setAdapter(adapter);
         startEntranceTransition();
     }
@@ -215,28 +238,34 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
         @Override
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
+            if (item instanceof MediaBrowserCompat.MediaItem) {
+                MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
-            if (item instanceof MediaElement) {
-                MediaElement element = (MediaElement) item;
+                if (mediaItem.isPlayable()) {
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                } else if (mediaItem.isBrowsable()) {
+                    Intent intent = null;
 
-                if(element.getType().equals(MediaElement.MediaElementType.DIRECTORY)) {
-                    switch(element.getDirectoryType()) {
-                        case MediaElement.DirectoryMediaType.NONE:case MediaElement.DirectoryMediaType.MIXED:
-                            Intent intent = new Intent(getActivity(), TvMediaElementGridActivity.class);
-                            intent.putExtra("Directory", element);
-                            getActivity().startActivity(intent);
+                    switch (MediaUtils.parseMediaId(mediaItem.getMediaId()).get(0)) {
+                        case MediaUtils.MEDIA_ID_FOLDER:
+                        case MediaUtils.MEDIA_ID_DIRECTORY:
+                            intent = new Intent(getActivity(), TvMediaGridActivity.class);
                             break;
 
-                        case MediaElement.DirectoryMediaType.AUDIO: case MediaElement.DirectoryMediaType.VIDEO:
+                        case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
+                        case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
                             intent = new Intent(getActivity(), TvDirectoryDetailsActivity.class);
-                            intent.putExtra("Directory", element);
-                            getActivity().startActivity(intent);
                             break;
                     }
-                } else if(element.getType().equals(MediaElement.MediaElementType.VIDEO)) {
-                    //Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                    //intent.putExtra("MediaElement", element);
-                    //getActivity().startActivity(intent);
+
+                    if (intent != null) {
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_ID, mediaItem.getMediaId());
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_ITEM, mediaItem);
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_TITLE, mediaItem.getDescription().getTitle());
+                        getActivity().startActivity(intent);
+                    }
+                } else {
+                    Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
                 }
             }
         }
@@ -246,10 +275,14 @@ public class TvMediaFolderGridFragment extends android.support.v17.leanback.app.
         @Override
         public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
-            if (item instanceof MediaElement) {
-                MediaElement element = (MediaElement) item;
-                backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + element.getID() + "/fanart/" + displayMetrics.widthPixels;
-                startBackgroundTimer();
+            if (item instanceof MediaBrowserCompat.MediaItem) {
+                MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
+                List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
+
+                if(id.size() > 1) {
+                    backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels;
+                    startBackgroundTimer();
+                }
             }
         }
     }

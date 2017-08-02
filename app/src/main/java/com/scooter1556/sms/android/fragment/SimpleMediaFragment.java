@@ -69,8 +69,6 @@ public class SimpleMediaFragment extends BaseFragment {
 
     private static final String TAG = "SimpleMediaFragment";
 
-    private static final String ARG_MEDIA_ID = "media_id";
-
     private MediaBrowserCompat mediaBrowser;
     private MediaFragmentListener mediaFragmentListener;
 
@@ -263,7 +261,7 @@ public class SimpleMediaFragment extends BaseFragment {
     public static SimpleMediaFragment newInstance(String mediaId) {
         SimpleMediaFragment fragment = new SimpleMediaFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_MEDIA_ID, mediaId);
+        args.putString(MediaUtils.EXTRA_MEDIA_ID, mediaId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -381,7 +379,7 @@ public class SimpleMediaFragment extends BaseFragment {
         Bundle args = getArguments();
 
         if (args != null) {
-            return args.getString(ARG_MEDIA_ID);
+            return args.getString(MediaUtils.EXTRA_MEDIA_ID);
         }
 
         return null;

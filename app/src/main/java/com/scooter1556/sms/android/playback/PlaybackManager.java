@@ -106,7 +106,7 @@ public class PlaybackManager implements Playback.Callback {
             if (playback == null) {
                 // Start video playback activity
                 Intent intent = new Intent(ctx, VideoPlaybackActivity.class)
-                        .putExtra(MediaUtils.EXTRA_MEDIA_ITEM, currentMedia);
+                        .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
                 ctx.startActivity(intent);
             } else {
                 playback.play(currentMedia);

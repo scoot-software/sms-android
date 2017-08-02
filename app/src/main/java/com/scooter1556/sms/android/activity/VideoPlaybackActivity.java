@@ -73,7 +73,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
-import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_MEDIA_ITEM;
+import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 
 public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
     private static final String TAG = "VideoPlaybackActivity";
@@ -134,7 +134,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            currentMedia = getIntent().getParcelableExtra(EXTRA_MEDIA_ITEM);
+            currentMedia = getIntent().getParcelableExtra(EXTRA_QUEUE_ITEM);
         }
 
         this.playbackState = PlaybackStateCompat.STATE_NONE;

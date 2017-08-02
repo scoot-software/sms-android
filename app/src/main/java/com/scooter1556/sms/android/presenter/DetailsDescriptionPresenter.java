@@ -41,19 +41,6 @@ public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPrese
 
         viewHolder.getTitle().setText(element.getDescription().getTitle());
         viewHolder.getSubtitle().setText(element.getDescription().getSubtitle());
-        viewHolder.getBody().setText(null);
-
-        switch(MediaUtils.getMediaTypeFromID(element.getMediaId())) {
-            case MediaElement.DirectoryMediaType.VIDEO:
-                viewHolder.getBody().setText(element.getDescription().getDescription());
-                break;
-
-            case MediaElement.DirectoryMediaType.AUDIO:
-                viewHolder.getBody().setText(String.valueOf(element.getDescription().getExtras().getShort("Year")));
-                break;
-
-            default:
-                viewHolder.getBody().setText(null);
-        }
+        viewHolder.getBody().setText(element.getDescription().getDescription());
     }
 }

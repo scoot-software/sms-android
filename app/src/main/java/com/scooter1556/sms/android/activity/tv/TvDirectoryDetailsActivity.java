@@ -24,51 +24,47 @@
 package com.scooter1556.sms.android.activity.tv;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.media.MediaBrowserCompat;
 import android.widget.Toast;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.fragment.tv.TvAudioDirectoryDetailsFragment;
-import com.scooter1556.sms.android.fragment.tv.TvVideoDirectoryDetailsFragment;
+import com.scooter1556.sms.android.fragment.tv.TvAudioDirectoryFragment;
+import com.scooter1556.sms.android.fragment.tv.TvVideoDirectoryFragment;
+import com.scooter1556.sms.android.utils.MediaUtils;
 
 public class TvDirectoryDetailsActivity extends Activity {
 
-    private MediaElement mediaElement;
+    private MediaBrowserCompat.MediaItem mediaItem;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Check media element
-        mediaElement = (MediaElement) getIntent().getSerializableExtra("Directory");
+        mediaItem = getIntent().getParcelableExtra(MediaUtils.EXTRA_MEDIA_ITEM);
 
-        if(mediaElement == null) {
+        if(mediaItem == null) {
             Toast.makeText(this, getString(R.string.error_loading_media), Toast.LENGTH_LONG).show();
             ActivityCompat.finishAfterTransition(this);
         }
 
         // Start suitable fragment
-        switch(mediaElement.getDirectoryType()) {
-
-            case MediaElement.DirectoryMediaType.AUDIO:
-                getFragmentManager().beginTransaction().add(android.R.id.content, new TvAudioDirectoryDetailsFragment()).commit();
+        switch(MediaUtils.parseMediaId(mediaItem.getMediaId()).get(0)) {
+            case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
+                getFragmentManager().beginTransaction().add(android.R.id.content, new TvAudioDirectoryFragment()).commit();
                 break;
 
-            case MediaElement.DirectoryMediaType.VIDEO:
-                getFragmentManager().beginTransaction().add(android.R.id.content, new TvVideoDirectoryDetailsFragment()).commit();
+            case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                getFragmentManager().beginTransaction().add(android.R.id.content, new TvVideoDirectoryFragment()).commit();
                 break;
         }
     }
 
-    public MediaElement getMediaElement() {
-        return mediaElement;
+    public MediaBrowserCompat.MediaItem getMediaItem() {
+        return mediaItem;
     }
 
     @Override

@@ -23,10 +23,14 @@
  */
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.DetailsFragment;
 import android.support.v17.leanback.widget.Action;
@@ -44,8 +48,12 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -55,11 +63,12 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
-import com.scooter1556.sms.android.activity.tv.TvMediaElementGridActivity;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaElementPresenter;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.MediaUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,16 +77,20 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
-    private static final String TAG = "VideoDirectoryDetailsFragment";
+public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMenu.OnMenuItemClickListener {
+    private static final String TAG = "TvAudioDirFragment";
 
     private static final int ACTION_PLAY = 0;
+    private static final int ACTION_ADD_AND_PLAY = 1;
+    private static final int ACTION_ADD_TO_PLAYLIST = 2;
 
     private static final int DETAIL_THUMB_WIDTH = 274;
     private static final int DETAIL_THUMB_HEIGHT = 274;
 
-    private MediaElement mediaElement;
-    List<MediaElement> mediaElements;
+    private MediaBrowserCompat.MediaItem mediaItem;
+    private MediaBrowserCompat.MediaItem selectedMediaItem;
+    private List<MediaBrowserCompat.MediaItem> mediaItems;
+    private MediaBrowserCompat mediaBrowser;
 
     private ArrayObjectAdapter adapter;
     private ClassPresenterSelector presenterSelector;
@@ -86,17 +99,67 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
 
+    private final MediaBrowserCompat.SubscriptionCallback subscriptionCallback =
+            new MediaBrowserCompat.SubscriptionCallback() {
+                @Override
+                public void onChildrenLoaded(@NonNull String parentId,
+                                             @NonNull List<MediaBrowserCompat.MediaItem> children) {
+                    Log.d(TAG, "onChildrenLoaded() parentId=" + parentId);
+
+                    if(children.isEmpty()) {
+                        Log.d(TAG, "Result for " + parentId + " is empty");
+                        return;
+                    }
+
+                    mediaItems.clear();
+                    mediaItems.addAll(children);
+
+                    setupMediaList();
+                }
+
+                @Override
+                public void onError(@NonNull String id) {
+                    Log.e(TAG, "Media subscription error: " + id);
+                }
+            };
+
+    private MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+
+                    if (isDetached()) {
+                        return;
+                    }
+
+                    // Subscribe to media browser event
+                    mediaBrowser.subscribe(mediaItem.getMediaId(), subscriptionCallback);
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                }
+            };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         prepareBackgroundManager();
 
-        mediaElement = ((TvDirectoryDetailsActivity) getActivity()).getMediaElement();
+        // Initialise variables
+        mediaItems = new ArrayList<>();
+        mediaItem = ((TvDirectoryDetailsActivity) getActivity()).getMediaItem();
 
         setupAdapter();
         setupDetailsOverview();
-        getContents();
         setBackground();
 
         // Set search icon color.
@@ -112,11 +175,25 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
                 Toast.makeText(getActivity(), getString(R.string.error_search_not_implemented), Toast.LENGTH_SHORT).show();
             }
         });
+
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        mediaBrowser.connect();
     }
 
     @Override
     public void onStop() {
         backgroundManager.release();
+        mediaBrowser.disconnect();
+
         super.onStop();
     }
 
@@ -135,8 +212,14 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
     }
 
     private void setBackground() {
+        List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
+
+        if(id.size() < 2) {
+            return;
+        }
+
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + mediaElement.getID() + "/fanart/" + displayMetrics.widthPixels)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
                 .asBitmap()
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
@@ -166,20 +249,13 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
             @Override
             public void onActionClicked(Action action) {
                 if(action.getId() == ACTION_PLAY) {
-                    if(mediaElements == null || mediaElements.isEmpty()) {
-                        Toast.makeText(getActivity(), getString(R.string.error_media_unavailable), Toast.LENGTH_SHORT);
-                        return;
-                    }
-
-                    // Find the first video element and play it
-                    for(MediaElement element : mediaElements) {
-                        if(element.getType().equals(MediaElement.MediaElementType.VIDEO)) {
-                            //Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                            //intent.putExtra("MediaElement", element);
-                            //getActivity().startActivity(intent);
-                            break;
-                        }
-                    }
+                    // TODO: Start playing
+                } else if (action.getId() == ACTION_ADD_AND_PLAY) {
+                    // TODO: Start playing
+                    Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_play_next), Toast.LENGTH_SHORT).show();
+                } else if (action.getId() == ACTION_ADD_TO_PLAYLIST) {
+                    // TODO: Start playing
+                    Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_add_to_queue), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -192,12 +268,18 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
     }
 
     private void setupDetailsOverview() {
-        final DetailsOverviewRow row = new DetailsOverviewRow(mediaElement);
+        List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
+
+        if(id.size() < 2) {
+            return;
+        }
+
+        final DetailsOverviewRow row = new DetailsOverviewRow(mediaItem);
 
         startEntranceTransition();
 
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + mediaElement.getID() + "/cover/" + DETAIL_THUMB_HEIGHT)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_HEIGHT)
                 .asBitmap()
                 .dontAnimate()
                 .error(defaultBackground)
@@ -212,6 +294,10 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
 
         actionsAdapter.set(ACTION_PLAY, new Action(ACTION_PLAY,
                 getResources().getString(R.string.label_play), null));
+        actionsAdapter.set(ACTION_ADD_AND_PLAY, new Action(ACTION_ADD_AND_PLAY,
+                getResources().getString(R.string.label_play_next), null));
+        actionsAdapter.set(ACTION_ADD_TO_PLAYLIST, new Action(ACTION_ADD_TO_PLAYLIST,
+                getResources().getString(R.string.label_add_to_queue), null));
 
         row.setActionsAdapter(actionsAdapter);
 
@@ -219,75 +305,40 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
     }
 
     private void setupMediaList() {
-        List<MediaElement> directories = new ArrayList<>();
-        List<MediaElement> videos = new ArrayList<>();
+        // Generate tracklist
+        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new MediaElementPresenter());
+        HeaderItem header = new HeaderItem(0, getString(R.string.heading_tracklist));
 
-        // Determine directory contents
-        for(MediaElement element : mediaElements) {
-            if(element.getType().equals(MediaElement.MediaElementType.DIRECTORY)) {
-                directories.add(element);
-            } else if(element.getType().equals(MediaElement.MediaElementType.VIDEO)) {
-                videos.add(element);
-            }
+        for(MediaBrowserCompat.MediaItem item : mediaItems) {
+            listRowAdapter.add(item);
         }
 
-        // Generate contents if necessary
-        if(videos.size() > 1) {
-            ArrayObjectAdapter contentsRowAdapter = new ArrayObjectAdapter(new MediaElementPresenter());
-            HeaderItem header = new HeaderItem(0, getString(R.string.heading_contents));
+        adapter.add(new ListRow(header, listRowAdapter));
+    }
 
-            for (MediaElement element : videos) {
-                contentsRowAdapter.add(element);
-            }
+    public void showOptionsMenu(View v) {
+        PopupMenu popup = new PopupMenu(getActivity(), v);
 
-            adapter.add(new ListRow(header, contentsRowAdapter));
-        }
+        // This activity implements OnMenuItemClickListener
+        popup.setOnMenuItemClickListener(this);
+        popup.inflate(R.menu.menu_audio_element);
+        popup.show();
+    }
 
-        // Generate row for sub-directories
-        if(!directories.isEmpty()) {
-            for(MediaElement directory : directories) {
-                final ArrayObjectAdapter directoryRowAdapter = new ArrayObjectAdapter(new MediaElementPresenter());
-                final HeaderItem header = new HeaderItem(directory.getID(), directory.getTitle());
-
-                // Fetch directory contents
-                RESTService.getInstance().getMediaElementContents(getActivity(), directory.getID(), new JsonHttpResponseHandler() {
-
-                    @Override
-                    public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                        Gson parser = new Gson();
-
-                        MediaElement element = parser.fromJson(response.toString(), MediaElement.class);
-                        directoryRowAdapter.add(element);
-                        adapter.add(new ListRow(header, directoryRowAdapter));
-                    }
-
-                    @Override
-                    public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                        Gson parser = new Gson();
-
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
-                                directoryRowAdapter.add(element);
-                            } catch (JSONException e) {
-                                Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        adapter.add(new ListRow(header, directoryRowAdapter));
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                        // Do nothing...
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                        // Do nothing...
-                    }
-                });
-            }
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.play:
+                // TODO:
+                return true;
+            case R.id.play_next:
+                // TODO:
+                return true;
+            case R.id.add_to_queue:
+                // TODO:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -296,60 +347,10 @@ public class TvVideoDirectoryDetailsFragment extends DetailsFragment {
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
 
-            if (item instanceof MediaElement) {
-                MediaElement element = (MediaElement) item;
-
-                if(element.getType().equals(MediaElement.MediaElementType.DIRECTORY)) {
-                    Intent intent = new Intent(getActivity(), TvMediaElementGridActivity.class);
-                    intent.putExtra("Directory", element);
-                    getActivity().startActivity(intent);
-                } else if(element.getType().equals(MediaElement.MediaElementType.VIDEO)) {
-                    //Intent intent = new Intent(getActivity(), VideoPlayerActivity.class);
-                    //intent.putExtra("MediaElement", element);
-                    //getActivity().startActivity(intent);
-                }
+            if (item instanceof MediaBrowserCompat.MediaItem) {
+                selectedMediaItem = (MediaBrowserCompat.MediaItem) item;
+                showOptionsMenu(itemViewHolder.view);
             }
         }
-    }
-
-    private void getContents() {
-        RESTService.getInstance().getMediaElementContents(getActivity(), mediaElement.getID(), new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                Gson parser = new Gson();
-                mediaElements = new ArrayList<>();
-
-                mediaElements.add(parser.fromJson(response.toString(), MediaElement.class));
-
-                setupMediaList();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
-                Gson parser = new Gson();
-                mediaElements = new ArrayList<>();
-
-                for (int i = 0; i < response.length(); i++) {
-                    try {
-                        mediaElements.add(parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class));
-                    } catch (JSONException e) {
-                        Toast.makeText(getActivity(), getString(R.string.error_parsing_media), Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                setupMediaList();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONArray response) {
-                Toast.makeText(getActivity(), getString(R.string.error_fetching_recently_added), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }

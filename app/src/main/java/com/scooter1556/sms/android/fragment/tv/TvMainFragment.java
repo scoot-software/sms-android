@@ -31,14 +31,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.activity.BrowseActivity;
-import com.scooter1556.sms.android.activity.HomeActivity;
 import com.scooter1556.sms.android.activity.tv.TvAudioSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvConnectionActivity;
+import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
+import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
-import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.fragment.BaseFragment;
 import com.scooter1556.sms.android.presenter.MediaElementPresenter;
 import com.scooter1556.sms.android.presenter.MediaFolderPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
@@ -64,9 +62,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private static final int ROW_SETTINGS = 4;
 
     private ArrayObjectAdapter rowsAdapter;
-
-    private boolean update = false;
-    boolean online = false;
 
     private MediaBrowserCompat mediaBrowser;
 
@@ -218,10 +213,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.d(TAG, "onSharedPreferencesChanged(" + key + ")");
-
-        if(key.equals("Connection")) {
-            update = true;
-        }
     }
 
     private void prepareBackgroundManager() {
@@ -383,7 +374,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         @Override
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
-
             if (item instanceof String) {
                 if (((String) item).contains(getString(R.string.preferences_title_audio))) {
                     Intent intent = new Intent(getActivity(), TvAudioSettingsActivity.class);
@@ -404,35 +394,28 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                 if (mediaItem.isPlayable()) {
                     MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
                 } else if (mediaItem.isBrowsable()) {
-                    // Start grid activity
-                    //Intent intent = new Intent(getActivity(), MediaFolderGridActivity.class);
-                    //intent.putExtra("Folder", folder);
-                    //getActivity().startActivity(intent);
-                } else {
-                    Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
-                }
-            } else if (item instanceof MediaElement) {
-                MediaElement element = (MediaElement) item;
-                Intent intent;
+                    Intent intent = null;
 
-                if(element.getType().equals(MediaElement.MediaElementType.DIRECTORY)) {
-                    switch(element.getDirectoryType()) {
-                        case MediaElement.DirectoryMediaType.NONE:case MediaElement.DirectoryMediaType.MIXED:
-                            //intent = new Intent(getActivity(), MediaElementGridActivity.class);
-                            //intent.putExtra("Directory", element);
-                            //getActivity().startActivity(intent);
+                    switch (MediaUtils.parseMediaId(mediaItem.getMediaId()).get(0)) {
+                        case MediaUtils.MEDIA_ID_FOLDER:
+                        case MediaUtils.MEDIA_ID_DIRECTORY:
+                            intent = new Intent(getActivity(), TvMediaGridActivity.class);
                             break;
 
-                        case MediaElement.DirectoryMediaType.AUDIO: case MediaElement.DirectoryMediaType.VIDEO:
-                            //intent = new Intent(getActivity(), DirectoryDetailsActivity.class);
-                            //intent.putExtra("Directory", element);
-                            //getActivity().startActivity(intent);
+                        case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
+                        case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                            intent = new Intent(getActivity(), TvDirectoryDetailsActivity.class);
                             break;
                     }
-                } else if(element.getType().equals(MediaElement.MediaElementType.AUDIO)) {
-                    // Now Playing
-                    //intent = new Intent(getActivity(), AudioPlayerActivity.class);
-                    //getActivity().startActivity(intent);
+
+                    if (intent != null) {
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_ID, mediaItem.getMediaId());
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_ITEM, mediaItem);
+                        intent.putExtra(MediaUtils.EXTRA_MEDIA_TITLE, mediaItem.getDescription().getTitle());
+                        getActivity().startActivity(intent);
+                    }
+                } else {
+                    Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
                 }
             }
         }

@@ -53,7 +53,12 @@ public class MediaFolderPresenter extends Presenter {
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object item) {
         MediaBrowserCompat.MediaItem mediaFolder = (MediaBrowserCompat.MediaItem) item;
-        ((TextView) viewHolder.view).setText(((MediaBrowserCompat.MediaItem) item).getDescription().getTitle());
+
+        if(mediaFolder == null) {
+            return;
+        }
+
+        ((TextView) viewHolder.view).setText(mediaFolder.getDescription().getTitle());
     }
 
     @Override

@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.DetailsFragment;
@@ -87,6 +88,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
     private MediaBrowserCompat.MediaItem selectedMediaItem;
     private List<MediaBrowserCompat.MediaItem> mediaItems;
     private MediaBrowserCompat mediaBrowser;
+    private static MediaControllerCompat mediaController;
 
     private ArrayObjectAdapter adapter;
     private ClassPresenterSelector presenterSelector;
@@ -135,6 +137,13 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
 
                     // Subscribe to media browser event
                     mediaBrowser.subscribe(mediaItem.getMediaId(), subscriptionCallback);
+
+                    try {
+                        mediaController = new MediaControllerCompat(getActivity(), mediaBrowser.getSessionToken());
+                        MediaControllerCompat.setMediaController(getActivity(), mediaController);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Failed to connect media controller", e);
+                    }
                 }
 
                 @Override
@@ -254,10 +263,11 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
                         return;
                     }
 
+
                     // Find the first video element and play it
                     for(MediaBrowserCompat.MediaItem item : mediaItems) {
                         if(MediaUtils.parseMediaId(item.getMediaId()).get(0).equals(MediaUtils.MEDIA_ID_VIDEO)) {
-                            MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(item.getMediaId(), null);
+                            mediaController.getTransportControls().playFromMediaId(item.getMediaId(), null);
                             break;
                         }
                     }
@@ -375,7 +385,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
 
             if (item instanceof MediaBrowserCompat.MediaItem) {
                 if(((MediaBrowserCompat.MediaItem) item).isPlayable()) {
-                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(((MediaBrowserCompat.MediaItem) item).getMediaId(), null);
+                    mediaController.getTransportControls().playFromMediaId(((MediaBrowserCompat.MediaItem) item).getMediaId(), null);
                 } else if(((MediaBrowserCompat.MediaItem) item).isBrowsable()) {
                     Intent intent = new Intent(getActivity(), TvMediaGridActivity.class);
                     intent.putExtra(MediaUtils.EXTRA_MEDIA_ID, mediaItem.getMediaId());

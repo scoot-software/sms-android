@@ -27,7 +27,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -39,7 +39,7 @@ import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.List;
 
-public class MediaElementPresenter extends Presenter {
+public class MediaDescriptionPresenter extends Presenter {
 
     private static int CARD_HEIGHT = 300;
     private static int CARD_WIDTH = 300;
@@ -47,7 +47,6 @@ public class MediaElementPresenter extends Presenter {
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
 
-    private static Drawable defaultDirectoryIcon;
     private static Drawable defaultAudioIcon;
     private static Drawable defaultVideoIcon;
 
@@ -56,7 +55,6 @@ public class MediaElementPresenter extends Presenter {
         defaultBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary);
         selectedBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary_dark);
 
-        defaultDirectoryIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_directory);
         defaultAudioIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_audio);
         defaultVideoIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_video);
 
@@ -82,10 +80,10 @@ public class MediaElementPresenter extends Presenter {
     }
 
     @Override
-    public void onBindViewHolder(Presenter.ViewHolder viewHolder, Object item) {
-        MediaBrowserCompat.MediaItem element = (MediaBrowserCompat.MediaItem) item;
+    public void onBindViewHolder(ViewHolder viewHolder, Object item) {
+        MediaDescriptionCompat description = (MediaDescriptionCompat) item;
 
-        if(element == null) {
+        if(description == null) {
             return;
         }
 
@@ -94,13 +92,13 @@ public class MediaElementPresenter extends Presenter {
         // Get title
         cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER);
-        cardView.setTitleText(element.getDescription().getTitle());
-        cardView.setContentText(element.getDescription().getSubtitle());
+        cardView.setTitleText(description.getTitle());
+        cardView.setContentText(description.getSubtitle());
 
         // Get default icon
         Drawable icon;
 
-        switch(MediaUtils.getMediaTypeFromID(element.getMediaId())) {
+        switch(MediaUtils.getMediaTypeFromID(description.getMediaId())) {
             case MediaElement.MediaElementType.AUDIO:
                 icon = defaultAudioIcon;
                 break;
@@ -109,16 +107,12 @@ public class MediaElementPresenter extends Presenter {
                 icon = defaultVideoIcon;
                 break;
 
-            case MediaElement.MediaElementType.DIRECTORY:
-                icon = defaultDirectoryIcon;
-                break;
-
             default:
-                icon = defaultDirectoryIcon;
+                icon = defaultAudioIcon;
                 break;
         }
 
-        List<String> id = MediaUtils.parseMediaId(element.getMediaId());
+        List<String> id = MediaUtils.parseMediaId((description.getMediaId()));
 
         if(id.size() > 1) {
             // Set image
@@ -131,7 +125,7 @@ public class MediaElementPresenter extends Presenter {
     }
 
     @Override
-    public void onUnbindViewHolder(Presenter.ViewHolder viewHolder) {
+    public void onUnbindViewHolder(ViewHolder viewHolder) {
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         // Remove references to images so that the garbage collector can free up memory.

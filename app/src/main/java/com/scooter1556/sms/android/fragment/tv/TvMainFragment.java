@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
@@ -21,7 +22,10 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -31,12 +35,14 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.activity.tv.TvAudioPlaybackActivity;
 import com.scooter1556.sms.android.activity.tv.TvAudioSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvConnectionActivity;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
+import com.scooter1556.sms.android.presenter.MediaDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaElementPresenter;
 import com.scooter1556.sms.android.presenter.MediaFolderPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
@@ -64,6 +70,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private ArrayObjectAdapter rowsAdapter;
 
     private MediaBrowserCompat mediaBrowser;
+    private static MediaControllerCompat mediaController;
 
     // Media Lists
     List<MediaBrowserCompat.MediaItem> mediaFolders;
@@ -77,6 +84,19 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private Timer backgroundTimer;
     private String backgroundURI;
     private BackgroundManager backgroundManager;
+
+    private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback() {
+        @Override
+        public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            if (metadata != null) {
+                setRows();
+            }
+        }
+    };
 
     private final MediaBrowserCompat.SubscriptionCallback subscriptionCallback =
             new MediaBrowserCompat.SubscriptionCallback() {
@@ -133,6 +153,14 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
                     mediaBrowser.subscribe(MediaUtils.MEDIA_ID_RECENTLY_ADDED, subscriptionCallback);
                     mediaBrowser.subscribe(MediaUtils.MEDIA_ID_RECENTLY_PLAYED, subscriptionCallback);
+
+                    try {
+                        mediaController = new MediaControllerCompat(getActivity(), mediaBrowser.getSessionToken());
+                        MediaControllerCompat.setMediaController(getActivity(), mediaController);
+                        mediaController.registerCallback(callback);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Failed to connect media controller", e);
+                    }
                 }
 
                 @Override
@@ -198,16 +226,24 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     @Override
     public void onStart() {
         super.onStart();
-
-        mediaBrowser.connect();
+        if (mediaBrowser != null) {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
     public void onStop() {
-        backgroundManager.release();
-        mediaBrowser.disconnect();
-
         super.onStop();
+
+        if (mediaBrowser != null) {
+            mediaBrowser.disconnect();
+        }
+
+        if (mediaController != null) {
+            mediaController.unregisterCallback(callback);
+        }
+
+        backgroundManager.release();
     }
 
     @Override
@@ -260,16 +296,16 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
 
         rowsAdapter.clear();
 
-        /*
-        HeaderItem nowPlayingHeader = new HeaderItem(ROW_NOW_PLAYING, getString(R.string.browser_now_playing));
-        MediaElementPresenter mediaElementPresenter = new MediaElementPresenter();
-        ArrayObjectAdapter nowPlayingRowAdapter = new ArrayObjectAdapter(mediaElementPresenter);
+        if(mediaController != null && mediaController.getMetadata() != null) {
+            HeaderItem nowPlayingHeader = new HeaderItem(ROW_NOW_PLAYING, getString(R.string.heading_now_playing));
+            MediaDescriptionPresenter mediaDescriptionPresenter = new MediaDescriptionPresenter();
+            ArrayObjectAdapter nowPlayingRowAdapter = new ArrayObjectAdapter(mediaDescriptionPresenter);
 
-        // Add current playlist item
-        nowPlayingRowAdapter.add(audioPlayerService.getMediaElement());
+            // Add current playlist item
+            nowPlayingRowAdapter.add(mediaController.getMetadata().getDescription());
 
-        rowsAdapter.add(new ListRow(nowPlayingHeader, nowPlayingRowAdapter));
-        */
+            rowsAdapter.add(new ListRow(nowPlayingHeader, nowPlayingRowAdapter));
+        }
 
         // Media Browser
         if(mediaFolders != null && !mediaFolders.isEmpty()) {
@@ -417,6 +453,10 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                 } else {
                     Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
                 }
+            } else if(item instanceof MediaDescriptionCompat) {
+                // Now Playing
+                Intent intent = new Intent(getActivity(), TvAudioPlaybackActivity.class);
+                getActivity().startActivity(intent);
             }
         }
     }

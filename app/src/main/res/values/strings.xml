@@ -38,6 +38,7 @@
 
     <string name="action_bar_play_all">Play All</string>
     <string name="action_bar_play">Play</string>
+    <string name="action_bar_stop">Stop</string>
     <string name="action_bar_add_all_and_play_next">Add All And Play Next</string>
     <string name="action_bar_add_and_play_next">Add And Play Next</string>
     <string name="action_bar_add_all_to_queue">Add All To Queue</string>
@@ -50,6 +51,9 @@
     <string name="action_bar_edit_connection">Edit Connection</string>
     <string name="action_bar_remove_connection">Remove Connection</string>
     <string name="action_bar_media_route">Available Devices</string>
+    <string name="action_bar_video_quality">Video Quality</string>
+    <string name="action_bar_audio_track">Audio</string>
+    <string name="action_bar_subtitle_track">Subtitles</string>
 
     <string name="button_more">More</string>
 
@@ -152,6 +156,7 @@
 
     <string name="heading_music">Music</string>
     <string name="heading_video">Video</string>
+    <string name="heading_now_playing">Now Playing</string>
     <string name="heading_media_folders">Media Folders</string>
     <string name="heading_recently_added">Recently Added</string>
     <string name="heading_recently_played">Recently Played</string>

@@ -64,7 +64,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class TvMediaGridFragment extends android.support.v17.leanback.app.VerticalGridFragment {
-    private static final String TAG = "MediaFolderGridFragment";
+    private static final String TAG = "TvMediaGridFragment";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int NUM_COLUMNS = 5;

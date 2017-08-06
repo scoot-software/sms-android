@@ -23,14 +23,12 @@
  */
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.widget.Toast;
 
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.fragment.tv.TvAudioDirectoryFragment;
 import com.scooter1556.sms.android.fragment.tv.TvVideoDirectoryFragment;
 import com.scooter1556.sms.android.utils.MediaUtils;

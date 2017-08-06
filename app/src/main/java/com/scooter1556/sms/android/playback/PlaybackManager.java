@@ -1,9 +1,12 @@
 package com.scooter1556.sms.android.playback;
 
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -13,6 +16,7 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
+import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
@@ -105,8 +109,21 @@ public class PlaybackManager implements Playback.Callback {
 
             if (playback == null) {
                 // Start video playback activity
-                Intent intent = new Intent(ctx, VideoPlaybackActivity.class)
-                        .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
+                Intent intent;
+                UiModeManager uiModeManager = (UiModeManager) ctx.getSystemService(ctx.UI_MODE_SERVICE);
+
+                Log.d(TAG, "UI Mode: " + uiModeManager.getCurrentModeType());
+
+                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+                    Log.d(TAG, "Launching video playback on a TV Device");
+                    intent = new Intent(ctx, TvVideoPlaybackActivity.class)
+                            .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
+                } else {
+                    intent = new Intent(ctx, VideoPlaybackActivity.class)
+                            .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
+                }
+
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(intent);
             } else {
                 playback.play(currentMedia);

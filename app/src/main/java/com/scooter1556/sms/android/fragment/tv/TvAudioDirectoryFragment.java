@@ -29,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.browse.MediaBrowser;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
@@ -92,6 +93,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     private MediaBrowserCompat.MediaItem selectedMediaItem;
     private List<MediaBrowserCompat.MediaItem> mediaItems;
     private MediaBrowserCompat mediaBrowser;
+    private static MediaControllerCompat mediaController;
 
     private ArrayObjectAdapter adapter;
     private ClassPresenterSelector presenterSelector;
@@ -136,6 +138,13 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
 
                     // Subscribe to media browser event
                     mediaBrowser.subscribe(mediaItem.getMediaId(), subscriptionCallback);
+
+                    try {
+                        mediaController = new MediaControllerCompat(getActivity(), mediaBrowser.getSessionToken());
+                        MediaControllerCompat.setMediaController(getActivity(), mediaController);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Failed to connect media controller", e);
+                    }
                 }
 
                 @Override
@@ -250,7 +259,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
             @Override
             public void onActionClicked(Action action) {
                 if(action.getId() == ACTION_PLAY) {
-                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                    mediaController.getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
                 } else if (action.getId() == ACTION_ADD_AND_PLAY) {
                     // TODO: Start playing
                     Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_play_next), Toast.LENGTH_SHORT).show();
@@ -293,12 +302,9 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
 
         SparseArrayObjectAdapter actionsAdapter = new SparseArrayObjectAdapter();
 
-        actionsAdapter.set(ACTION_PLAY, new Action(ACTION_PLAY,
-                getResources().getString(R.string.label_play), null));
-        actionsAdapter.set(ACTION_ADD_AND_PLAY, new Action(ACTION_ADD_AND_PLAY,
-                getResources().getString(R.string.label_play_next), null));
-        actionsAdapter.set(ACTION_ADD_TO_PLAYLIST, new Action(ACTION_ADD_TO_PLAYLIST,
-                getResources().getString(R.string.label_add_to_queue), null));
+        actionsAdapter.set(ACTION_PLAY, new Action(ACTION_PLAY, getResources().getString(R.string.label_play), null));
+        actionsAdapter.set(ACTION_ADD_AND_PLAY, new Action(ACTION_ADD_AND_PLAY, getResources().getString(R.string.label_play_next), null));
+        actionsAdapter.set(ACTION_ADD_TO_PLAYLIST, new Action(ACTION_ADD_TO_PLAYLIST, getResources().getString(R.string.label_add_to_queue), null));
 
         row.setActionsAdapter(actionsAdapter);
 
@@ -330,7 +336,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.play:
-                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(selectedMediaItem.getMediaId(), null);
+                mediaController.getTransportControls().playFromMediaId(selectedMediaItem.getMediaId(), null);
                 return true;
             case R.id.play_next:
                 // TODO:

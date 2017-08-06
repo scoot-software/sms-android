@@ -67,7 +67,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
      * Shows the selection dialog for a given renderer.
      *
      * @param activity The parent activity.
-     * @param title The dialog's title.
      * @param trackInfo The current track information.
      * @param rendererIndex The index of the renderer.
      */

@@ -85,6 +85,18 @@
 
         <!-- Android TV -->
         <activity
+            android:name=".activity.tv.TvAudioPlaybackActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback" />
+
+        <activity
+            android:name=".activity.tv.TvVideoPlaybackActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:theme="@style/Theme.Leanback" />
+
+        <activity
             android:name=".activity.tv.TvMediaGridActivity"
             android:exported="true"
             android:parentActivityName=".activity.tv.TvMainActivity"

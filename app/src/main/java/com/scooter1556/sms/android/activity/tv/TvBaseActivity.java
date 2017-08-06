@@ -20,16 +20,9 @@ import com.scooter1556.sms.android.fragment.PlaybackControlsFragment;
 import com.scooter1556.sms.android.provider.MediaBrowserProvider;
 import com.scooter1556.sms.android.service.MediaService;
 
-public class TvBaseActivity extends Activity implements MediaBrowserProvider {
+public class TvBaseActivity extends Activity {
 
-    private static final String TAG = "BaseActivity";
-
-    public static final int RESULT_CODE_SETTINGS = 101;
-    public static final int RESULT_CODE_CONNECTIONS = 102;
-    public static final int RESULT_CODE_BROWSE = 103;
-
-    private MediaBrowserCompat mediaBrowser;
-    private PlaybackControlsFragment controlsFragment;
+    private static final String TAG = "TVBaseActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,70 +43,5 @@ public class TvBaseActivity extends Activity implements MediaBrowserProvider {
                 startActivity(intent);
             }
         }
-
-        // Connect a media browser just to get the media session token.
-        mediaBrowser = new MediaBrowserCompat(this, new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        Log.d(TAG, "onStart()");
-
-        mediaBrowser.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        Log.d(TAG, "onStop()");
-
-        mediaBrowser.disconnect();
-    }
-
-    @Override
-    public MediaBrowserCompat getMediaBrowser() {
-        return mediaBrowser;
-    }
-
-    protected void onMediaControllerConnected() {
-        // Empty implementation, Can be overridden by clients.
-    }
-
-    private void connectToSession(MediaSessionCompat.Token token) throws RemoteException {
-        MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
-        MediaControllerCompat.setMediaController(this, mediaController);
-        mediaController.registerCallback(mediaControllerCallback);
-
-        onMediaControllerConnected();
-    }
-
-    // Callback that ensures that we are showing the controls
-    private final MediaControllerCompat.Callback mediaControllerCallback =
-            new MediaControllerCompat.Callback() {
-                @Override
-                public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
-                }
-
-                @Override
-                public void onMetadataChanged(MediaMetadataCompat metadata) {
-                }
-            };
-
-    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
-            new MediaBrowserCompat.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected()");
-
-                    try {
-                        connectToSession(mediaBrowser.getSessionToken());
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "could not connect media controller", e);
-                    }
-                }
-            };
-
 }

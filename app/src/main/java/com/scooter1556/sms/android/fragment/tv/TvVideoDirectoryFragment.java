@@ -93,6 +93,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
     private ArrayObjectAdapter adapter;
     private ClassPresenterSelector presenterSelector;
 
+
     private BackgroundManager backgroundManager;
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
@@ -168,8 +169,6 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
         mediaItem = ((TvDirectoryDetailsActivity) getActivity()).getMediaItem();
 
         setupAdapter();
-        setupDetailsOverview();
-        setBackground();
 
         // Set search icon color.
         setSearchAffordanceColor(ContextCompat.getColor(getActivity(), R.color.primary_dark));
@@ -192,6 +191,22 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d(TAG, "onResume()");
+
+        setupDetailsOverview();
+        setBackground();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy()");
+        super.onDestroy();
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -202,6 +217,8 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
     public void onStop() {
         backgroundManager.release();
         mediaBrowser.disconnect();
+
+        adapter.clear();
 
         super.onStop();
     }
@@ -289,7 +306,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
             return;
         }
 
-        final DetailsOverviewRow row = new DetailsOverviewRow(mediaItem);
+        final DetailsOverviewRow detailsRow = new DetailsOverviewRow(mediaItem);
 
         startEntranceTransition();
 
@@ -301,7 +318,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
                 .into(new SimpleTarget<Bitmap>() {
                     @Override
                     public void onResourceReady(final Bitmap resource, GlideAnimation glideAnimation) {
-                        row.setImageBitmap(getActivity(), resource);
+                        detailsRow.setImageBitmap(getActivity(), resource);
                     }
                 });
 
@@ -310,9 +327,9 @@ public class TvVideoDirectoryFragment extends DetailsFragment {
         actionsAdapter.set(ACTION_PLAY, new Action(ACTION_PLAY,
                 getResources().getString(R.string.label_play), null));
 
-        row.setActionsAdapter(actionsAdapter);
+        detailsRow.setActionsAdapter(actionsAdapter);
 
-        adapter.add(row);
+        adapter.add(detailsRow);
     }
 
     private void setupMediaList() {

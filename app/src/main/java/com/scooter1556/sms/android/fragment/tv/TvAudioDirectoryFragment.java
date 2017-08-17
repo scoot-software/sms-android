@@ -24,62 +24,65 @@
 package com.scooter1556.sms.android.fragment.tv;
 
 import android.content.ComponentName;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.DetailsFragment;
+import android.support.v17.leanback.widget.AbstractMediaListHeaderPresenter;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import android.support.v17.leanback.widget.BaseOnItemViewClickedListener;
+import android.support.v17.leanback.widget.BaseOnItemViewSelectedListener;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
 import android.support.v17.leanback.widget.DetailsOverviewRow;
+import android.support.v17.leanback.widget.DividerRow;
 import android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
+import android.support.v17.leanback.widget.OnItemViewSelectedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
+import android.support.v17.leanback.widget.SectionRow;
 import android.support.v17.leanback.widget.SparseArrayObjectAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
-import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.presenter.AudioItemPresenter;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
-import com.scooter1556.sms.android.presenter.MediaElementPresenter;
+import com.scooter1556.sms.android.presenter.HeaderPresenter;
+import com.scooter1556.sms.android.presenter.MediaDescriptionPresenter;
+import com.scooter1556.sms.android.presenter.MediaItemPresenter;
+import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMenu.OnMenuItemClickListener {
+public class TvAudioDirectoryFragment extends DetailsFragment {
     private static final String TAG = "TvAudioDirFragment";
 
     private static final int ACTION_PLAY = 0;
@@ -90,7 +93,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     private static final int DETAIL_THUMB_HEIGHT = 274;
 
     private MediaBrowserCompat.MediaItem mediaItem;
-    private MediaBrowserCompat.MediaItem selectedMediaItem;
+    private MediaDescriptionCompat selectedMediaItem;
     private List<MediaBrowserCompat.MediaItem> mediaItems;
     private MediaBrowserCompat mediaBrowser;
     private static MediaControllerCompat mediaController;
@@ -162,6 +165,9 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setOnItemViewClickedListener(new ItemViewClickedListener());
+        setOnItemViewSelectedListener(new ItemViewSelectedListener());
+
         prepareBackgroundManager();
 
         // Initialise variables
@@ -169,16 +175,11 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
         mediaItem = ((TvDirectoryDetailsActivity) getActivity()).getMediaItem();
 
         setupAdapter();
-        setupDetailsOverview();
-        setBackground();
 
         // Set search icon color.
         setSearchAffordanceColor(ContextCompat.getColor(getActivity(), R.color.primary_dark));
 
-        // When a Related Movie item is clicked.
-        setOnItemViewClickedListener(new ItemViewClickedListener());
-
-        setOnSearchClickedListener(new View.OnClickListener() {
+        setOnSearchClickedListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 // ToDo: Implement search feature
@@ -193,6 +194,16 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d(TAG, "onResume()");
+
+        setupDetailsOverview();
+        setBackground();
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -203,6 +214,8 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     public void onStop() {
         backgroundManager.release();
         mediaBrowser.disconnect();
+
+        adapter.clear();
 
         super.onStop();
     }
@@ -272,7 +285,6 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
 
         presenterSelector = new ClassPresenterSelector();
         presenterSelector.addClassPresenter(DetailsOverviewRow.class, detailsPresenter);
-        presenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
         adapter = new ArrayObjectAdapter(presenterSelector);
         setAdapter(adapter);
     }
@@ -312,52 +324,35 @@ public class TvAudioDirectoryFragment extends DetailsFragment implements PopupMe
     }
 
     private void setupMediaList() {
-        // Generate tracklist
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new MediaElementPresenter());
-        HeaderItem header = new HeaderItem(0, getString(R.string.heading_tracklist));
+        presenterSelector.addClassPresenter(String.class, new HeaderPresenter());
+        presenterSelector.addClassPresenter(MediaDescriptionCompat.class, new AudioItemPresenter());
+
+        // Add heading
+        adapter.add(getString(R.string.heading_tracklist));
 
         for(MediaBrowserCompat.MediaItem item : mediaItems) {
-            listRowAdapter.add(item);
-        }
-
-        adapter.add(new ListRow(header, listRowAdapter));
-    }
-
-    public void showOptionsMenu(View v) {
-        PopupMenu popup = new PopupMenu(getActivity(), v);
-
-        // This activity implements OnMenuItemClickListener
-        popup.setOnMenuItemClickListener(this);
-        popup.inflate(R.menu.menu_audio_element);
-        popup.show();
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.play:
-                mediaController.getTransportControls().playFromMediaId(selectedMediaItem.getMediaId(), null);
-                return true;
-            case R.id.play_next:
-                // TODO:
-                return true;
-            case R.id.add_to_queue:
-                // TODO:
-                return true;
-            default:
-                return false;
+            adapter.add(item.getDescription());
         }
     }
 
-    private final class ItemViewClickedListener implements OnItemViewClickedListener {
+    private final class ItemViewClickedListener implements BaseOnItemViewClickedListener {
         @Override
-        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
-                                  RowPresenter.ViewHolder rowViewHolder, Row row) {
+        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Object row) {
             Log.d(TAG, "onItemClicked()");
 
-            if (item instanceof MediaBrowserCompat.MediaItem) {
-                selectedMediaItem = (MediaBrowserCompat.MediaItem) item;
-                showOptionsMenu(itemViewHolder.view);
+            if (row instanceof MediaDescriptionCompat) {
+                //showOptionsMenu(itemViewHolder.view);
+                mediaController.getTransportControls().playFromMediaId(selectedMediaItem.getMediaId(), null);
+            }
+        }
+    }
+
+    private final class ItemViewSelectedListener implements BaseOnItemViewSelectedListener {
+        @Override
+        public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Object row) {
+            if (row instanceof MediaDescriptionCompat) {
+                selectedMediaItem = (MediaDescriptionCompat) row;
+                Log.d(TAG, ("Item Selected: " + ((MediaDescriptionCompat) row).getMediaId()));
             }
         }
     }

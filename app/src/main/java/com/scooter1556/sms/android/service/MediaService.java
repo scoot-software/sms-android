@@ -202,8 +202,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
                         mediaSession.setQueue(newQueue);
                         mediaSession.setQueueTitle("Now Playing");
-
-                        playbackManager.handlePlayRequest();
                     }
                 });
 
@@ -1570,23 +1568,11 @@ public class MediaService extends MediaBrowserServiceCompat
                         MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
 
             case MediaElement.MediaElementType.AUDIO:
-                MediaDescriptionCompat audDescription = new MediaDescriptionCompat.Builder()
-                        .setMediaId(MediaUtils.MEDIA_ID_AUDIO + MediaUtils.SEPARATOR + String.valueOf(element.getID()))
-                        .setTitle(element.getTitle())
-                        .setSubtitle(element.getArtist())
-                        .setDescription(element.getTrackNumber().toString())
-                        .build();
-
-                return new MediaBrowserCompat.MediaItem(audDescription,
+                return new MediaBrowserCompat.MediaItem(MediaUtils.getMediaDescription(element),
                         MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
 
             case MediaElement.MediaElementType.VIDEO:
-                MediaDescriptionCompat vidDescription = new MediaDescriptionCompat.Builder()
-                        .setMediaId(MediaUtils.MEDIA_ID_VIDEO + MediaUtils.SEPARATOR + String.valueOf(element.getID()))
-                        .setTitle(element.getTitle())
-                        .build();
-
-                return new MediaBrowserCompat.MediaItem(vidDescription,
+                return new MediaBrowserCompat.MediaItem(MediaUtils.getMediaDescription(element),
                         MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
 
             default:

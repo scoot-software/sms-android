@@ -23,11 +23,14 @@
  */
 package com.scooter1556.sms.android.presenter;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.view.ContextThemeWrapper;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -39,7 +42,7 @@ import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.List;
 
-public class MediaElementPresenter extends Presenter {
+public class MediaItemPresenter extends Presenter {
 
     private static int CARD_HEIGHT = 300;
     private static int CARD_WIDTH = 300;
@@ -69,7 +72,7 @@ public class MediaElementPresenter extends Presenter {
         };
 
         view.setFocusable(true);
-        view.setFocusableInTouchMode(true);
+
         updateCardBackgroundColor(view, false);
         return new ViewHolder(view);
     }

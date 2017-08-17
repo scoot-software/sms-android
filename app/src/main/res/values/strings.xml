@@ -166,6 +166,7 @@
     <string name="heading_collections">Collections</string>
     <string name="heading_home">Home</string>
     <string name="heading_tracklist">Tracklist</string>
+    <string name="heading_queue">Queue</string>
     <string name="heading_playlists">Playlists</string>
     <string name="heading_track_selection">Track Selection</string>
     <string name="heading_contents">Contents</string>

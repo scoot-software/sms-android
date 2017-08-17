@@ -43,8 +43,9 @@ import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
 import com.scooter1556.sms.android.presenter.MediaDescriptionPresenter;
-import com.scooter1556.sms.android.presenter.MediaElementPresenter;
+import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.presenter.MediaFolderPresenter;
+import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -296,13 +297,14 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
 
         rowsAdapter.clear();
 
+        // Now Playing
         if(mediaController != null && mediaController.getMetadata() != null) {
             HeaderItem nowPlayingHeader = new HeaderItem(ROW_NOW_PLAYING, getString(R.string.heading_now_playing));
-            MediaDescriptionPresenter mediaDescriptionPresenter = new MediaDescriptionPresenter();
-            ArrayObjectAdapter nowPlayingRowAdapter = new ArrayObjectAdapter(mediaDescriptionPresenter);
+            MediaMetadataPresenter mediaMetadataPresenter = new MediaMetadataPresenter();
+            ArrayObjectAdapter nowPlayingRowAdapter = new ArrayObjectAdapter(mediaMetadataPresenter);
 
             // Add current playlist item
-            nowPlayingRowAdapter.add(mediaController.getMetadata().getDescription());
+            nowPlayingRowAdapter.add(mediaController.getMetadata());
 
             rowsAdapter.add(new ListRow(nowPlayingHeader, nowPlayingRowAdapter));
         }
@@ -324,7 +326,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         // Recently Added
         if(recentlyAdded != null && !recentlyAdded.isEmpty()) {
             HeaderItem recentlyAddedHeader = new HeaderItem(ROW_RECENTLY_ADDED, getString(R.string.heading_recently_added));
-            MediaElementPresenter recentlyAddedPresenter = new MediaElementPresenter();
+            MediaItemPresenter recentlyAddedPresenter = new MediaItemPresenter();
             ArrayObjectAdapter recentlyAddedRowAdapter = new ArrayObjectAdapter(recentlyAddedPresenter);
 
             // Add media elements to row
@@ -338,7 +340,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         // Recently Played
         if(recentlyPlayed != null && !recentlyPlayed.isEmpty()) {
             HeaderItem recentlyPlayedHeader = new HeaderItem(ROW_RECENTLY_PLAYED, getString(R.string.heading_recently_played));
-            MediaElementPresenter recentlyPlayedPresenter = new MediaElementPresenter();
+            MediaItemPresenter recentlyPlayedPresenter = new MediaItemPresenter();
             ArrayObjectAdapter recentlyPlayedRowAdapter = new ArrayObjectAdapter(recentlyPlayedPresenter);
 
             // Add media elements to row
@@ -453,7 +455,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                 } else {
                     Log.w(TAG, "Ignoring MediaItem that is neither browsable nor playable: mediaID=" + mediaItem.getMediaId());
                 }
-            } else if(item instanceof MediaDescriptionCompat) {
+            } else if(item instanceof MediaMetadataCompat) {
                 // Now Playing
                 Intent intent = new Intent(getActivity(), TvAudioPlaybackActivity.class);
                 getActivity().startActivity(intent);
@@ -478,6 +480,15 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                 } else {
                     backgroundManager.setDrawable(defaultBackground);
                 }
+
+                Log.d(TAG, "onItemSelected() -> " + mediaItem.getMediaId());
+            } else if(item instanceof MediaMetadataCompat) {
+                MediaMetadataCompat media = (MediaMetadataCompat) item;
+
+                backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + media.getDescription().getMediaId() + "/fanart/" + displayMetrics.widthPixels;
+                startBackgroundTimer();
+
+                Log.d(TAG, "onItemSelected() -> " + media.getDescription().getMediaId());
             }
         }
     }

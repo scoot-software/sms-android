@@ -42,5 +42,6 @@ public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPrese
         viewHolder.getTitle().setText(element.getDescription().getTitle());
         viewHolder.getSubtitle().setText(element.getDescription().getSubtitle());
         viewHolder.getBody().setText(element.getDescription().getDescription());
+
     }
 }

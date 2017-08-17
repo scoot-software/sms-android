@@ -142,6 +142,8 @@ public class QueueManager {
             currentQueue.addAll(queue);
             currentIndex = currentQueue.indexOf(currentItem);
         }
+
+        metadataListener.onQueueUpdated(currentQueue);
     }
 
     public MediaSessionCompat.QueueItem getCurrentMedia() {
@@ -379,10 +381,13 @@ public class QueueManager {
 
                         // Handle Shuffle
                         if(shuffle) {
-                            MediaSessionCompat.QueueItem currentItem = newQueue.get(QueueUtils.getIndexByMediaID(newQueue, id));
                             Collections.shuffle(newQueue);
-                            newQueue.remove(currentItem);
-                            newQueue.add(0, currentItem);
+
+                            if(QueueUtils.getIndexByMediaID(newQueue, id) != -1) {
+                                MediaSessionCompat.QueueItem currentItem = newQueue.get(QueueUtils.getIndexByMediaID(newQueue, id));
+                                newQueue.remove(currentItem);
+                                newQueue.add(0, currentItem);
+                            }
                         }
 
                         setCurrentQueue(newQueue, id);
@@ -415,6 +420,7 @@ public class QueueManager {
         currentIndex = Math.max(index, 0);
 
         metadataListener.onQueueUpdated(currentQueue);
+        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
     }
 
     protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, String initialMediaID) {
@@ -430,6 +436,7 @@ public class QueueManager {
         currentIndex = Math.max(index, 0);
 
         metadataListener.onQueueUpdated(currentQueue);
+        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
     }
 
     public void updateMetadata() {

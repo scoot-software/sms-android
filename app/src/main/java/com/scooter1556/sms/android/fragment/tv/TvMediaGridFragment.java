@@ -53,7 +53,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
-import com.scooter1556.sms.android.presenter.MediaElementPresenter;
+import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
@@ -151,7 +151,7 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
 
         // Initialise variables
         mediaItems = new ArrayList<>();
-        adapter = new ArrayObjectAdapter(new MediaElementPresenter());
+        adapter = new ArrayObjectAdapter(new MediaItemPresenter());
 
         // Initialise interface
         prepareBackgroundManager();

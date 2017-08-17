@@ -460,7 +460,9 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         } else {
             // We have audio focus
             if (audioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
-                mediaPlayer.setVolume(VOLUME_DUCK);
+                if (mediaPlayer != null) {
+                    mediaPlayer.setVolume(VOLUME_DUCK);
+                }
             } else {
                 if (mediaPlayer != null) {
                     mediaPlayer.setVolume(VOLUME_NORMAL);

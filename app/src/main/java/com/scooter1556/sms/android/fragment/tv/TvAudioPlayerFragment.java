@@ -37,22 +37,17 @@ import android.support.v17.leanback.app.PlaybackFragment;
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import android.support.v17.leanback.widget.BaseOnItemViewClickedListener;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
 import android.support.v17.leanback.widget.ControlButtonPresenterSelector;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
-import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.PlaybackControlsRow;
 import android.support.v17.leanback.widget.PlaybackControlsRow.PlayPauseAction;
 import android.support.v17.leanback.widget.PlaybackControlsRow.SkipNextAction;
 import android.support.v17.leanback.widget.PlaybackControlsRow.SkipPreviousAction;
 import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
 import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -63,15 +58,14 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.PopupMenu;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.presenter.MediaDescriptionPresenter;
+import com.scooter1556.sms.android.presenter.HeaderPresenter;
+import com.scooter1556.sms.android.presenter.QueueItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
@@ -82,13 +76,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class TvAudioPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment implements PopupMenu.OnMenuItemClickListener {
+public class TvAudioPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment {
     private static final String TAG = "TvAudioPlayerFragment";
 
     private static final int BACKGROUND_TYPE = PlaybackFragment.BG_DARK;
 
     public static final int ACTION_STOP_ID = 0x7f0f0012;
     public static final int ACTION_CLEAR_PLAYLIST_ID = 0x7f0f0013;
+    public static final int ACTION_SHUFFLE_ID = 0x7f0f0014;
+    public static final int ACTION_REPEAT_ID = 0x7f0f0015;
 
     private static final int THUMB_WIDTH = 274;
     private static final int THUMB_HEIGHT = 274;
@@ -106,18 +102,14 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
     private SkipNextAction skipNextAction;
     private SkipPreviousAction skipPreviousAction;
     private ClearPlaylistAction clearPlaylistAction;
+    private PlaybackControlsRow.ShuffleAction shuffleAction;
+    private PlaybackControlsRow.RepeatAction repeatAction;
 
     private Handler handler;
-    private Runnable runnable;
 
     private BackgroundManager backgroundManager;
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
-
-    private ArrayObjectAdapter listRowAdapter;
-    private ListRow listRow;
-
-    private MediaDescriptionCompat selectedItem;
 
     private ClassPresenterSelector presenterSelector;
 
@@ -136,9 +128,13 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
     private MediaBrowserCompat mediaBrowser;
     private static MediaControllerCompat mediaController;
 
+    private String shuffleMode;
+
     private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback() {
         @Override
         public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
+            Log.d(TAG, "onPlaybackStateChanged() -> " + state);
+
             updatePlaybackState(state);
         }
 
@@ -181,7 +177,6 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         handler = new Handler();
 
-        listRowAdapter = new ArrayObjectAdapter(new MediaDescriptionPresenter());
         presenterSelector = new ClassPresenterSelector();
         rowsAdapter = new ArrayObjectAdapter(presenterSelector);
 
@@ -235,6 +230,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         }
 
         updateProgress();
+        updatePlayListRow();
 
         if (state != null && (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_BUFFERING)) {
             scheduleSeekbarUpdate();
@@ -290,11 +286,54 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                     mediaController.getTransportControls().stop();
                 } else if (action.getId() == clearPlaylistAction.getId()) {
                     //TODO
+                } else if(action.getId() == shuffleAction.getId()) {
+                    Log.d(TAG, "onActionClicked -> Shuffle");
+
+                    PlaybackStateCompat state = mediaController.getPlaybackState();
+                    MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+
+                    if(state == null) {
+                        return;
+                    }
+
+                    for(PlaybackStateCompat.CustomAction cAction : state.getCustomActions()) {
+                        switch (cAction.getAction()) {
+                            case MediaService.STATE_SHUFFLE_ON:
+                                controls.sendCustomAction(MediaService.STATE_SHUFFLE_ON, null);
+                                break;
+
+                            case MediaService.STATE_SHUFFLE_OFF:
+                                controls.sendCustomAction(MediaService.STATE_SHUFFLE_OFF, null);
+                                break;
+                        }
+                    }
+
+                    updatePlaybackState(state);
+                } else if(action.getId() == repeatAction.getId()) {
+                    Log.d(TAG, "onActionClicked -> Repeat");
+
+                    PlaybackStateCompat state = mediaController.getPlaybackState();
+                    MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+
+                    if(state == null) {
+                        return;
+                    }
+
+                    for(PlaybackStateCompat.CustomAction cAction : state.getCustomActions()) {
+                        switch (cAction.getAction()) {
+                            case MediaService.STATE_REPEAT_NONE: case MediaService.STATE_REPEAT_ALL: case MediaService.STATE_REPEAT_ONE:
+                                controls.sendCustomAction(cAction.getAction(), null);
+                                break;
+                        }
+                    }
+
+                    updatePlaybackState(state);
                 }
             }
         });
 
         presenterSelector.addClassPresenter(PlaybackControlsRow.class, playbackControlsRowPresenter);
+        presenterSelector.addClassPresenter(String.class, new HeaderPresenter());
 
         playbackControlsRow = new PlaybackControlsRow(new MediaDescriptionHolder());
         ControlButtonPresenterSelector presenterSelector = new ControlButtonPresenterSelector();
@@ -308,15 +347,24 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         skipNextAction = new PlaybackControlsRow.SkipNextAction(getActivity());
         skipPreviousAction = new PlaybackControlsRow.SkipPreviousAction(getActivity());
         clearPlaylistAction = new ClearPlaylistAction(getActivity());
+        shuffleAction = new PlaybackControlsRow.ShuffleAction(getActivity());
+        repeatAction = new PlaybackControlsRow.RepeatAction(getActivity());
+
 
         primaryActionsAdapter.add(skipPreviousAction);
         primaryActionsAdapter.add(stopAction);
         primaryActionsAdapter.add(playPauseAction);
         primaryActionsAdapter.add(skipNextAction);
 
+        secondaryActionsAdapter.add(shuffleAction);
+        secondaryActionsAdapter.add(repeatAction);
         secondaryActionsAdapter.add(clearPlaylistAction);
 
         rowsAdapter.add(playbackControlsRow);
+
+        // Add heading
+        rowsAdapter.add(getString(R.string.heading_queue));
+
         setAdapter(rowsAdapter);
         setOnItemViewClickedListener(new ItemViewClickedListener());
     }
@@ -357,15 +405,9 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         ((MediaDescriptionHolder) playbackControlsRow.getItem()).item = description;
         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
 
-        List<String> id = MediaUtils.parseMediaId(description.getMediaId());
-
-        if(id.size() < 2) {
-            return;
-        }
-
         // Get cover
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + THUMB_HEIGHT)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover/" + THUMB_HEIGHT)
                 .asBitmap()
                 .into(new SimpleTarget<Bitmap>(THUMB_WIDTH, THUMB_HEIGHT) {
                     @Override
@@ -377,7 +419,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         // Get fanart
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart/" + displayMetrics.widthPixels)
                 .asBitmap()
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
@@ -430,7 +472,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
             case PlaybackStateCompat.STATE_STOPPED:
                 stopSeekbarUpdate();
                 playPauseAction.setIndex(PlayPauseAction.PLAY);
-                resetPlaybackRow();
+                playbackControlsRow.setCurrentTime(0);
                 break;
 
             case PlaybackStateCompat.STATE_BUFFERING:
@@ -441,44 +483,45 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                 Log.d(TAG, "Unhandled state: " + state.getState());
         }
 
-        /*skipNext.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_NEXT) == 0
-                ? INVISIBLE : VISIBLE );
-        skipPrev.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) == 0
-                ? INVISIBLE : VISIBLE );
-        shuffle.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED) == 0
-                ? INVISIBLE : VISIBLE );
-        repeat.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_REPEAT_MODE) == 0
-                ? INVISIBLE : VISIBLE );
-
-
         // Custom Actions
         for(PlaybackStateCompat.CustomAction action : state.getCustomActions()) {
             switch (action.getAction()) {
                 case MediaService.STATE_SHUFFLE_ON:
-                    shuffle.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    shuffleAction.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_shuffle_enabled_white_48dp));
+
+                    // Update interface if necessary
+                    if(shuffleMode == null || !shuffleMode.equals(MediaService.STATE_SHUFFLE_ON)) {
+                        shuffleMode = MediaService.STATE_SHUFFLE_ON;
+                        updatePlayListRow();
+                    }
+
                     break;
 
                 case MediaService.STATE_SHUFFLE_OFF:
-                    shuffle.clearColorFilter();
+                    shuffleAction.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_shuffle_white_48dp));
+
+                    // Update interface if necessary
+                    if(shuffleMode == null || !shuffleMode.equals(MediaService.STATE_SHUFFLE_OFF)) {
+                        shuffleMode = MediaService.STATE_SHUFFLE_OFF;
+                        updatePlayListRow();
+                    }
+
                     break;
 
                 case MediaService.STATE_REPEAT_NONE:
-                    repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
-                    repeat.clearColorFilter();
+                    repeatAction.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_repeat_white_48dp));
                     break;
 
                 case MediaService.STATE_REPEAT_ALL:
-                    repeat.setImageResource(R.drawable.ic_repeat_white_24dp);
-                    repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    repeatAction.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_repeat_enable_white_48dp));
                     break;
 
                 case MediaService.STATE_REPEAT_ONE:
-                    repeat.setImageResource(R.drawable.ic_repeat_one_white_24dp);
-                    repeat.setColorFilter(ContextCompat.getColor(getBaseContext(), R.color.accent));
+                    repeatAction.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_repeat_one_white_48dp));
                     break;
             }
         }
-        */
+
         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
     }
 
@@ -487,80 +530,28 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         List<MediaSessionCompat.QueueItem> queue = mediaController.getQueue();
 
         if (queue == null || queue.isEmpty()) {
-            // Remove the playlist row if no items are in the playlist
-            rowsAdapter.remove(listRow);
-            listRow = null;
             resetPlaybackRow();
             return;
         }
 
-        // Reset playlist row
-        listRowAdapter.clear();
+        presenterSelector.addClassPresenter(MediaSessionCompat.QueueItem.class, new QueueItemPresenter());
+
+        rowsAdapter.removeItems(2, rowsAdapter.size());
 
         // Populate playlist
         for (MediaSessionCompat.QueueItem item : queue) {
-            listRowAdapter.add(item.getDescription());
-        }
-
-        // Add to interface
-        if (listRow == null) {
-            HeaderItem header = new HeaderItem(0, getString(R.string.action_bar_view_playlist));
-            presenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
-            listRow = new ListRow(header, listRowAdapter);
-            rowsAdapter.add(listRow);
-        } else {
-            rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(listRow), 1);
+            rowsAdapter.add(item);
         }
     }
 
-    public void showOptionsMenu(View v) {
-        PopupMenu popup = new PopupMenu(getActivity(), v);
-
-        // This activity implements OnMenuItemClickListener
-        popup.setOnMenuItemClickListener(this);
-        popup.inflate(R.menu.menu_playlist_item);
-        popup.show();
-    }
-
-    private final class ItemViewClickedListener implements OnItemViewClickedListener {
+    private final class ItemViewClickedListener implements BaseOnItemViewClickedListener {
         @Override
-        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
-                                  RowPresenter.ViewHolder rowViewHolder, Row row) {
+        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Object row) {
+            if (row instanceof MediaSessionCompat.QueueItem) {
+                Log.d(TAG, "onItemClicked() -> " + ((MediaSessionCompat.QueueItem) row).getQueueId());
 
-            if (item instanceof MediaDescriptionCompat) {
-                selectedItem = (MediaDescriptionCompat) item;
-                showOptionsMenu(itemViewHolder.view);
+                mediaController.getTransportControls().skipToQueueItem(((MediaSessionCompat.QueueItem) row).getQueueId());
             }
-        }
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.play:
-                if(selectedItem != null) {
-                    List<MediaSessionCompat.QueueItem> queue = mediaController.getQueue();
-
-                    if(queue == null || queue.isEmpty()) {
-                        Log.d(TAG, "Failed to play media. Unable to retrieve queue.");
-                    }
-
-                    // Get queue id
-                    for(MediaSessionCompat.QueueItem qItem : queue) {
-                        if(qItem.getDescription().equals(selectedItem)) {
-                            mediaController.getTransportControls().skipToQueueItem(qItem.getQueueId());
-                        }
-                    }
-                }
-
-                return true;
-
-            case R.id.remove:
-                //TODO
-                return true;
-
-            default:
-                return false;
         }
     }
 
@@ -606,6 +597,30 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
             super(ACTION_CLEAR_PLAYLIST_ID);
             setIcon(ContextCompat.getDrawable(context, R.drawable.ic_clear_all_white_48dp));
             setLabel1(context.getString(R.string.action_bar_clear));
+        }
+    }
+
+    private static class ShuffleAction extends Action {
+        /**
+         * Constructor
+         * @param context Context used for loading resources.
+         */
+        private ShuffleAction(Context context) {
+            super(ACTION_SHUFFLE_ID);
+            setIcon(ContextCompat.getDrawable(context, R.drawable.ic_shuffle_white_48dp));
+            setLabel1(context.getString(R.string.description_shuffle_playlist));
+        }
+    }
+
+    private static class RepeatAction extends Action {
+        /**
+         * Constructor
+         * @param context Context used for loading resources.
+         */
+        private RepeatAction(Context context) {
+            super(ACTION_REPEAT_ID);
+            setIcon(ContextCompat.getDrawable(context, R.drawable.ic_repeat_white_48dp));
+            setLabel1(context.getString(R.string.description_repeat));
         }
     }
 

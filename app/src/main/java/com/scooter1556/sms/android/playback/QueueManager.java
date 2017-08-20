@@ -72,8 +72,8 @@ public class QueueManager {
         this.ctx = ctx;
         this.metadataListener = listener;
 
-        queue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
-        currentQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        queue = new ArrayList<MediaSessionCompat.QueueItem>();
+        currentQueue = new ArrayList<MediaSessionCompat.QueueItem>();
         currentIndex = 0;
     }
 
@@ -82,6 +82,10 @@ public class QueueManager {
             currentIndex = index;
             metadataListener.onCurrentQueueIndexUpdated(currentIndex);
         }
+    }
+
+    public int getCurrentIndex() {
+        return currentIndex;
     }
 
     public boolean setCurrentQueueItem(long queueID) {
@@ -165,6 +169,52 @@ public class QueueManager {
     public void setQueueFromMediaId(final String id) {
         Log.d(TAG, "setQueueFromMediaId(" + id + ")");
 
+        updateQueue(id, -1);
+    }
+
+    private void setQueue(List<MediaSessionCompat.QueueItem> newQueue) {
+        queue.clear();
+        queue.addAll(newQueue);
+    }
+
+    private void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue) {
+        setCurrentQueue(newQueue, null);
+    }
+
+    protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, int index) {
+        currentQueue.clear();
+        currentQueue.addAll(newQueue);
+        currentIndex = Math.max(index, 0);
+
+        metadataListener.onQueueUpdated(currentQueue);
+        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
+    }
+
+    private void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, String initialMediaID) {
+        currentQueue.clear();
+        currentQueue.addAll(newQueue);
+
+        int index = 0;
+
+        if (initialMediaID != null) {
+            index = QueueUtils.getIndexByMediaID(currentQueue, initialMediaID);
+        }
+
+        currentIndex = Math.max(index, 0);
+
+        metadataListener.onQueueUpdated(currentQueue);
+        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
+    }
+
+    public void addToQueue(MediaDescriptionCompat description, int index) {
+        if(description.getMediaId() == null) {
+            return;
+        }
+
+        updateQueue(description.getMediaId(), index);
+    }
+
+    private void updateQueue(final String id, final int index) {
         final List<MediaSessionCompat.QueueItem> newQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
         List<String> parsedMediaId = MediaUtils.parseMediaId(id);
 
@@ -202,9 +252,21 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
-                        setQueue(newQueue);
-                        setCurrentQueue(newQueue);
-                        updateMetadata();
+                        if(index == -1 || currentQueue.size() == 0) {
+                            setQueue(newQueue);
+                            setCurrentQueue(newQueue);
+                            updateMetadata();
+                        } else {
+                            queue.addAll(newQueue);
+
+                            if(currentQueue.size() > index) {
+                                currentQueue.addAll(index, newQueue);
+                            } else {
+                                currentQueue.addAll(newQueue);
+                            }
+
+                            metadataListener.onQueueUpdated(currentQueue);
+                        }
                     } else {
                         Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
                     }
@@ -233,16 +295,33 @@ public class QueueManager {
                     }
 
                     if (!newQueue.isEmpty()) {
-                        // Update master queue
-                        setQueue(newQueue);
+                        if(index == -1 || currentQueue.size() == 0) {
+                            // Update master queue
+                            setQueue(newQueue);
 
-                        // Handle Shuffle
-                        if(shuffle) {
-                            Collections.shuffle(newQueue);
+                            // Handle Shuffle
+                            if(shuffle) {
+                                Collections.shuffle(newQueue);
+                            }
+
+                            setCurrentQueue(newQueue);
+                            updateMetadata();
+                        } else {
+                            queue.addAll(newQueue);
+
+                            // Handle Shuffle
+                            if(shuffle) {
+                                Collections.shuffle(newQueue);
+                            }
+
+                            if(currentQueue.size() > index) {
+                                currentQueue.addAll(index, newQueue);
+                            } else {
+                                currentQueue.addAll(newQueue);
+                            }
+
+                            metadataListener.onQueueUpdated(currentQueue);
                         }
-
-                        setCurrentQueue(newQueue);
-                        updateMetadata();
                     } else {
                         Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
                     }
@@ -317,7 +396,7 @@ public class QueueManager {
                     throw new IllegalArgumentException("Failed to fetch random media elements.");
                 }
             });
-        } else {
+        } else if(index == -1) {
             if(parsedMediaId.size() < 2) {
                 metadataListener.onMetadataRetrieveError();
                 return;
@@ -340,7 +419,6 @@ public class QueueManager {
                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                     if (description != null) {
-                        List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
                         newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
                     }
 
@@ -402,41 +480,217 @@ public class QueueManager {
                     throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
                 }
             });
+        } else {
+            if(parsedMediaId.size() < 2) {
+                metadataListener.onMetadataRetrieveError();
+                return;
+            }
+
+            final long elementId = Long.parseLong(parsedMediaId.get(1));
+
+            switch(parsedMediaId.get(0)) {
+                case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                    RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                            MediaElement element;
+                            Gson parser = new Gson();
+
+                            element = parser.fromJson(response.toString(), MediaElement.class);
+
+                            if (element == null) {
+                                throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                            }
+
+                            MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                            if (description != null) {
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                            }
+
+                            if (!newQueue.isEmpty()) {
+                                if(currentQueue.size() == 0) {
+                                    setQueue(newQueue);
+                                    setCurrentQueue(newQueue, id);
+                                    updateMetadata();
+                                } else {
+                                    queue.addAll(newQueue);
+
+                                    if (currentQueue.size() > index) {
+                                        currentQueue.addAll(index, newQueue);
+                                    } else {
+                                        currentQueue.addAll(newQueue);
+                                    }
+
+                                    metadataListener.onQueueUpdated(currentQueue);
+                                }
+                            } else {
+                                Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                            }
+                        }
+
+                        @Override
+                        public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                            Gson parser = new Gson();
+
+                            for (int i = 0; i < response.length(); i++) {
+                                try {
+                                    MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                                    if (element == null) {
+                                        throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                                    }
+
+                                    MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                                    if (description != null) {
+                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "Failed to process JSON", e);
+                                }
+                            }
+
+                            if (!newQueue.isEmpty()) {
+                                if(currentQueue.size() == 0) {
+                                    setQueue(newQueue);
+
+                                    // Handle Shuffle
+                                    if (shuffle) {
+                                        Collections.shuffle(newQueue);
+
+                                        if (QueueUtils.getIndexByMediaID(newQueue, id) != -1) {
+                                            MediaSessionCompat.QueueItem currentItem = newQueue.get(QueueUtils.getIndexByMediaID(newQueue, id));
+                                            newQueue.remove(currentItem);
+                                            newQueue.add(0, currentItem);
+                                        }
+                                    }
+
+                                    setCurrentQueue(newQueue, id);
+                                    updateMetadata();
+                                } else {
+                                    // Update master queue
+                                    queue.addAll(newQueue);
+
+                                    // Handle Shuffle
+                                    if (shuffle) {
+                                        Collections.shuffle(newQueue);
+
+                                        if (QueueUtils.getIndexByMediaID(newQueue, id) != -1) {
+                                            MediaSessionCompat.QueueItem currentItem = newQueue.get(QueueUtils.getIndexByMediaID(newQueue, id));
+                                            newQueue.remove(currentItem);
+                                            newQueue.add(0, currentItem);
+                                        }
+                                    }
+
+                                    if (currentQueue.size() > index) {
+                                        currentQueue.addAll(index, newQueue);
+                                    } else {
+                                        currentQueue.addAll(newQueue);
+                                    }
+
+                                    metadataListener.onQueueUpdated(currentQueue);
+                                }
+                            } else {
+                                Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                            throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                        }
+                    });
+
+                    break;
+
+                case MediaUtils.MEDIA_ID_AUDIO:case MediaUtils.MEDIA_ID_VIDEO:
+                    RESTService.getInstance().getMediaElement(ctx, elementId, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
+                            MediaElement element;
+                            Gson parser = new Gson();
+
+                            element = parser.fromJson(response.toString(), MediaElement.class);
+
+                            if (element == null) {
+                                throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                            }
+
+                            MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                            if (description != null) {
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                            }
+
+                            if (!newQueue.isEmpty()) {
+                                if(currentQueue.size() == 0) {
+                                    setQueue(newQueue);
+                                    setCurrentQueue(newQueue, id);
+                                    updateMetadata();
+                                } else {
+                                    queue.addAll(newQueue);
+
+                                    if (currentQueue.size() > index) {
+                                        currentQueue.addAll(index, newQueue);
+                                    } else {
+                                        currentQueue.addAll(newQueue);
+                                    }
+
+                                    metadataListener.onQueueUpdated(currentQueue);
+                                }
+                            } else {
+                                Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                            }
+                        }
+
+                        @Override
+                        public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
+                            Gson parser = new Gson();
+
+                            for (int i = 0; i < response.length(); i++) {
+                                try {
+                                    MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                                    if (element == null) {
+                                        throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                                    }
+
+                                    MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
+
+                                    if (description != null) {
+                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "Failed to process JSON", e);
+                                }
+                            }
+
+                            if (!newQueue.isEmpty()) {
+                                // Update master queue
+                                queue.addAll(newQueue);
+
+                                if(currentQueue.size() > index) {
+                                    currentQueue.addAll(index, newQueue);
+                                } else {
+                                    currentQueue.addAll(newQueue);
+                                }
+
+                                metadataListener.onQueueUpdated(currentQueue);
+                            } else {
+                                Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
+                            throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                        }
+                    });
+
+                    break;
+            }
         }
-    }
-
-    protected void setQueue(List<MediaSessionCompat.QueueItem> newQueue) {
-        queue.clear();
-        queue.addAll(newQueue);
-    }
-
-    protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue) {
-        setCurrentQueue(newQueue, null);
-    }
-
-    protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, int index) {
-        currentQueue.clear();
-        currentQueue.addAll(newQueue);
-        currentIndex = Math.max(index, 0);
-
-        metadataListener.onQueueUpdated(currentQueue);
-        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
-    }
-
-    protected void setCurrentQueue(List<MediaSessionCompat.QueueItem> newQueue, String initialMediaID) {
-        currentQueue.clear();
-        currentQueue.addAll(newQueue);
-
-        int index = 0;
-
-        if (initialMediaID != null) {
-            index = QueueUtils.getIndexByMediaID(currentQueue, initialMediaID);
-        }
-
-        currentIndex = Math.max(index, 0);
-
-        metadataListener.onQueueUpdated(currentQueue);
-        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
     }
 
     public void updateMetadata() {

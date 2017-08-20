@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -338,6 +339,20 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     private class MediaSessionCallback extends MediaSessionCompat.Callback {
+        @Override
+        public void onAddQueueItem(MediaDescriptionCompat description, int index) {
+            if(index == -1) {
+                queueManager.addToQueue(description, queueManager.getCurrentIndex() + 1);
+            } else {
+                queueManager.addToQueue(description, index);
+            }
+        }
+
+        @Override
+        public void onAddQueueItem(MediaDescriptionCompat description) {
+            queueManager.addToQueue(description, queueManager.getCurrentQueueSize());
+        }
+
         @Override
         public void onPlay() {
             Log.d(TAG, "onPlay()");

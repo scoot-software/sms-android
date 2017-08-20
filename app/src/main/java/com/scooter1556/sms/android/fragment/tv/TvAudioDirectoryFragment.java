@@ -274,10 +274,10 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
                 if(action.getId() == ACTION_PLAY) {
                     mediaController.getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
                 } else if (action.getId() == ACTION_ADD_AND_PLAY) {
-                    // TODO: Start playing
+                    mediaController.addQueueItem(mediaItem.getDescription(), -1);
                     Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_play_next), Toast.LENGTH_SHORT).show();
                 } else if (action.getId() == ACTION_ADD_TO_PLAYLIST) {
-                    // TODO: Start playing
+                    mediaController.addQueueItem(mediaItem.getDescription());
                     Toast.makeText(getActivity(), getString(R.string.notification_audio_directory_add_to_queue), Toast.LENGTH_SHORT).show();
                 }
             }

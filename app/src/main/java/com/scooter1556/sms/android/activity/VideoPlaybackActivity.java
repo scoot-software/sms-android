@@ -539,6 +539,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
+    public void onRepeatModeChanged(int repeatMode) {
+
+    }
+
+    @Override
     public void onPlayerError(ExoPlaybackException error) {
         InterfaceUtils.showErrorDialog(VideoPlaybackActivity.this, error.toString());
 

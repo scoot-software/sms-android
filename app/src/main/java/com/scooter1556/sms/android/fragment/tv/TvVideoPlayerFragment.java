@@ -819,6 +819,11 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     @Override
+    public void onRepeatModeChanged(int repeatMode) {
+
+    }
+
+    @Override
     public void onPlayerError(ExoPlaybackException error) {
 
     }
@@ -924,15 +929,13 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         trackSelectionUtils = new TrackSelectionUtils(trackSelector, adaptiveTrackSelectionFactory);
         lastSeenTrackGroupArray = null;
 
-        LoadControl loadControl = new DefaultLoadControl();
-
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
         }
 
         // Create player
-        mediaPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector, loadControl);
+        mediaPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
         mediaPlayer.setVideoSurfaceHolder(surfaceHolder);
         mediaPlayer.addListener(this);
     }

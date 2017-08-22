@@ -80,7 +80,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
     private Drawable defaultBackground;
     private Timer backgroundTimer;
     private String backgroundURI;
-    private BackgroundManager backgroundManager;
 
     private final MediaBrowserCompat.SubscriptionCallback subscriptionCallback =
             new MediaBrowserCompat.SubscriptionCallback() {
@@ -154,7 +153,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         adapter = new ArrayObjectAdapter(new MediaItemPresenter());
 
         // Initialise interface
-        prepareBackgroundManager();
         VerticalGridPresenter gridPresenter = new VerticalGridPresenter();
         gridPresenter.setNumberOfColumns(NUM_COLUMNS);
         setGridPresenter(gridPresenter);
@@ -181,13 +179,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
 
     @Override
     public void onDestroy() {
-        if (backgroundTimer != null) {
-            backgroundTimer.cancel();
-            backgroundTimer = null;
-        }
-
-        backgroundManager = null;
-
         super.onDestroy();
     }
 
@@ -196,19 +187,31 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         super.onStart();
 
         mediaBrowser.connect();
+
+        if(!BackgroundManager.getInstance(getActivity()).isAttached()) {
+            prepareBackgroundManager();
+        }
     }
 
     @Override
     public void onStop() {
-        backgroundManager.release();
         mediaBrowser.disconnect();
+
+        if (backgroundTimer != null) {
+            backgroundTimer.cancel();
+            backgroundTimer = null;
+        }
+
+        BackgroundManager.getInstance(getActivity()).release();
 
         super.onStop();
     }
 
     private void prepareBackgroundManager() {
+        Log.d(TAG, "prepareBackgroundManager()");
+
         // Setup background manager
-        backgroundManager = BackgroundManager.getInstance(getActivity());
+        BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
         backgroundManager.attach(getActivity().getWindow());
 
         // Get default background
@@ -302,11 +305,11 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
                     @Override
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
-                        backgroundManager.setBitmap(resource);
+                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
                     }
 
                     @Override public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        backgroundManager.setDrawable(defaultBackground);
+                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                     }
                 });
 

@@ -265,6 +265,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         }
 
         detailsBackground.enableParallax();
+        detailsBackground.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
 
         Glide.with(getActivity())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
@@ -274,11 +275,6 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
                         detailsBackground.setCoverBitmap(resource);
-                    }
-
-                    @Override
-                    public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        detailsBackground.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
                     }
                 });
     }

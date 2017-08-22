@@ -22,7 +22,6 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -42,7 +41,6 @@ import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
-import com.scooter1556.sms.android.presenter.MediaDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.presenter.MediaFolderPresenter;
 import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
@@ -60,7 +58,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private static final String TAG = "TvMainFragment";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;
-    private static final int ELEMENTS_TO_LOAD = 10;
 
     private static final int ROW_NOW_PLAYING = 0;
     private static final int ROW_MEDIA_BROWSER = 1;
@@ -84,7 +81,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     private Drawable defaultBackground;
     private Timer backgroundTimer;
     private String backgroundURI;
-    private BackgroundManager backgroundManager;
 
     private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback() {
         @Override
@@ -188,7 +184,6 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         recentlyPlayed = new ArrayList<>();
 
         // Initialise interface
-        prepareBackgroundManager();
         initialiseInterfaceElements();
         initialiseEventListeners();
         prepareEntranceTransition();
@@ -214,26 +209,30 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
 
     @Override
     public void onDestroy() {
-        if (backgroundTimer != null) {
-            backgroundTimer.cancel();
-            backgroundTimer = null;
-        }
-
-        backgroundManager = null;
+        Log.d(TAG, "onDestroy()");
 
         super.onDestroy();
     }
 
     @Override
     public void onStart() {
+        Log.d(TAG, "onStart()");
+
         super.onStart();
+
         if (mediaBrowser != null) {
             mediaBrowser.connect();
+        }
+
+        if(!BackgroundManager.getInstance(getActivity()).isAttached()) {
+            prepareBackgroundManager();
         }
     }
 
     @Override
     public void onStop() {
+        Log.d(TAG, "onStop()");
+
         super.onStop();
 
         if (mediaBrowser != null) {
@@ -244,7 +243,12 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
             mediaController.unregisterCallback(callback);
         }
 
-        backgroundManager.release();
+        if (backgroundTimer != null) {
+            backgroundTimer.cancel();
+            backgroundTimer = null;
+        }
+
+        BackgroundManager.getInstance(getActivity()).release();
     }
 
     @Override
@@ -253,8 +257,10 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
     }
 
     private void prepareBackgroundManager() {
+        Log.d(TAG, "prepareBackgroundManager()");
+
         // Setup background manager
-        backgroundManager = BackgroundManager.getInstance(getActivity());
+        BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
         backgroundManager.attach(getActivity().getWindow());
 
         // Get default background
@@ -374,15 +380,11 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     @Override
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
-                        if(backgroundManager != null) {
-                            backgroundManager.setBitmap(resource);
-                        }
+                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
                     }
 
                     @Override public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        if(backgroundManager != null) {
-                            backgroundManager.setDrawable(defaultBackground);
-                        }
+                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                     }
                 });
 
@@ -472,7 +474,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
         public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
             if (item instanceof String) {
-                backgroundManager.setDrawable(defaultBackground);
+                BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
             } else if (item instanceof MediaBrowserCompat.MediaItem) {
                 MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
@@ -482,7 +484,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels;
                     startBackgroundTimer();
                 } else {
-                    backgroundManager.setDrawable(defaultBackground);
+                    BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                 }
 
                 Log.d(TAG, "onItemSelected() -> " + mediaItem.getMediaId());

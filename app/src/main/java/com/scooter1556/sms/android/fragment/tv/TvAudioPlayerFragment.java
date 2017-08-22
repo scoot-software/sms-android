@@ -108,7 +108,6 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
     private Handler handler;
 
-    private BackgroundManager backgroundManager;
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
 
@@ -166,24 +165,11 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Setup background manager
-        backgroundManager = BackgroundManager.getInstance(getActivity());
-        backgroundManager.attach(getActivity().getWindow());
-
-        // Get default background
-        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
-        backgroundManager.setDrawable(defaultBackground);
-
-        // Get screen size
-        displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
         handler = new Handler();
 
         presenterSelector = new ClassPresenterSelector();
         rowsAdapter = new ArrayObjectAdapter(presenterSelector);
 
-        setBackgroundType(BACKGROUND_TYPE);
         setFadingEnabled(false);
 
         setupRows();
@@ -244,8 +230,13 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
     @Override
     public void onStart() {
         super.onStart();
+
         if (mediaBrowser != null) {
             mediaBrowser.connect();
+        }
+
+        if(!BackgroundManager.getInstance(getActivity()).isAttached()) {
+            prepareBackgroundManager();
         }
     }
 
@@ -260,6 +251,8 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         if (mediaController != null) {
             mediaController.unregisterCallback(callback);
         }
+
+        BackgroundManager.getInstance(getActivity()).release();
     }
 
     @Override
@@ -268,6 +261,24 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         executorService.shutdown();
 
         super.onDestroy();
+    }
+
+    private void prepareBackgroundManager() {
+        Log.d(TAG, "prepareBackgroundManager()");
+
+        setBackgroundType(BACKGROUND_TYPE);
+
+        // Setup background manager
+        BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
+        backgroundManager.attach(getActivity().getWindow());
+
+        // Get default background
+        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
+        backgroundManager.setDrawable(defaultBackground);
+
+        // Get screen size
+        displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
     }
 
     private void setupRows() {
@@ -384,7 +395,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         playbackControlsRow.setImageDrawable(null);
         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
 
-        backgroundManager.setDrawable(defaultBackground);
+        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
     }
 
     private void scheduleSeekbarUpdate() {
@@ -434,12 +445,12 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                     @Override
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
-                        backgroundManager.setBitmap(resource);
+                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
                     }
 
                     @Override
                     public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        backgroundManager.setDrawable(defaultBackground);
+                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                     }
                 });
     }

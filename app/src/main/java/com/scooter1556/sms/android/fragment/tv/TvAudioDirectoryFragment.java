@@ -91,8 +91,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
     private static final int ACTION_ADD_AND_PLAY = 1;
     private static final int ACTION_ADD_TO_PLAYLIST = 2;
 
-    private static final int DETAIL_THUMB_WIDTH = 274;
-    private static final int DETAIL_THUMB_HEIGHT = 274;
+    private static final int DETAIL_THUMB_SIZE = 274;
 
     private MediaBrowserCompat.MediaItem mediaItem;
     private MediaDescriptionCompat selectedMediaItem;
@@ -291,7 +290,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
         startEntranceTransition();
 
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_HEIGHT)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_SIZE)
                 .asBitmap()
                 .dontAnimate()
                 .error(defaultBackground)

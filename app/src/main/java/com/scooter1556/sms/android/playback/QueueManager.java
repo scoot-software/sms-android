@@ -214,6 +214,16 @@ public class QueueManager {
         updateQueue(description.getMediaId(), index);
     }
 
+    public void resetQueue() {
+        queue.clear();
+        currentQueue.clear();
+        currentIndex = 0;
+
+        metadataListener.onQueueUpdated(currentQueue);
+        metadataListener.onCurrentQueueIndexUpdated(currentIndex);
+        metadataListener.onMetadataChanged(null);
+    }
+
     private void updateQueue(final String id, final int index) {
         final List<MediaSessionCompat.QueueItem> newQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
         List<String> parsedMediaId = MediaUtils.parseMediaId(id);

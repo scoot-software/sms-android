@@ -111,6 +111,9 @@ public class MediaService extends MediaBrowserServiceCompat
     public static final String STATE_REPEAT_ALL = "state_repeat_all";
     public static final String STATE_REPEAT_ONE = "state_repeat_one";
 
+    // Actions
+    public static final String ACTION_CLEAR_PLAYLIST = "action_clear_playlist";
+
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
 
@@ -177,7 +180,7 @@ public class MediaService extends MediaBrowserServiceCompat
         QueueManager queueManager = new QueueManager(getApplicationContext(), new QueueManager.MetadataUpdateListener() {
                     @Override
                     public void onMetadataChanged(MediaMetadataCompat metadata) {
-                        Log.d(TAG, "onMetadataChanged("+ metadata.toString() + ")");
+                        Log.d(TAG, "onMetadataChanged()");
 
                         mediaSession.setMetadata(metadata);
                     }

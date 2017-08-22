@@ -84,6 +84,9 @@ public class PlaybackManager implements Playback.Callback {
         MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
 
         if (currentMedia == null || currentMedia.getDescription() == null) {
+            handleStopRequest(null);
+            playback.setState(PlaybackStateCompat.STATE_NONE);
+            updatePlaybackState(null);
             return;
         }
 
@@ -444,7 +447,6 @@ public class PlaybackManager implements Playback.Callback {
             Log.d(TAG, "onCustomAction(" + action + ")");
 
             switch(action) {
-
                 case MediaService.STATE_SHUFFLE_ON:
                     shuffleMode = false;
                     queueManager.setShuffleMode(false);
@@ -467,6 +469,8 @@ public class PlaybackManager implements Playback.Callback {
                     repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
                     break;
 
+                case MediaService.ACTION_CLEAR_PLAYLIST:
+                    queueManager.resetQueue();
             }
 
             updatePlaybackState(null);

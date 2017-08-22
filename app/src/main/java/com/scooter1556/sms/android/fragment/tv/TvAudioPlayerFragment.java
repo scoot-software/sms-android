@@ -49,6 +49,7 @@ import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -140,6 +141,8 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
+            Log.d(TAG, "onMetadataChanged()");
+
             if (metadata != null) {
                 updateMediaDescription(metadata.getDescription());
                 updateDuration(metadata);
@@ -205,6 +208,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                                 mediaController.getTransportControls().play();
                             }
                         }
+
                         return true;
                     }
                 }
@@ -273,10 +277,12 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         playbackControlsRowPresenter.setOnActionClickedListener(new OnActionClickedListener() {
             public void onActionClicked(Action action) {
                 if (action.getId() == playPauseAction.getId()) {
-                    if (lastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                        mediaController.getTransportControls().pause();
-                    } else {
-                        mediaController.getTransportControls().play();
+                    if (lastPlaybackState != null) {
+                        if (lastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                            mediaController.getTransportControls().pause();
+                        } else {
+                            mediaController.getTransportControls().play();
+                        }
                     }
                 } else if (action.getId() == skipNextAction.getId()) {
                     mediaController.getTransportControls().skipToNext();
@@ -285,7 +291,9 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                 } else if (action.getId() == stopAction.getId()) {
                     mediaController.getTransportControls().stop();
                 } else if (action.getId() == clearPlaylistAction.getId()) {
-                    //TODO
+                    Log.d(TAG, "onActionClicked -> Clear Playlist");
+                    MediaControllerCompat.TransportControls controls = mediaController.getTransportControls();
+                    controls.sendCustomAction(MediaService.ACTION_CLEAR_PLAYLIST, null);
                 } else if(action.getId() == shuffleAction.getId()) {
                     Log.d(TAG, "onActionClicked -> Shuffle");
 
@@ -370,6 +378,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     private void resetPlaybackRow() {
+        ((MediaDescriptionHolder) playbackControlsRow.getItem()).item = null;
         playbackControlsRow.setTotalTime(0);
         playbackControlsRow.setCurrentTime(0);
         playbackControlsRow.setImageDrawable(null);
@@ -467,6 +476,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                 stopSeekbarUpdate();
                 playPauseAction.setIndex(PlayPauseAction.PLAY);
                 resetPlaybackRow();
+                updatePlayListRow();
                 break;
 
             case PlaybackStateCompat.STATE_STOPPED:
@@ -531,6 +541,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         if (queue == null || queue.isEmpty()) {
             resetPlaybackRow();
+            rowsAdapter.removeItems(2, rowsAdapter.size());
             return;
         }
 
@@ -560,7 +571,10 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         protected void onBindDescription(ViewHolder viewHolder, Object item) {
             MediaDescriptionHolder itemHolder = ((MediaDescriptionHolder) item);
 
-            if(itemHolder.item != null) {
+            if(itemHolder.item == null) {
+                viewHolder.getTitle().setText("");
+                viewHolder.getSubtitle().setText("");
+            } else {
                 viewHolder.getTitle().setText(itemHolder.item.getTitle());
                 viewHolder.getSubtitle().setText(itemHolder.item.getSubtitle());
             }

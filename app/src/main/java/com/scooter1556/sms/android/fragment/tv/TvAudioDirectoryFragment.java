@@ -25,12 +25,14 @@ package com.scooter1556.sms.android.fragment.tv;
 
 import android.content.ComponentName;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.DetailsFragment;
+import android.support.v17.leanback.app.DetailsFragmentBackgroundController;
 import android.support.v17.leanback.widget.AbstractMediaListHeaderPresenter;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -101,7 +103,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
     private ArrayObjectAdapter adapter;
     private ClassPresenterSelector presenterSelector;
 
-    private BackgroundManager backgroundManager;
+    private final DetailsFragmentBackgroundController backgroundController = new DetailsFragmentBackgroundController(this);
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
 
@@ -168,8 +170,6 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
         setOnItemViewClickedListener(new ItemViewClickedListener());
         setOnItemViewSelectedListener(new ItemViewSelectedListener());
 
-        prepareBackgroundManager();
-
         // Initialise variables
         mediaItems = new ArrayList<>();
         mediaItem = ((TvDirectoryDetailsActivity) getActivity()).getMediaItem();
@@ -199,8 +199,8 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
 
         Log.d(TAG, "onResume()");
 
-        setupDetailsOverview();
         setBackground();
+        setupDetailsOverview();
     }
 
     @Override
@@ -212,26 +212,11 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
 
     @Override
     public void onStop() {
-        backgroundManager.release();
         mediaBrowser.disconnect();
 
         adapter.clear();
 
         super.onStop();
-    }
-
-    private void prepareBackgroundManager() {
-        // Setup background manager
-        backgroundManager = BackgroundManager.getInstance(getActivity());
-        backgroundManager.attach(getActivity().getWindow());
-
-        // Get default background
-        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
-        backgroundManager.setDrawable(defaultBackground);
-
-        // Get screen size
-        displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
     }
 
     private void setBackground() {
@@ -241,6 +226,16 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
             return;
         }
 
+        // Get screen size
+        displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        // Get default background
+        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
+
+        backgroundController.enableParallax();
+        backgroundController.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
+
         Glide.with(getActivity())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
                 .asBitmap()
@@ -248,12 +243,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
                     @Override
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
-                        backgroundManager.setBitmap(resource);
-                    }
-
-                    @Override
-                    public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        backgroundManager.setDrawable(defaultBackground);
+                        backgroundController.setCoverBitmap(resource);
                     }
                 });
     }

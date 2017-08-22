@@ -93,9 +93,7 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
-            if (metadata != null) {
                 setRows();
-            }
         }
     };
 
@@ -162,6 +160,8 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     } catch (RemoteException e) {
                         Log.e(TAG, "Failed to connect media controller", e);
                     }
+
+                    setRows();
                 }
 
                 @Override
@@ -374,11 +374,15 @@ public class TvMainFragment extends BrowseFragment implements SharedPreferences.
                     @Override
                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
                             glideAnimation) {
-                        backgroundManager.setBitmap(resource);
+                        if(backgroundManager != null) {
+                            backgroundManager.setBitmap(resource);
+                        }
                     }
 
                     @Override public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                        backgroundManager.setDrawable(defaultBackground);
+                        if(backgroundManager != null) {
+                            backgroundManager.setDrawable(defaultBackground);
+                        }
                     }
                 });
 

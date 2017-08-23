@@ -698,15 +698,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         trackSelectionUtils = new TrackSelectionUtils(trackSelector, adaptiveTrackSelectionFactory);
         lastSeenTrackGroupArray = null;
 
-        LoadControl loadControl = new DefaultLoadControl();
-
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
         }
 
         // Create player
-        mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+        mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
         mediaPlayer.addListener(this);
     }
 

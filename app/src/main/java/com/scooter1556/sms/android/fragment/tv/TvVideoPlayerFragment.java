@@ -72,11 +72,14 @@ import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.text.Cue;
+import com.google.android.exoplayer2.text.TextRenderer;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.ui.SubtitleView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -102,7 +105,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 
-public class TvVideoPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, ExoPlayer.EventListener {
+public class TvVideoPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, ExoPlayer.EventListener, TextRenderer.Output {
     private static final String TAG = "TvVideoPlaybackFragment";
 
     private static final String CLIENT_ID = "android";
@@ -163,6 +166,8 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     private Handler handler;
     private Runnable runnable;
 
+    private SubtitleView subtitleView;
+
     // Seek
     private Handler seekHandler;
     private Runnable seekRunnable;
@@ -177,6 +182,12 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
 
         surfaceHolder = ((TvVideoPlaybackActivity) getActivity()).getSurfaceHolder();
         surfaceHolder.addCallback(this);
+
+        subtitleView = (SubtitleView) getActivity().findViewById(R.id.subtitle_view);
+        if (subtitleView != null) {
+            subtitleView.setUserDefaultStyle();
+            subtitleView.setUserDefaultTextSize();
+        }
 
         handler = new Handler();
         seekHandler = new Handler();
@@ -938,6 +949,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
         mediaPlayer.setVideoSurfaceHolder(surfaceHolder);
         mediaPlayer.addListener(this);
+        mediaPlayer.setTextOutput(this);
     }
 
 
@@ -965,6 +977,12 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         }
 
         stopProgressAutomation();
+    }
+
+    @Override
+    public void onCues(List<Cue> cues) {
+        if (subtitleView != null)
+            subtitleView.onCues(cues);
     }
 
     private static class VideoQualityAction extends Action {

@@ -45,7 +45,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.h6ah4i.android.widget.advrecyclerview.composedadapter.ComposedAdapter;
 import com.scooter1556.sms.android.R;

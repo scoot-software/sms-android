@@ -47,6 +47,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.service.MediaService;
 
@@ -365,9 +366,12 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         subtitle.setText(description.getSubtitle());
 
         // Cover Art
+        RequestOptions options = new RequestOptions()
+                .fallback(R.drawable.ic_not_interested_black_48dp);
+
         Glide.with(this)
                 .load(description.getIconUri().toString())
-                .fallback(R.drawable.ic_not_interested_black_48dp)
+                .apply(options)
                 .into(backgroundImage);
     }
 

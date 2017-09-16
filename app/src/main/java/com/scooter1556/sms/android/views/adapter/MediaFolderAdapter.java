@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.signature.StringSignature;
+import com.bumptech.glide.request.RequestOptions;
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 import com.scooter1556.sms.android.R;
@@ -48,32 +48,49 @@ public class MediaFolderAdapter extends RecyclerView.Adapter<MediaFolderViewHold
         holder.title.setText(item.getDescription().getTitle());
         holder.subtitle.setText(item.getDescription().getSubtitle());
 
+        RequestOptions options1 = new RequestOptions()
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .placeholder(R.drawable.ic_placeholder_1)
+                .error(R.drawable.ic_placeholder_1);
+
+        RequestOptions options2 = new RequestOptions()
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .placeholder(R.drawable.ic_placeholder_2)
+                .error(R.drawable.ic_placeholder_2);
+
+        RequestOptions options3 = new RequestOptions()
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .placeholder(R.drawable.ic_placeholder_3)
+                .error(R.drawable.ic_placeholder_3);
+
+        RequestOptions options4 = new RequestOptions()
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .placeholder(R.drawable.ic_placeholder_4)
+                .error(R.drawable.ic_placeholder_4);
+
+
         Glide.with(context)
                 .load(item.getDescription().getIconUri())
-                .error(R.drawable.ic_placeholder_1)
-                .signature(new StringSignature(item.getMediaId() + "_1"))
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .apply(options1)
                 .into((holder).image1);
 
         Glide.with(context)
                 .load(item.getDescription().getIconUri())
-                .error(R.drawable.ic_placeholder_2)
-                .signature(new StringSignature(item.getMediaId() + "_2"))
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .apply(options2)
                 .into((holder).image2);
 
         Glide.with(context)
                 .load(item.getDescription().getIconUri())
-                .error(R.drawable.ic_placeholder_3)
-                .signature(new StringSignature(item.getMediaId() + "_3"))
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .apply(options3)
                 .into((holder).image3);
 
         Glide.with(context)
                 .load(item.getDescription().getIconUri())
-                .error(R.drawable.ic_placeholder_4)
-                .signature(new StringSignature(item.getMediaId() + "_4"))
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .apply(options4)
                 .into((holder).image4);
     }
 

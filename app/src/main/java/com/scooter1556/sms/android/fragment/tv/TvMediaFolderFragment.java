@@ -1,26 +1,3 @@
-/*
- * Author: Scott Ware <scoot.software@gmail.com>
- * Copyright (c) 2015 Scott Ware
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.scooter1556.sms.android.fragment.tv;
 
 import android.content.ComponentName;
@@ -63,8 +40,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class TvMediaGridFragment extends android.support.v17.leanback.app.VerticalGridFragment {
-    private static final String TAG = "TvMediaGridFragment";
+public class TvMediaFolderFragment extends TvGridFragment {
+    private static final String TAG = "TvMediaFolderFragment";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int NUM_COLUMNS = 5;
@@ -76,7 +53,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
 
     // Background
     private final Handler handler = new Handler();
-    private DisplayMetrics displayMetrics;
     private Drawable defaultBackground;
     private Timer backgroundTimer;
     private String backgroundURI;
@@ -116,7 +92,9 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
                     }
 
                     // Subscribe to media browser event
-                    mediaBrowser.subscribe(mediaId, subscriptionCallback);
+                    if(mediaId != null) {
+                        mediaBrowser.subscribe(mediaId, subscriptionCallback);
+                    }
                 }
 
                 @Override
@@ -134,18 +112,17 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Set media folder
-        String title = getActivity().getIntent().getStringExtra(MediaUtils.EXTRA_MEDIA_TITLE);
-        mediaId = getActivity().getIntent().getStringExtra(MediaUtils.EXTRA_MEDIA_ID);
+        long id = -1;
 
-        if(title == null || mediaId == null) {
-            Toast.makeText(getActivity(), getString(R.string.error_loading_media), Toast.LENGTH_LONG).show();
-            ActivityCompat.finishAfterTransition(getActivity());
+        // Set media folder
+        Bundle bundle = this.getArguments();
+
+        if (bundle != null) {
+            id = bundle.getLong(MediaUtils.EXTRA_MEDIA_ID, -1);
         }
 
-        if (savedInstanceState == null) {
-            setTitle(title);
-            prepareEntranceTransition();
+        if(id > 0) {
+            mediaId = MediaUtils.MEDIA_ID_FOLDER + MediaUtils.SEPARATOR + id;
         }
 
         // Initialise variables
@@ -157,29 +134,15 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         gridPresenter.setNumberOfColumns(NUM_COLUMNS);
         setGridPresenter(gridPresenter);
 
-        setOnSearchClickedListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // ToDo: Implement search feature
-                Toast.makeText(getActivity(), getString(R.string.error_search_not_implemented), Toast.LENGTH_SHORT).show();
-            }
-        });
+        setOnItemViewClickedListener(new TvMediaFolderFragment.ItemViewClickedListener());
+        setOnItemViewSelectedListener(new TvMediaFolderFragment.ItemViewSelectedListener());
 
-        setOnItemViewClickedListener(new ItemViewClickedListener());
-        setOnItemViewSelectedListener(new ItemViewSelectedListener());
-
-        // Set search icon color.
-        setSearchAffordanceColor(ContextCompat.getColor(getActivity(), R.color.primary_dark));
+        getMainFragmentAdapter().getFragmentHost().notifyDataReady(getMainFragmentAdapter());
 
         // Subscribe to relevant media service callbacks
         mediaBrowser = new MediaBrowserCompat(getActivity(),
                 new ComponentName(getActivity(), MediaService.class),
                 connectionCallback, null);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -217,10 +180,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         // Get default background
         defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
         backgroundManager.setDrawable(defaultBackground);
-
-        // Get screen size
-        displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
     }
 
     private void setGrid() {
@@ -234,7 +193,6 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         }
 
         setAdapter(adapter);
-        startEntranceTransition();
     }
 
     private final class ItemViewClickedListener implements OnItemViewClickedListener {
@@ -283,7 +241,7 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
                 List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
 
                 if(id.size() > 1) {
-                    backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels;
+                    backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + getResources().getDisplayMetrics().widthPixels;
                     startBackgroundTimer();
                 }
             }
@@ -295,8 +253,8 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
     //
     private void updateBackground() {
         // Get screen size
-        int width = displayMetrics.widthPixels;
-        int height = displayMetrics.heightPixels;
+        int width = getResources().getDisplayMetrics().widthPixels;
+        int height = getResources().getDisplayMetrics().heightPixels;
 
         Glide.with(getActivity())
                 .asBitmap()
@@ -321,7 +279,7 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         }
 
         backgroundTimer = new Timer();
-        backgroundTimer.schedule(new UpdateBackgroundTask(), BACKGROUND_UPDATE_DELAY);
+        backgroundTimer.schedule(new TvMediaFolderFragment.UpdateBackgroundTask(), BACKGROUND_UPDATE_DELAY);
     }
 
     private class UpdateBackgroundTask extends TimerTask {

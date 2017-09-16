@@ -36,6 +36,7 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
@@ -159,6 +160,8 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
             }
         }
 
+        RequestOptions options;
+
         switch(viewType) {
 
             case DIRECTORY_VIEW:
@@ -176,9 +179,12 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView dirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
+                options = new RequestOptions()
+                        .error(R.drawable.ic_content_folder);
+
                 Glide.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .error(R.drawable.ic_content_folder)
+                        .apply(options)
                         .into(dirThumbnail);
 
                 break;
@@ -229,9 +235,12 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView aDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
+                options = new RequestOptions()
+                        .error(R.drawable.ic_album);
+
                 Glide.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .error(R.drawable.ic_album)
+                        .apply(options)
                         .into(aDirThumbnail);
 
                 break;
@@ -271,9 +280,12 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView vDirThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
+                options = new RequestOptions()
+                        .error(R.drawable.ic_content_video);
+
                 Glide.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
-                        .error(R.drawable.ic_content_video)
+                        .apply(options)
                         .into(vDirThumbnail);
 
                 break;
@@ -344,9 +356,12 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 // Cover Art
                 final ImageView vidThumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
 
+                options = new RequestOptions()
+                        .error(R.drawable.ic_content_video);
+
                 Glide.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/150")
-                        .error(R.drawable.ic_content_video)
+                        .apply(options)
                         .into(vidThumbnail);
 
                 break;

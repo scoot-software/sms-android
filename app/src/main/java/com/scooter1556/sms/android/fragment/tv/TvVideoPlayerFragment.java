@@ -56,8 +56,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -448,11 +448,11 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
 
     private void updateVideoImage() {
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover/" + CARD_SIZE)
                 .asBitmap()
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover/" + CARD_SIZE)
                 .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {
                     @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         playbackControlsRow.setImageBitmap(getActivity(), resource);
                         rowsAdapter.notifyArrayItemRangeChanged(0, rowsAdapter.size());
                     }

@@ -21,9 +21,9 @@ allprojects {
         }
     }
     project.ext {
-        compileSdkVersion = 25
-        targetSdkVersion = 25
-        buildToolsVersion = '25.0.2'
+        compileSdkVersion = 'android-26'
+        targetSdkVersion = 26
+        buildToolsVersion = '26.0.1'
         releaseRepoName = 'sms-android'
         releaseUserOrg = 'scoot.software'
         releaseGroupId = 'com.scooter1556.sms'

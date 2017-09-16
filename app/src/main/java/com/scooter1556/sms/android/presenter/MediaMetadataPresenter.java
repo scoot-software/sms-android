@@ -33,6 +33,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
@@ -95,9 +96,12 @@ public class MediaMetadataPresenter extends Presenter {
         cardView.setContentText(metadata.getDescription().getSubtitle());
 
         // Set image
+        RequestOptions options = new RequestOptions()
+                .error(defaultIcon);
+
         Glide.with(viewHolder.view.getContext())
                 .load(metadata.getDescription().getIconUri().toString())
-                .error(defaultIcon)
+                .apply(options)
                 .into(cardView.getMainImageView());
     }
 

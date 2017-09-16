@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 import com.scooter1556.sms.android.R;
@@ -57,26 +58,36 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                 holder.subtitle.setText(subtitle);
             }
 
-            switch (MediaUtils.parseMediaId(item.getMediaId()).get(0)) {
+            RequestOptions options;
 
+            switch (MediaUtils.parseMediaId(item.getMediaId()).get(0)) {
                 case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
+                    options = new RequestOptions()
+                            .error(R.drawable.ic_album);
+
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
-                            .error(R.drawable.ic_album)
+                            .apply(options)
                             .into((holder).image);
                     break;
 
                 case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                    options = new RequestOptions()
+                            .error(R.drawable.ic_video);
+
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
-                            .error(R.drawable.ic_video)
+                            .apply(options)
                             .into((holder).image);
                     break;
 
                 default:
+                    options = new RequestOptions()
+                            .error(R.drawable.ic_folder);
+
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
-                            .error(R.drawable.ic_folder)
+                            .apply(options)
                             .into((holder).image);
                     break;
             }

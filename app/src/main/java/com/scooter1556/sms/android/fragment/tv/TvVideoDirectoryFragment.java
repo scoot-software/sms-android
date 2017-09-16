@@ -57,8 +57,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
@@ -268,12 +269,11 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         detailsBackground.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
 
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
                 .asBitmap()
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
-                            glideAnimation) {
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         detailsBackground.setCoverBitmap(resource);
                     }
                 });
@@ -288,13 +288,16 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
 
         final DetailsOverviewRow detailsRow = new DetailsOverviewRow(mediaItem);
 
+        RequestOptions options = new RequestOptions()
+                .dontAnimate();
+
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_HEIGHT)
                 .asBitmap()
-                .dontAnimate()
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_HEIGHT)
+                .apply(options)
                 .into(new SimpleTarget<Bitmap>() {
                     @Override
-                    public void onResourceReady(final Bitmap resource, GlideAnimation glideAnimation) {
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         detailsRow.setImageBitmap(getActivity(), resource);
                     }
                 });

@@ -44,8 +44,8 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.HomeActivity;
 import com.scooter1556.sms.android.service.MediaService;
@@ -319,12 +319,12 @@ public class MediaNotificationManager extends BroadcastReceiver {
             url = url + NOTIFICATION_ICON_SIZE;
 
             Glide.with(mediaService)
-                    .load(url)
                     .asBitmap()
+                    .load(url)
                     .into(new SimpleTarget<Bitmap>(NOTIFICATION_ICON_SIZE , NOTIFICATION_ICON_SIZE) {
                         @Override
-                        public void onResourceReady(Bitmap bitmap, GlideAnimation animation) {
-                            notificationBuilder.setLargeIcon(bitmap);
+                        public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                            notificationBuilder.setLargeIcon(resource);
                             notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
                         }
                     });

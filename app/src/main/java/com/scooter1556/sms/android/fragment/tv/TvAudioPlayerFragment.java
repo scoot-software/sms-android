@@ -62,8 +62,8 @@ import android.view.KeyEvent;
 import android.view.View;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.presenter.HeaderPresenter;
 import com.scooter1556.sms.android.presenter.QueueItemPresenter;
@@ -427,11 +427,11 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         // Get cover
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover/" + THUMB_HEIGHT)
                 .asBitmap()
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover/" + THUMB_HEIGHT)
                 .into(new SimpleTarget<Bitmap>(THUMB_WIDTH, THUMB_HEIGHT) {
                     @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         playbackControlsRow.setImageBitmap(getActivity(), resource);
                         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
                     }
@@ -439,17 +439,16 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
 
         // Get fanart
         Glide.with(getActivity())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart/" + displayMetrics.widthPixels)
                 .asBitmap()
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart/" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap>
-                            glideAnimation) {
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         BackgroundManager.getInstance(getActivity()).setBitmap(resource);
                     }
 
                     @Override
-                    public void onLoadFailed(Exception e, Drawable errorDrawable) {
+                    public void onLoadFailed(Drawable errorDrawable) {
                         BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                     }
                 });

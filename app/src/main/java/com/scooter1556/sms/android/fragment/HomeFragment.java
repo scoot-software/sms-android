@@ -107,7 +107,7 @@ public class HomeFragment extends BaseFragment {
                     mediaAdapter.setHasStableIds(true);
 
                     HeaderFooterAdapter headerFooterAdapter = new HeaderFooterAdapter(mediaAdapter);
-                    headerFooterAdapter.addHeaderItem(getString(R.string.heading_media_folders));
+                    headerFooterAdapter.addHeaderItem(getString(R.string.heading_media_browser));
                     headerFooterAdapter.setupFullSpanForGridLayoutManager(recyclerView);
 
                     adapter.addAdapter(headerFooterAdapter);

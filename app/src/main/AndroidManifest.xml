@@ -73,7 +73,7 @@
 
         <!-- Main activity for Android TV user interface -->
         <activity
-            android:name=".activity.tv.TvMainActivity"
+            android:name=".activity.tv.TvHomeActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Leanback.Browse">
@@ -85,21 +85,45 @@
 
         <!-- Android TV -->
         <activity
+            android:name=".activity.tv.TvMediaBrowserActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
+            android:theme="@style/Theme.Leanback.Browse" />
+
+        <activity
+            android:name=".activity.tv.TvMusicActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
+            android:theme="@style/Theme.Leanback.Browse" />
+
+        <activity
+            android:name=".activity.tv.TvVideoActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
+            android:theme="@style/Theme.Leanback.Browse" />
+
+        <activity
+            android:name=".activity.tv.TvSettingsActivity"
+            android:exported="true"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
+            android:theme="@style/Theme.Leanback.Browse" />
+
+        <activity
             android:name=".activity.tv.TvAudioPlaybackActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback" />
 
         <activity
             android:name=".activity.tv.TvVideoPlaybackActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback" />
 
         <activity
             android:name=".activity.tv.TvMediaGridActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.VerticalGrid" />
 
         <activity
@@ -110,37 +134,37 @@
         <activity
             android:name=".activity.tv.TvConnectionActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <activity
             android:name=".activity.tv.TvConnectionOptionsActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <activity
             android:name=".activity.tv.TvEditConnectionActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <activity
             android:name=".activity.tv.TvAudioSettingsActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <activity
             android:name=".activity.tv.TvVideoSettingsActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <activity
             android:name=".activity.tv.TvTranscodeSettingsActivity"
             android:exported="true"
-            android:parentActivityName=".activity.tv.TvMainActivity"
+            android:parentActivityName=".activity.tv.TvHomeActivity"
             android:theme="@style/Theme.Leanback.GuidedStep" />
 
         <!-- Mobile Devices -->

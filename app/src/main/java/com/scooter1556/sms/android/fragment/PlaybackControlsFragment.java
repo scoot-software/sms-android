@@ -74,7 +74,7 @@ public class PlaybackControlsFragment extends Fragment {
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), FullScreenPlayerActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+                MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
                 MediaMetadataCompat metadata = controller.getMetadata();
 
                 if (metadata != null) {
@@ -91,7 +91,7 @@ public class PlaybackControlsFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
 
         if (controller != null) {
             onConnected();
@@ -102,14 +102,15 @@ public class PlaybackControlsFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
-        MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
+
         if (controller != null) {
             controller.unregisterCallback(callback);
         }
     }
 
     public void onConnected() {
-        MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
 
         if (controller != null) {
             onMetadataChanged(controller.getMetadata());
@@ -175,7 +176,7 @@ public class PlaybackControlsFragment extends Fragment {
             playPause.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause_black_36dp));
         }
 
-        MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
         String extraInfo = null;
 
         if (controller != null && controller.getExtras() != null) {
@@ -191,7 +192,7 @@ public class PlaybackControlsFragment extends Fragment {
     private final View.OnClickListener buttonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
+            MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
             PlaybackStateCompat stateObj = controller.getPlaybackState();
             final int state = stateObj == null ? PlaybackStateCompat.STATE_NONE : stateObj.getState();
 
@@ -213,16 +214,16 @@ public class PlaybackControlsFragment extends Fragment {
     };
 
     private void playMedia() {
-        MediaControllerCompat controller = ((FragmentActivity) getActivity())
-                .getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
+
         if (controller != null) {
             controller.getTransportControls().play();
         }
     }
 
     private void pauseMedia() {
-        MediaControllerCompat controller = ((FragmentActivity) getActivity())
-                .getSupportMediaController();
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
+
         if (controller != null) {
             controller.getTransportControls().pause();
         }

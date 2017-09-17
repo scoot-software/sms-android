@@ -1,6 +1,8 @@
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -46,6 +48,7 @@ public class TvMediaFolderFragment extends TvGridFragment {
     private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int NUM_COLUMNS = 5;
 
+    private Activity activity;
     private ArrayObjectAdapter adapter;
     private String mediaId;
     private List<MediaBrowserCompat.MediaItem> mediaItems;
@@ -129,6 +132,9 @@ public class TvMediaFolderFragment extends TvGridFragment {
         mediaItems = new ArrayList<>();
         adapter = new ArrayObjectAdapter(new MediaItemPresenter());
 
+        // Get default background
+        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
+
         // Initialise interface
         VerticalGridPresenter gridPresenter = new VerticalGridPresenter();
         gridPresenter.setNumberOfColumns(NUM_COLUMNS);
@@ -146,40 +152,36 @@ public class TvMediaFolderFragment extends TvGridFragment {
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof Activity) {
+            activity = (Activity) context;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        if (backgroundTimer != null) {
+            backgroundTimer.cancel();
+            backgroundTimer = null;
+        }
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
         mediaBrowser.connect();
-
-        if(!BackgroundManager.getInstance(getActivity()).isAttached()) {
-            prepareBackgroundManager();
-        }
     }
 
     @Override
     public void onStop() {
         mediaBrowser.disconnect();
 
-        if (backgroundTimer != null) {
-            backgroundTimer.cancel();
-            backgroundTimer = null;
-        }
-
-        BackgroundManager.getInstance(getActivity()).release();
-
         super.onStop();
-    }
-
-    private void prepareBackgroundManager() {
-        Log.d(TAG, "prepareBackgroundManager()");
-
-        // Setup background manager
-        BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
-        backgroundManager.attach(getActivity().getWindow());
-
-        // Get default background
-        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
-        backgroundManager.setDrawable(defaultBackground);
     }
 
     private void setGrid() {
@@ -253,20 +255,20 @@ public class TvMediaFolderFragment extends TvGridFragment {
     //
     private void updateBackground() {
         // Get screen size
-        int width = getResources().getDisplayMetrics().widthPixels;
-        int height = getResources().getDisplayMetrics().heightPixels;
+        int width = activity.getResources().getDisplayMetrics().widthPixels;
+        int height = activity.getResources().getDisplayMetrics().heightPixels;
 
-        Glide.with(getActivity())
+        Glide.with(activity)
                 .asBitmap()
                 .load(backgroundURI)
                 .into(new SimpleTarget<Bitmap>(width, height) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
+                        BackgroundManager.getInstance(activity).setBitmap(resource);
                     }
 
                     @Override public void onLoadFailed(Drawable errorDrawable) {
-                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
+                        BackgroundManager.getInstance(activity).setDrawable(defaultBackground);
                     }
                 });
 

@@ -100,8 +100,8 @@ public class TvMediaBrowserFragment extends BrowseFragment {
 
         backgroundManager = BackgroundManager.getInstance(getActivity());
         backgroundManager.attach(getActivity().getWindow());
-        getMainFragmentRegistry().registerFragment(PageRow.class,
-                new PageRowFragmentFactory());
+
+        getMainFragmentRegistry().registerFragment(PageRow.class, new PageRowFragmentFactory());
 
         // Initialisation
         rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());

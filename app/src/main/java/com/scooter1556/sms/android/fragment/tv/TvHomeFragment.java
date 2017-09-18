@@ -1,12 +1,16 @@
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
@@ -15,17 +19,30 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.activity.tv.TvAudioPlaybackActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaBrowserActivity;
 import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
 import com.scooter1556.sms.android.activity.tv.TvSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoActivity;
+import com.scooter1556.sms.android.presenter.MediaItemPresenter;
+import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
+import com.scooter1556.sms.android.service.MediaService;
+import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.MediaUtils;
+
+import java.util.List;
 
 public class TvHomeFragment extends BrowseFragment {
     private static final String TAG = "TvHomeFragment";
@@ -35,15 +52,66 @@ public class TvHomeFragment extends BrowseFragment {
     private Drawable defaultBackground;
     private String backgroundUri;
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    private MediaBrowserCompat mediaBrowser;
+    private static MediaControllerCompat mediaController;
 
-        Log.d(TAG, "onActivityCreated()");
+    private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback() {
+        @Override
+        public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
+            Log.d(TAG, "onPlaybackStateChanged() -> " + state);
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            Log.d(TAG, "onMetadataChanged()");
+
+            if (metadata != null) {
+                updateNowPlayingRow(metadata);
+            }
+        }
+    };
+
+    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    try {
+                        connectToSession(mediaBrowser.getSessionToken());
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Could not connect media controller", e);
+                    }
+                }
+            };
+
+    private void connectToSession(MediaSessionCompat.Token token) throws RemoteException {
+        Log.d(TAG, "connectToSession()");
+
+        mediaController = new MediaControllerCompat(getActivity(), token);
+
+        MediaControllerCompat.setMediaController(getActivity(), mediaController);
+        mediaController.registerCallback(callback);
+        PlaybackStateCompat state = mediaController.getPlaybackState();
+        MediaMetadataCompat metadata = mediaController.getMetadata();
+
+        if (metadata != null) {
+            updateNowPlayingRow(metadata);
+        }
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Log.d(TAG, "onCreate()");
 
         setupUI();
         setupRowAdapter();
         setupEventListeners();
+
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
     }
 
     @Override
@@ -53,6 +121,17 @@ public class TvHomeFragment extends BrowseFragment {
         Log.d(TAG, "onResume()");
 
         updateBackground();
+    }
+
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart()");
+
+        super.onStart();
+
+        if (mediaBrowser != null && !mediaBrowser.isConnected()) {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
@@ -68,6 +147,22 @@ public class TvHomeFragment extends BrowseFragment {
         rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         createRows();
         setAdapter(rowsAdapter);
+    }
+
+    private void updateNowPlayingRow(MediaMetadataCompat metadata) {
+        ArrayObjectAdapter nowPlayingAdapter = new ArrayObjectAdapter(new MediaMetadataPresenter());
+        nowPlayingAdapter.add(metadata);
+        HeaderItem headerItem = new HeaderItem(getString(R.string.heading_now_playing));
+
+        if(rowsAdapter.size() > 1) {
+            rowsAdapter.replace(0, new ListRow(headerItem, nowPlayingAdapter));
+        } else {
+            rowsAdapter.add(0, new ListRow(headerItem, nowPlayingAdapter));
+        }
+
+        // Update background
+        backgroundUri = RESTService.getInstance().getConnection().getUrl() + "/image/" + metadata.getDescription().getMediaId() + "/fanart/" + getResources().getDisplayMetrics().widthPixels;
+        updateBackground();
     }
 
     private void createRows() {
@@ -141,6 +236,8 @@ public class TvHomeFragment extends BrowseFragment {
                 } else if (((String) item).contains(getString(R.string.heading_media_browser))) {
                     intent = new Intent(getActivity(), TvMediaBrowserActivity.class);
                 }
+            } else if (item instanceof MediaMetadataCompat) {
+                intent = new Intent(getActivity(), TvAudioPlaybackActivity.class);
             }
 
             if (intent != null) {

@@ -183,7 +183,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                         .error(R.drawable.ic_content_folder);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(dirThumbnail);
 
@@ -239,7 +239,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                         .error(R.drawable.ic_album);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(aDirThumbnail);
 
@@ -284,7 +284,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                         .error(R.drawable.ic_content_video);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/80")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(vDirThumbnail);
 
@@ -360,7 +360,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                         .error(R.drawable.ic_content_video);
 
                 Glide.with(context)
-                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover/150")
+                        .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=150")
                         .apply(options)
                         .into(vidThumbnail);
 

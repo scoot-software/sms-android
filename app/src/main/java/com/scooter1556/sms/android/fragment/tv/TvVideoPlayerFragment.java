@@ -449,7 +449,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     private void updateVideoImage() {
         Glide.with(getActivity())
                 .asBitmap()
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover/" + CARD_SIZE)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover?scale=" + CARD_SIZE)
                 .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {

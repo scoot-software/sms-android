@@ -125,7 +125,7 @@ public class AudioDirectoryFragment extends Fragment {
         ImageView coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
 
         Glide.with(getActivity().getBaseContext())
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover/80")
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover?scale=80")
                 .into(coverArt);
 
         TextView directoryTitle = (TextView) rootView.findViewById(R.id.directory_title);

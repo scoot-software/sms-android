@@ -270,7 +270,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
 
         Glide.with(getActivity())
                 .asBitmap()
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
@@ -293,7 +293,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
 
         Glide.with(getActivity())
                 .asBitmap()
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + DETAIL_THUMB_HEIGHT)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + DETAIL_THUMB_HEIGHT)
                 .apply(options)
                 .into(new SimpleTarget<Bitmap>() {
                     @Override

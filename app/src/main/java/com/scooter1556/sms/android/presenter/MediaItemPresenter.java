@@ -45,8 +45,7 @@ import java.util.List;
 
 public class MediaItemPresenter extends Presenter {
 
-    private static int CARD_HEIGHT = 300;
-    private static int CARD_WIDTH = 300;
+    private static int CARD_HEIGHT = 400;
 
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
@@ -95,8 +94,6 @@ public class MediaItemPresenter extends Presenter {
 
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
-        // Get title
-        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER);
         cardView.setTitleText(element.getDescription().getTitle());
         cardView.setContentText(element.getDescription().getSubtitle());
@@ -104,22 +101,16 @@ public class MediaItemPresenter extends Presenter {
         // Get default icon
         Drawable icon;
 
-        switch(MediaUtils.getMediaTypeFromID(element.getMediaId())) {
-            case MediaElement.MediaElementType.AUDIO:
-                icon = defaultAudioIcon;
-                break;
-
-            case MediaElement.MediaElementType.VIDEO:
-                icon = defaultVideoIcon;
-                break;
-
-            case MediaElement.MediaElementType.DIRECTORY:
-                icon = defaultDirectoryIcon;
-                break;
-
-            default:
-                icon = defaultDirectoryIcon;
-                break;
+        if(element.getMediaId().contains(MediaUtils.MEDIA_ID_AUDIO)) {
+            icon = defaultAudioIcon;
+        } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_VIDEO)) {
+            icon = defaultVideoIcon;
+        } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_DIRECTORY_AUDIO)) {
+            icon = defaultAudioIcon;
+        } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_DIRECTORY_VIDEO)) {
+            icon = defaultVideoIcon;
+        } else {
+            icon = defaultDirectoryIcon;
         }
 
         List<String> id = MediaUtils.parseMediaId(element.getMediaId());
@@ -131,7 +122,7 @@ public class MediaItemPresenter extends Presenter {
 
             Glide.with(viewHolder.view.getContext())
                     .asBitmap()
-                    .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover/" + CARD_HEIGHT)
+                    .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + CARD_HEIGHT)
                     .apply(options)
                     .into(cardView.getMainImageView());
         }

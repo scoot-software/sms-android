@@ -282,7 +282,7 @@ public class TvVideoFragment extends BrowseFragment implements OnItemViewClicked
             List<String> id = MediaUtils.parseMediaId(mediaItem.getMediaId());
 
             if (id.size() > 1) {
-                backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart/" + displayMetrics.widthPixels;
+                backgroundURI = RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart?scale=" + displayMetrics.widthPixels;
                 startBackgroundTimer();
             } else {
                 BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);

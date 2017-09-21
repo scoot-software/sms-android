@@ -76,6 +76,8 @@ public class MediaUtils {
     public static final String MEDIA_ID_FOLDERS_AUDIO = "__FOLDERS_AUDIO__";
     public static final String MEDIA_ID_FOLDERS_VIDEO = "__FOLDERS_VIDEO__";
     public static final String MEDIA_ID_FOLDER = "__FOLDER__";
+    public static final String MEDIA_ID_FOLDER_AUDIO = "__FOLDER_AUDIO__";
+    public static final String MEDIA_ID_FOLDER_VIDEO = "__FOLDER_VIDEO__";
     public static final String MEDIA_ID_DIRECTORY = "__DIRECTORY__";
     public static final String MEDIA_ID_DIRECTORY_AUDIO = "__DIRECTORY_AUDIO__";
     public static final String MEDIA_ID_DIRECTORY_VIDEO = "__DIRECTORY_VIDEO__";
@@ -141,9 +143,9 @@ public class MediaUtils {
         }
 
         if(RESTService.getInstance().getAddress() != null) {
-            metadata.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover/200");
-            metadata.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover/1000");
-            metadata.putString(MediaMetadataCompat.METADATA_KEY_ART_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart/1000");
+            metadata.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover");
+            metadata.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover");
+            metadata.putString(MediaMetadataCompat.METADATA_KEY_ART_URI, RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart");
         }
 
         return metadata.build();
@@ -179,8 +181,8 @@ public class MediaUtils {
         }
 
         if(RESTService.getInstance().getAddress() != null) {
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover/500")));
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart/1280")));
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover")));
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart")));
         }
 
         return metadata;
@@ -210,8 +212,8 @@ public class MediaUtils {
         metadata.putInt(MediaMetadata.KEY_DISC_NUMBER, description.getExtras().getShort("DiscNumber"));
 
         if(RESTService.getInstance().getAddress() != null) {
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/cover/500")));
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/fanart/1280")));
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/cover")));
+            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/fanart")));
         }
 
         return metadata;
@@ -247,8 +249,24 @@ public class MediaUtils {
             return MediaElement.MediaElementType.AUDIO;
         } else if(mediaId.startsWith(MEDIA_ID_VIDEO)) {
             return MediaElement.MediaElementType.VIDEO;
-        } else {
+        } else if(mediaId.startsWith(MEDIA_ID_DIRECTORY)) {
+            return MediaElement.MediaElementType.DIRECTORY;
+        }else {
             return -1;
+        }
+    }
+
+    public static Byte getDirectoryTypeFromID(@NonNull String mediaId) {
+        if(!mediaId.startsWith(MEDIA_ID_DIRECTORY)) {
+            return -1;
+        }
+
+        if(mediaId.startsWith(MEDIA_ID_DIRECTORY_AUDIO)) {
+            return MediaElement.DirectoryMediaType.AUDIO;
+        } else if(mediaId.startsWith(MEDIA_ID_DIRECTORY_VIDEO)) {
+            return MediaElement.DirectoryMediaType.VIDEO;
+        } else {
+            return MediaElement.DirectoryMediaType.NONE;
         }
     }
 
@@ -314,7 +332,7 @@ public class MediaUtils {
                 .setSubtitle(getSubtitle(element))
                 .setDescription(element.getDescription() == null ? "" : element.getDescription())
                 .setExtras(extras)
-                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover/200"))
+                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                 .build();
 
         return description;

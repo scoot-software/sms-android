@@ -428,7 +428,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         // Get cover
         Glide.with(getActivity())
                 .asBitmap()
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover/" + THUMB_HEIGHT)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover?scale=" + THUMB_HEIGHT)
                 .into(new SimpleTarget<Bitmap>(THUMB_WIDTH, THUMB_HEIGHT) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
@@ -440,7 +440,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         // Get fanart
         Glide.with(getActivity())
                 .asBitmap()
-                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart/" + displayMetrics.widthPixels)
+                .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {

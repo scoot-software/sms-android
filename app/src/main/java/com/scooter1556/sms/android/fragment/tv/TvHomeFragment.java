@@ -35,8 +35,10 @@ import com.scooter1556.sms.android.activity.tv.TvMediaBrowserActivity;
 import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
 import com.scooter1556.sms.android.activity.tv.TvSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoActivity;
+import com.scooter1556.sms.android.domain.MenuItem;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
+import com.scooter1556.sms.android.presenter.MenuItemPresenter;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -161,17 +163,17 @@ public class TvHomeFragment extends BrowseFragment {
         }
 
         // Update background
-        backgroundUri = RESTService.getInstance().getConnection().getUrl() + "/image/" + metadata.getDescription().getMediaId() + "/fanart/" + getResources().getDisplayMetrics().widthPixels;
+        backgroundUri = RESTService.getInstance().getConnection().getUrl() + "/image/" + metadata.getDescription().getMediaId() + "/fanart?scale=" + getResources().getDisplayMetrics().widthPixels;
         updateBackground();
     }
 
     private void createRows() {
-        SettingsItemPresenter settingsPresenter = new SettingsItemPresenter();
-        ArrayObjectAdapter rowAdapter = new ArrayObjectAdapter(settingsPresenter);
-        rowAdapter.add(getString(R.string.heading_media_browser));
-        rowAdapter.add(getString(R.string.heading_music));
-        rowAdapter.add(getString(R.string.heading_video));
-        rowAdapter.add(getString(R.string.heading_settings));
+        MenuItemPresenter menuItemPresenter = new MenuItemPresenter();
+        ArrayObjectAdapter rowAdapter = new ArrayObjectAdapter(menuItemPresenter);
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_media_browser), getString(R.string.heading_media_browser)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_music), getString(R.string.heading_music)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_video), getString(R.string.heading_video)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_settings), getString(R.string.heading_settings)));
         rowsAdapter.add(new ListRow(rowAdapter));
     }
 
@@ -226,14 +228,14 @@ public class TvHomeFragment extends BrowseFragment {
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
             Intent intent = null;
 
-            if (item instanceof String) {
-                if (((String) item).contains(getString(R.string.heading_music))) {
+            if (item instanceof MenuItem) {
+                if (((MenuItem) item).getTitle().contains(getString(R.string.heading_music))) {
                     intent = new Intent(getActivity(), TvMusicActivity.class);
-                } else if (((String) item).contains(getString(R.string.heading_video))) {
+                } else if (((MenuItem) item).getTitle().contains(getString(R.string.heading_video))) {
                     intent = new Intent(getActivity(), TvVideoActivity.class);
-                } else if (((String) item).contains(getString(R.string.heading_settings))) {
+                } else if (((MenuItem) item).getTitle().contains(getString(R.string.heading_settings))) {
                     intent = new Intent(getActivity(), TvSettingsActivity.class);
-                } else if (((String) item).contains(getString(R.string.heading_media_browser))) {
+                } else if (((MenuItem) item).getTitle().contains(getString(R.string.heading_media_browser))) {
                     intent = new Intent(getActivity(), TvMediaBrowserActivity.class);
                 }
             } else if (item instanceof MediaMetadataCompat) {

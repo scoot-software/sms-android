@@ -27,37 +27,27 @@ import android.graphics.drawable.Drawable;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.MediaUtils;
+import com.scooter1556.sms.android.domain.MenuItem;
 
-import java.util.List;
-
-public class MediaDescriptionPresenter extends Presenter {
+public class MenuItemPresenter extends Presenter {
 
     private static int CARD_HEIGHT = 300;
-    private static int CARD_WIDTH = 300;
+    private static int CARD_WIDTH = 400;
 
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
-
-    private static Drawable defaultAudioIcon;
-    private static Drawable defaultVideoIcon;
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
         defaultBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary);
         selectedBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary_dark);
-
-        defaultAudioIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_audio);
-        defaultVideoIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_video);
 
         ImageCardView view = new ImageCardView(parent.getContext()) {
             @Override
@@ -82,50 +72,18 @@ public class MediaDescriptionPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object item) {
-        MediaDescriptionCompat description = (MediaDescriptionCompat) item;
+        MenuItem menuItem = (MenuItem) item;
 
-        if(description == null) {
+        if(menuItem == null) {
             return;
         }
 
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         // Get title
-        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER);
-        cardView.setTitleText(description.getTitle());
-        cardView.setContentText(description.getSubtitle());
-
-        // Get default icon
-        Drawable icon;
-
-        switch(MediaUtils.getMediaTypeFromID(description.getMediaId())) {
-            case MediaElement.MediaElementType.AUDIO:
-                icon = defaultAudioIcon;
-                break;
-
-            case MediaElement.MediaElementType.VIDEO:
-                icon = defaultVideoIcon;
-                break;
-
-            default:
-                icon = defaultAudioIcon;
-                break;
-        }
-
-        List<String> id = MediaUtils.parseMediaId((description.getMediaId()));
-
-        if(id.size() > 1) {
-            // Set image
-            RequestOptions options = new RequestOptions()
-                    .error(icon);
-
-            Glide.with(viewHolder.view.getContext())
-                    .asBitmap()
-                    .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + CARD_HEIGHT)
-                    .apply(options)
-                    .into(cardView.getMainImageView());
-        }
+        cardView.setTitleText(menuItem.getTitle());
+        cardView.setMainImage(menuItem.getIcon());
     }
 
     @Override

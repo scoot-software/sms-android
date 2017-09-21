@@ -43,8 +43,7 @@ import java.util.List;
 
 public class MediaMetadataPresenter extends Presenter {
 
-    private static int CARD_HEIGHT = 300;
-    private static int CARD_WIDTH = 300;
+    private static int CARD_HEIGHT = 400;
 
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
@@ -90,7 +89,7 @@ public class MediaMetadataPresenter extends Presenter {
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
         // Get title
-        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+        //cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER);
         cardView.setTitleText(metadata.getDescription().getTitle());
         cardView.setContentText(metadata.getDescription().getSubtitle());
@@ -100,7 +99,7 @@ public class MediaMetadataPresenter extends Presenter {
                 .error(defaultIcon);
 
         Glide.with(viewHolder.view.getContext())
-                .load(metadata.getDescription().getIconUri().toString())
+                .load(metadata.getDescription().getIconUri().toString() + "?scale=" + CARD_HEIGHT)
                 .apply(options)
                 .into(cardView.getMainImageView());
     }

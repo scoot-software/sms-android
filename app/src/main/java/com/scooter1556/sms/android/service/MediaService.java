@@ -574,7 +574,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
                 break;
 
-            case MediaUtils.MEDIA_ID_FOLDER:
+            case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_FOLDER_AUDIO: case MediaUtils.MEDIA_ID_FOLDER_VIDEO:
                 if(mediaId.size() > 1) {
                     result.detach();
                     getMediaFolderContents(Long.parseLong(mediaId.get(1)), result);
@@ -1528,7 +1528,7 @@ public class MediaService extends MediaBrowserServiceCompat
                 .setMediaId(MediaUtils.MEDIA_ID_FOLDER + MediaUtils.SEPARATOR + String.valueOf(folder.getID()))
                 .setTitle(folder.getName())
                 .setSubtitle(String.format(getString(R.string.media_folder_subtitle), folder.getFiles(), folder.getFolders()))
-                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + folder.getID() + "/random/" + getResources().getDimension(R.dimen.card_media_folder_image) + "?folder=true"))
+                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + folder.getID() + "/random" + "?folder=true"))
                 .build();
 
         return new MediaBrowserCompat.MediaItem(description,
@@ -1547,7 +1547,7 @@ public class MediaService extends MediaBrowserServiceCompat
                     dirDescription = new MediaDescriptionCompat.Builder()
                             .setMediaId(MediaUtils.MEDIA_ID_DIRECTORY + MediaUtils.SEPARATOR + String.valueOf(element.getID()))
                             .setTitle(element.getTitle())
-                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover/200"))
+                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                             .build();
                 } else if(element.getDirectoryType() == MediaElement.DirectoryMediaType.VIDEO) {
                     dirDescription = new MediaDescriptionCompat.Builder()
@@ -1555,7 +1555,7 @@ public class MediaService extends MediaBrowserServiceCompat
                             .setTitle(element.getTitle())
                             .setSubtitle(element.getCollection() == null ? "" : element.getCollection())
                             .setDescription(element.getDescription() == null ? "" : element.getDescription())
-                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover/200"))
+                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                             .build();
                 } else if(element.getDirectoryType() == MediaElement.DirectoryMediaType.AUDIO) {
                     dirDescription = new MediaDescriptionCompat.Builder()
@@ -1563,7 +1563,7 @@ public class MediaService extends MediaBrowserServiceCompat
                             .setTitle(element.getTitle())
                             .setSubtitle(element.getArtist() == null ? "" : element.getArtist())
                             .setDescription(element.getYear() == null ? "" : element.getYear().toString())
-                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover/200"))
+                            .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                             .build();
                 }
 

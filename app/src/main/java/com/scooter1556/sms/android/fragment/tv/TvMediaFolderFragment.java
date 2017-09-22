@@ -48,7 +48,6 @@ public class TvMediaFolderFragment extends TvGridFragment {
     private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int NUM_COLUMNS = 5;
 
-    private Activity activity;
     private ArrayObjectAdapter adapter;
     private String mediaId;
     private List<MediaBrowserCompat.MediaItem> mediaItems;
@@ -154,10 +153,6 @@ public class TvMediaFolderFragment extends TvGridFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-        if (context instanceof Activity) {
-            activity = (Activity) context;
-        }
     }
 
     @Override
@@ -254,21 +249,25 @@ public class TvMediaFolderFragment extends TvGridFragment {
     // Background
     //
     private void updateBackground() {
-        // Get screen size
-        int width = activity.getResources().getDisplayMetrics().widthPixels;
-        int height = activity.getResources().getDisplayMetrics().heightPixels;
+        if(getActivity() == null) {
+            return;
+        }
 
-        Glide.with(activity)
+        // Get screen size
+        int width = getResources().getDisplayMetrics().widthPixels;
+        int height = getResources().getDisplayMetrics().heightPixels;
+
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(backgroundURI)
                 .into(new SimpleTarget<Bitmap>(width, height) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                        BackgroundManager.getInstance(activity).setBitmap(resource);
+                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
                     }
 
                     @Override public void onLoadFailed(Drawable errorDrawable) {
-                        BackgroundManager.getInstance(activity).setDrawable(defaultBackground);
+                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
                     }
                 });
 

@@ -88,4 +88,7 @@
     <dimen name="card_media_subtitle_padding_bottom">5dp</dimen>
     <dimen name="card_media_subtitle">12sp</dimen>
 
+    <dimen name="card_image_view_title_text_size">12sp</dimen>
+    <dimen name="card_image_view_content_text_size">10sp</dimen>
+
 </resources>

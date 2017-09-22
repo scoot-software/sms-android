@@ -29,10 +29,13 @@ import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.text.method.ScrollingMovementMethod;
+import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -45,7 +48,7 @@ import java.util.List;
 
 public class MediaItemPresenter extends Presenter {
 
-    private static int CARD_HEIGHT = 400;
+    private static int CARD_HEIGHT = 324;
 
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
@@ -53,15 +56,17 @@ public class MediaItemPresenter extends Presenter {
     private static Drawable defaultDirectoryIcon;
     private static Drawable defaultAudioIcon;
     private static Drawable defaultVideoIcon;
+    private static Drawable defaultMediaIcon;
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
         defaultBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary);
         selectedBackgroundColor = ContextCompat.getColor(parent.getContext(), R.color.primary_dark);
 
-        defaultDirectoryIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_directory);
-        defaultAudioIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_audio);
-        defaultVideoIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.ic_video);
+        defaultDirectoryIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.tv_folder);
+        defaultAudioIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.tv_audio);
+        defaultVideoIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.tv_video);
+        defaultMediaIcon = ContextCompat.getDrawable(parent.getContext(), R.drawable.tv_play);
 
         ImageCardView view = new ImageCardView(parent.getContext()) {
             @Override
@@ -98,13 +103,16 @@ public class MediaItemPresenter extends Presenter {
         cardView.setTitleText(element.getDescription().getTitle());
         cardView.setContentText(element.getDescription().getSubtitle());
 
+        ((TextView) cardView.findViewById(R.id.title_text)).setTextSize(TypedValue.COMPLEX_UNIT_PX, cardView.getResources().getDimension(R.dimen.card_image_view_title_text_size));
+        ((TextView) cardView.findViewById(R.id.content_text)).setTextSize(TypedValue.COMPLEX_UNIT_PX, cardView.getResources().getDimension(R.dimen.card_image_view_content_text_size));
+
         // Get default icon
         Drawable icon;
 
         if(element.getMediaId().contains(MediaUtils.MEDIA_ID_AUDIO)) {
             icon = defaultAudioIcon;
         } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_VIDEO)) {
-            icon = defaultVideoIcon;
+            icon = defaultMediaIcon;
         } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_DIRECTORY_AUDIO)) {
             icon = defaultAudioIcon;
         } else if(element.getMediaId().contains(MediaUtils.MEDIA_ID_DIRECTORY_VIDEO)) {
@@ -118,7 +126,8 @@ public class MediaItemPresenter extends Presenter {
         if(id.size() > 1) {
             // Set image
             RequestOptions options = new RequestOptions()
-                    .error(icon);
+                    .placeholder(icon)
+                    .fallback(icon);
 
             Glide.with(viewHolder.view.getContext())
                     .asBitmap()

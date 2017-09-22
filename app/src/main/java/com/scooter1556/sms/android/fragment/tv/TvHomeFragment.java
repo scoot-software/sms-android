@@ -170,10 +170,10 @@ public class TvHomeFragment extends BrowseFragment {
     private void createRows() {
         MenuItemPresenter menuItemPresenter = new MenuItemPresenter();
         ArrayObjectAdapter rowAdapter = new ArrayObjectAdapter(menuItemPresenter);
-        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_media_browser), getString(R.string.heading_media_browser)));
-        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_music), getString(R.string.heading_music)));
-        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_video), getString(R.string.heading_video)));
-        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.menu_settings), getString(R.string.heading_settings)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.tv_menu_browse), getString(R.string.heading_media_browser)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.tv_menu_music), getString(R.string.heading_music)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.tv_menu_video), getString(R.string.heading_video)));
+        rowAdapter.add(new MenuItem(ContextCompat.getDrawable(getActivity(), R.drawable.tv_menu_settings), getString(R.string.heading_settings)));
         rowsAdapter.add(new ListRow(rowAdapter));
     }
 

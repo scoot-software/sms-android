@@ -38,9 +38,6 @@ import com.scooter1556.sms.android.domain.MenuItem;
 
 public class MenuItemPresenter extends Presenter {
 
-    private static int CARD_HEIGHT = 300;
-    private static int CARD_WIDTH = 400;
-
     private static int selectedBackgroundColor;
     private static int defaultBackgroundColor;
 

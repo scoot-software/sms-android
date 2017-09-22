@@ -36,7 +36,7 @@ public class HeaderFooterAdapter extends AbstractHeaderFooterWrapperAdapter<Head
         headerItems = new ArrayList<>();
         footerItems = new ArrayList<>();
 
-        this.setHasStableIds(true);
+        //this.setHasStableIds(true);
     }
 
     @Override

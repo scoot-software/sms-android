@@ -131,7 +131,9 @@ public class HomeFragment extends BaseFragment {
                     }
 
                     // Subscribe to media browser event
-                    mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
+                    if(mediaAdapter.getItemCount() == 0) {
+                        mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
+                    }
                 }
 
                 @Override
@@ -154,13 +156,10 @@ public class HomeFragment extends BaseFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView()");
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        final View view = inflater.inflate(R.layout.fragment_home, container, false);
-
-        coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.coordinatorLayout);
-        snackbar = Snackbar.make(coordinatorLayout, "No connection!", Snackbar.LENGTH_INDEFINITE);
+        Log.d(TAG, "onCreate()");
 
         OnListItemClickListener clickListener = new OnListItemClickListener() {
             @Override
@@ -174,6 +173,21 @@ public class HomeFragment extends BaseFragment {
         items = new ArrayList<>();
         adapter = new ComposedAdapter();
         mediaAdapter = new MediaFolderAdapter(getContext(), items, clickListener);
+
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView()");
+
+        final View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+        coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.coordinatorLayout);
+        snackbar = Snackbar.make(coordinatorLayout, "No connection!", Snackbar.LENGTH_INDEFINITE);
         final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
 
         // Initialise UI
@@ -194,11 +208,6 @@ public class HomeFragment extends BaseFragment {
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(lm);
-
-        // Subscribe to relevant media service callbacks
-        mediaBrowser = new MediaBrowserCompat(getActivity(),
-                new ComponentName(getActivity(), MediaService.class),
-                connectionCallback, null);
 
         return view;
     }

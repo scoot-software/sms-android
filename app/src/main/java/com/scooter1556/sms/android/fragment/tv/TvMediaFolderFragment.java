@@ -253,6 +253,8 @@ public class TvMediaFolderFragment extends TvGridFragment {
             return;
         }
 
+        final Activity activity = getActivity();
+
         // Get screen size
         int width = getResources().getDisplayMetrics().widthPixels;
         int height = getResources().getDisplayMetrics().heightPixels;
@@ -263,11 +265,11 @@ public class TvMediaFolderFragment extends TvGridFragment {
                 .into(new SimpleTarget<Bitmap>(width, height) {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
+                        BackgroundManager.getInstance(activity).setBitmap(resource);
                     }
 
                     @Override public void onLoadFailed(Drawable errorDrawable) {
-                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
+                        BackgroundManager.getInstance(activity).setDrawable(defaultBackground);
                     }
                 });
 

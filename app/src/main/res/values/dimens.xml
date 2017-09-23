@@ -72,9 +72,9 @@
     <dimen name="card_radius">0dp</dimen>
 
     <dimen name="card_media_width">170dp</dimen>
-    <dimen name="card_media_audio_height">240dp</dimen>
-    <dimen name="card_media_audio_image_height">160dp</dimen>
-    <dimen name="card_media_video_height">320dp</dimen>
+    <dimen name="card_media_height">240dp</dimen>
+    <dimen name="card_media_image_height">160dp</dimen>
+    <dimen name="card_media_video_width">113dp</dimen>
     <dimen name="card_media_video_image_height">240dp</dimen>
     <dimen name="card_media_artist_height">210dp</dimen>
     <dimen name="card_media_album_height">210dp</dimen>

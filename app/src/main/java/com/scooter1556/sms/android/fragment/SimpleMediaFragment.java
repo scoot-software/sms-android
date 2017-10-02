@@ -242,7 +242,9 @@ public class SimpleMediaFragment extends BaseFragment {
                         return;
                     }
 
-                    mediaBrowser.subscribe(mediaId, subscriptionCallback);
+                    if(adapter.getItemCount() == 0) {
+                        mediaBrowser.subscribe(mediaId, subscriptionCallback);
+                    }
                 }
 
                 @Override

@@ -18,6 +18,7 @@ android {
         }
     }
     buildToolsVersion project.ext.buildToolsVersion
+    buildToolsVersion '26.0.2'
 }
 
 dependencies {

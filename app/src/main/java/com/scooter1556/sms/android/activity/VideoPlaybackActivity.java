@@ -1,5 +1,6 @@
 package com.scooter1556.sms.android.activity;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -8,8 +9,10 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -59,6 +62,7 @@ import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.InterfaceUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
@@ -108,6 +112,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     private Callback callback;
     private PlaybackManager playbackManager;
+
+    private MediaBrowserCompat mediaBrowser;
 
     private SimpleExoPlayer mediaPlayer;
     private DefaultTrackSelector trackSelector;
@@ -172,6 +178,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 play(currentMedia);
             }
         });
+
+        mediaBrowser = new MediaBrowserCompat(this,
+                new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
     }
 
     @Override
@@ -180,12 +189,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         Log.d(TAG, "onPause()");
 
         pause();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "onStop()");
-        super.onStop();
     }
 
     @Override
@@ -206,6 +209,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             RESTService.getInstance().endSession(sessionId);
         }
 
+        mediaBrowser.disconnect();
+
         super.onDestroy();
     }
 
@@ -213,6 +218,16 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     protected void onStart() {
         Log.d(TAG, "onStart()");
         super.onStart();
+
+        if(!mediaBrowser.isConnected()) {
+            mediaBrowser.connect();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "onStop()");
+        super.onStop();
     }
 
     @Override
@@ -759,4 +774,12 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             }
         }
     }
+
+    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+                }
+            };
 }

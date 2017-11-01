@@ -40,7 +40,7 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
@@ -289,7 +289,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         Bitmap art = BitmapFactory.decodeResource(mediaService.getResources(), R.drawable.ic_placeholder_audio);
 
         notificationBuilder
-                .setStyle(new NotificationCompat.MediaStyle()
+                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(new int[]{playPauseButtonPosition})
                         .setMediaSession(mediaSessionToken))
                 .setColor(ContextCompat.getColor(mediaService, R.color.primary))

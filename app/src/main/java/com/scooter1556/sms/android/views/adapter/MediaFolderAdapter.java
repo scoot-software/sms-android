@@ -48,50 +48,16 @@ public class MediaFolderAdapter extends RecyclerView.Adapter<MediaFolderViewHold
         holder.title.setText(item.getDescription().getTitle());
         holder.subtitle.setText(item.getDescription().getSubtitle());
 
-        RequestOptions options1 = new RequestOptions()
+        RequestOptions options = new RequestOptions()
                 .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .placeholder(R.drawable.ic_placeholder_1)
-                .error(R.drawable.ic_placeholder_1);
-
-        RequestOptions options2 = new RequestOptions()
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .placeholder(R.drawable.ic_placeholder_2)
-                .error(R.drawable.ic_placeholder_2);
-
-        RequestOptions options3 = new RequestOptions()
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .placeholder(R.drawable.ic_placeholder_3)
-                .error(R.drawable.ic_placeholder_3);
-
-        RequestOptions options4 = new RequestOptions()
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .placeholder(R.drawable.ic_placeholder_4)
-                .error(R.drawable.ic_placeholder_4);
+                .placeholder(R.drawable.ic_placeholder)
+                .error(R.drawable.ic_placeholder);
 
 
         Glide.with(context)
                 .load(item.getDescription().getIconUri())
-                .apply(options1)
-                .into((holder).image1);
-
-        Glide.with(context)
-                .load(item.getDescription().getIconUri())
-                .apply(options2)
-                .into((holder).image2);
-
-        Glide.with(context)
-                .load(item.getDescription().getIconUri())
-                .apply(options3)
-                .into((holder).image3);
-
-        Glide.with(context)
-                .load(item.getDescription().getIconUri())
-                .apply(options4)
-                .into((holder).image4);
+                .apply(options)
+                .into((holder).image);
     }
 
     @Override

@@ -11,20 +11,14 @@ public class MediaFolderViewHolder extends RecyclerView.ViewHolder {
 
     public TextView title;
     public TextView subtitle;
-    public ImageView image1;
-    public ImageView image2;
-    public ImageView image3;
-    public ImageView image4;
+    public ImageView image;
 
     public MediaFolderViewHolder(View view){
         super(view);
 
         title = (TextView) view.findViewById(R.id.title);
         subtitle = (TextView) view.findViewById(R.id.subtitle);
-        image1 = (ImageView) view.findViewById(R.id.image_1);
-        image2 = (ImageView) view.findViewById(R.id.image_2);
-        image3 = (ImageView) view.findViewById(R.id.image_3);
-        image4 = (ImageView) view.findViewById(R.id.image_4);
+        image = (ImageView) view.findViewById(R.id.image);
     }
 
 }

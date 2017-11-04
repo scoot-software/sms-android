@@ -80,7 +80,7 @@
     <dimen name="card_media_album_height">210dp</dimen>
     <dimen name="card_media_folder_height">220dp</dimen>
     <dimen name="card_media_folder_image_height">160dp</dimen>
-    <dimen name="card_media_folder_image">80dp</dimen>
+    <dimen name="card_media_folder_image">160dp</dimen>
     <dimen name="card_media_collection_height">210dp</dimen>
 
     <dimen name="card_media_title_padding">10dp</dimen>

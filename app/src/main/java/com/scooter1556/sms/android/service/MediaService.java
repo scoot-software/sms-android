@@ -1528,7 +1528,7 @@ public class MediaService extends MediaBrowserServiceCompat
                 .setMediaId(MediaUtils.MEDIA_ID_FOLDER + MediaUtils.SEPARATOR + String.valueOf(folder.getID()))
                 .setTitle(folder.getName())
                 .setSubtitle(String.format(getString(R.string.media_folder_subtitle), folder.getFiles(), folder.getFolders()))
-                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + folder.getID() + "/random" + "?folder=true"))
+                .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + folder.getID() + "/cover" + "?folder=true"))
                 .build();
 
         return new MediaBrowserCompat.MediaItem(description,

@@ -99,7 +99,7 @@ public class MusicActivity extends BaseActivity implements SimpleMediaFragment.M
             MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(MusicActivity.this, BrowseActivity.class)
-                    .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, item)
+                    .putExtra(MediaUtils.EXTRA_MEDIA_ID, item.getMediaId())
                     .putExtra(MediaUtils.EXTRA_MEDIA_TITLE, item.getDescription().getTitle());
             startActivityForResult(intent, RESULT_CODE_BROWSE);
         } else {

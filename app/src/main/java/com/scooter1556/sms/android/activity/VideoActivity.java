@@ -112,7 +112,7 @@ public class VideoActivity extends BaseActivity implements SimpleMediaFragment.M
     @Override
     public void setToolbarTitle(CharSequence title) {
         if (title == null) {
-            title = getString(R.string.heading_music);
+            title = getString(R.string.heading_video);
         }
 
         setTitle(title);

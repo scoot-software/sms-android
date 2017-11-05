@@ -660,7 +660,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
                 .setContentType(CONTENT_TYPE_MUSIC)
                 .setUsage(USAGE_MEDIA)
                 .build();
-        
+
         mediaPlayer.setAudioAttributes(audioAttributes);
     }
 

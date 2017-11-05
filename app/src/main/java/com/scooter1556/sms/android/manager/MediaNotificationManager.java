@@ -24,6 +24,8 @@
 package com.scooter1556.sms.android.manager;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,8 +33,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -50,12 +54,18 @@ import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.HomeActivity;
 import com.scooter1556.sms.android.service.MediaService;
 
+import static android.os.Build.*;
+import static android.os.Build.VERSION.*;
+
 /**
  * Manages media notification and updates it automatically for a given MediaSession.
  */
+@RequiresApi(api = VERSION_CODES.O)
 public class MediaNotificationManager extends BroadcastReceiver {
 
     private static final String TAG = "NotificationManager";
+
+    private static final String CHANNEL_ID = "com.scooter1556.sms.android.CHANNEL_ID";
 
     private static final int NOTIFICATION_ID = 412;
     private static final int REQUEST_CODE = 100;
@@ -76,7 +86,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
     private PlaybackStateCompat playbackState;
     private MediaMetadataCompat mediaMetadata;
 
-    private final NotificationManagerCompat notificationManager;
+    private final NotificationManager notificationManager;
 
     private final PendingIntent pauseIntent;
     private final PendingIntent playIntent;
@@ -91,7 +101,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
         mediaService = service;
         updateSessionToken();
 
-        notificationManager = NotificationManagerCompat.from(service);
+        notificationManager = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
 
         String pkg = mediaService.getPackageName();
         pauseIntent = PendingIntent.getBroadcast(mediaService, REQUEST_CODE,
@@ -288,6 +298,11 @@ public class MediaNotificationManager extends BroadcastReceiver {
         MediaDescriptionCompat description = mediaMetadata.getDescription();
         Bitmap art = BitmapFactory.decodeResource(mediaService.getResources(), R.drawable.ic_placeholder_audio);
 
+        // Call this method only if SDK is Oreo or higher
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel();
+        }
+
         notificationBuilder
                 .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(new int[]{playPauseButtonPosition})
@@ -299,6 +314,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 .setContentIntent(createContentIntent(description))
                 .setContentTitle(description.getTitle())
                 .setContentText(description.getSubtitle())
+                .setChannelId(CHANNEL_ID)
                 .setLargeIcon(art);
 
         if (mediaController != null && mediaController.getExtras() != null) {
@@ -370,5 +386,16 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
         // Make sure that the notification can be dismissed by the user when we are not playing:
         builder.setOngoing(playbackState.getState() == PlaybackStateCompat.STATE_PLAYING);
+    }
+
+    /**
+     * Create Notification Channel, required by SDK Oreo to display notifications.
+     */
+     private void createNotificationChannel() {
+         if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
+            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, mediaService.getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.setDescription(mediaService.getString(R.string.notification_channel_description));
+            notificationManager.createNotificationChannel(notificationChannel);
+         }
     }
 }

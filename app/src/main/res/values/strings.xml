@@ -218,6 +218,10 @@
     <string name="audio">Audio</string>
     <string name="text">Text</string>
 
+    <!-- Notification Channel -->
+    <string name="notification_channel">Scoot Media Streamer_Channel_ID</string>
+    <string name="notification_channel_description">Channel ID for Scoot Media Streamer</string>
+
     <string-array
         name="preferences_audio_quality_names">
         <item>Low</item>

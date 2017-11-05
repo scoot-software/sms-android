@@ -25,6 +25,7 @@ import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -58,6 +59,9 @@ import java.util.List;
 import java.util.UUID;
 
 import cz.msebera.android.httpclient.Header;
+
+import static com.google.android.exoplayer2.C.CONTENT_TYPE_MUSIC;
+import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 
 /**
  * A class that implements local media playback
@@ -650,6 +654,14 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         // Create player
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector, loadControl);
         mediaPlayer.addListener(this);
+
+        // Set audio attributes
+        final AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(CONTENT_TYPE_MUSIC)
+                .setUsage(USAGE_MEDIA)
+                .build();
+        
+        mediaPlayer.setAudioAttributes(audioAttributes);
     }
 
     /**

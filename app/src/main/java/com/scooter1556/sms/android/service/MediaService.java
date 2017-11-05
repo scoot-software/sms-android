@@ -278,6 +278,16 @@ public class MediaService extends MediaBrowserServiceCompat
         return START_STICKY;
     }
 
+    /*
+     * Handle case when user swipes the app away from the recent apps list by
+     * stopping the service (and any ongoing playback).
+     */
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
+    }
+
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy()");

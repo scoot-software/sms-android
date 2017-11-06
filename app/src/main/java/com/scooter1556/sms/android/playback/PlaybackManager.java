@@ -85,8 +85,6 @@ public class PlaybackManager implements Playback.Callback {
 
         if (currentMedia == null || currentMedia.getDescription() == null || currentMedia.getDescription().getMediaId() == null) {
             handleStopRequest(null);
-            playback.setState(PlaybackStateCompat.STATE_NONE);
-            updatePlaybackState(null);
             return;
         }
 
@@ -154,6 +152,7 @@ public class PlaybackManager implements Playback.Callback {
     public void handleStopRequest(String error) {
         if(playback != null) {
             playback.stop(true);
+            playback.setState(PlaybackStateCompat.STATE_NONE);
             updatePlaybackState(error);
         }
 
@@ -302,24 +301,30 @@ public class PlaybackManager implements Playback.Callback {
         // Suspend the current playback
         int oldState = playback == null ? PlaybackStateCompat.STATE_NONE : playback.getState();
         long pos = playback == null ? 0 : playback.getCurrentStreamPosition();
-        String currentMediaID = playback == null ? "" : playback.getCurrentMediaId();
+        String currentMediaId = playback == null ? "" : playback.getCurrentMediaId();
 
         if(playback != null) {
-            playback.stop(false);
+            playback.stop(MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.VIDEO);
             playback.destroy();
+        }
+
+        // Only switch playback for audio
+        if (MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.VIDEO) {
+            queueManager.resetQueue();
+            return;
         }
 
         Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
                 " Resume: " + resumePlaying +
                 " State: " + oldState +
                 " Position: " + pos +
-                " Media ID: " + currentMediaID +
+                " Media ID: " + currentMediaId +
                 ")");
 
         // Setup new playback
         newPlayback.setCallback(this);
         newPlayback.setCurrentStreamPosition(pos < 0 ? 0 : pos);
-        newPlayback.setCurrentMediaId(currentMediaID);
+        newPlayback.setCurrentMediaId(currentMediaId);
         newPlayback.start();
 
         // Finally swap the instance

@@ -31,6 +31,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -38,6 +39,7 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -121,6 +123,7 @@ public class MediaService extends MediaBrowserServiceCompat
     public static final int FETCH_LIMIT = 50;
 
     private PlaybackManager playbackManager;
+    private QueueManager queueManager;
 
     private MediaSessionCompat mediaSession;
     private Bundle mediaSessionExtras;
@@ -149,6 +152,7 @@ public class MediaService extends MediaBrowserServiceCompat
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onCreate() {
         super.onCreate();
@@ -177,7 +181,7 @@ public class MediaService extends MediaBrowserServiceCompat
             isConnected = false;
         }
 
-        QueueManager queueManager = new QueueManager(getApplicationContext(), new QueueManager.MetadataUpdateListener() {
+        queueManager = new QueueManager(getApplicationContext(), new QueueManager.MetadataUpdateListener() {
                     @Override
                     public void onMetadataChanged(MediaMetadataCompat metadata) {
                         Log.d(TAG, "onMetadataChanged()");
@@ -288,6 +292,7 @@ public class MediaService extends MediaBrowserServiceCompat
         stopSelf();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy()");
@@ -343,6 +348,7 @@ public class MediaService extends MediaBrowserServiceCompat
         stopForeground(true);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onNotificationRequired() {
         mediaNotificationManager.startNotification();
@@ -406,8 +412,9 @@ public class MediaService extends MediaBrowserServiceCompat
 
             mediaSessionExtras.remove(EXTRA_CONNECTED_CAST);
             mediaSession.setExtras(mediaSessionExtras);
-            Playback playback = new AudioPlayback(MediaService.this);
             mediaRouter.setMediaSessionCompat(null);
+
+            Playback playback = new AudioPlayback(MediaService.this);
             playbackManager.switchToPlayback(playback, true);
         }
 

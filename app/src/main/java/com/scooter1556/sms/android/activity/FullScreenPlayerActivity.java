@@ -86,7 +86,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
     private Drawable playDrawable;
     private ImageView backgroundImage;
 
-    private static boolean shuffleEnabled = false;
+    private static int shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_NONE;
     private static int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
 
     private final Handler handler = new Handler();
@@ -439,7 +439,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
                 ? INVISIBLE : VISIBLE );
         skipPrev.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) == 0
                 ? INVISIBLE : VISIBLE );
-        shuffle.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED) == 0
+        shuffle.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE) == 0
                 ? INVISIBLE : VISIBLE );
         repeat.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SET_REPEAT_MODE) == 0
                 ? INVISIBLE : VISIBLE );

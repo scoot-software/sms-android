@@ -41,7 +41,7 @@ public class PlaybackManager implements Playback.Callback {
     private MediaSessionCallback mediaSessionCallback;
 
     private int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
-    private boolean shuffleMode = false;
+    private int shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_NONE;
 
     private PlaybackManager() {}
 
@@ -176,9 +176,15 @@ public class PlaybackManager implements Playback.Callback {
         stateBuilder.setActions(getAvailableActions());
 
         // Shuffle
-        stateBuilder.addCustomAction(shuffleMode ? MediaService.STATE_SHUFFLE_ON : MediaService.STATE_SHUFFLE_OFF,
-                                     shuffleMode ? ctx.getResources().getString(R.string.description_shuffle_on) : ctx.getResources().getString(R.string.description_shuffle_off),
-                                     shuffleMode ?  R.drawable.ic_shuffle_enabled_white_48dp : R.drawable.ic_shuffle_white_48dp);
+        switch(shuffleMode) {
+            case PlaybackStateCompat.SHUFFLE_MODE_NONE:
+                stateBuilder.addCustomAction(MediaService.STATE_SHUFFLE_OFF, ctx.getResources().getString(R.string.description_shuffle_off), R.drawable.ic_shuffle_white_48dp);
+                break;
+
+            case PlaybackStateCompat.SHUFFLE_MODE_ALL:
+                stateBuilder.addCustomAction(MediaService.STATE_SHUFFLE_ON, ctx.getResources().getString(R.string.description_shuffle_on), R.drawable.ic_shuffle_enabled_white_48dp);
+                break;
+        }
 
         // Repeat
         switch(repeatMode) {
@@ -200,7 +206,7 @@ public class PlaybackManager implements Playback.Callback {
 
         // If there is an error message, send it to the playback state:
         if (error != null) {
-            stateBuilder.setErrorMessage(error);
+            stateBuilder.setErrorMessage(-1, error);
             state = PlaybackStateCompat.STATE_ERROR;
         }
 
@@ -231,7 +237,7 @@ public class PlaybackManager implements Playback.Callback {
                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
                        PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
-                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE_ENABLED;
+                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE;
 
         if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
@@ -448,12 +454,12 @@ public class PlaybackManager implements Playback.Callback {
 
             switch(action) {
                 case MediaService.STATE_SHUFFLE_ON:
-                    shuffleMode = false;
+                    shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_NONE;
                     queueManager.setShuffleMode(false);
                     break;
 
                 case MediaService.STATE_SHUFFLE_OFF:
-                    shuffleMode = true;
+                    shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_ALL;
                     queueManager.setShuffleMode(true);
                     break;
 

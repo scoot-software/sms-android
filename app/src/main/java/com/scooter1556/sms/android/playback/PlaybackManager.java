@@ -83,7 +83,7 @@ public class PlaybackManager implements Playback.Callback {
 
         MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
 
-        if (currentMedia == null || currentMedia.getDescription() == null) {
+        if (currentMedia == null || currentMedia.getDescription() == null || currentMedia.getDescription().getMediaId() == null) {
             handleStopRequest(null);
             playback.setState(PlaybackStateCompat.STATE_NONE);
             updatePlaybackState(null);
@@ -232,17 +232,25 @@ public class PlaybackManager implements Playback.Callback {
 
     private long getAvailableActions() {
         long actions = PlaybackStateCompat.ACTION_PLAY_PAUSE |
-                       PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
-                       PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH |
-                       PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-                       PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
-                       PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE;
+                       PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+                       PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
+                       PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
 
         if (playback != null && playback.isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
         } else {
             actions |= PlaybackStateCompat.ACTION_PLAY;
+        }
+
+        // Determine media type
+        MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
+
+        if(currentMedia != null && currentMedia.getDescription() != null && currentMedia.getDescription().getMediaId() != null) {
+            if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
+                actions |= PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
+                           PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE;
+            }
         }
 
         return actions;
@@ -407,8 +415,6 @@ public class PlaybackManager implements Playback.Callback {
             } else if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
                 queueManager.setCurrentQueueIndex(0);
                 handlePlayRequest();
-            } else {
-                handleStopRequest("Cannot skip");
             }
 
             queueManager.updateMetadata();
@@ -420,8 +426,6 @@ public class PlaybackManager implements Playback.Callback {
 
             if (queueManager.skipQueuePosition(-1)) {
                 handlePlayRequest();
-            } else {
-                handleStopRequest("Cannot skip");
             }
 
             queueManager.updateMetadata();

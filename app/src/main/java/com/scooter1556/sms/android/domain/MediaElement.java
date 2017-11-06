@@ -522,6 +522,7 @@ public class MediaElement implements Serializable {
     }
 
     public static class MediaElementType {
+        public static final byte NONE = -1;
         public static final byte AUDIO = 0;
         public static final byte VIDEO = 1;
         public static final byte DIRECTORY = 2;

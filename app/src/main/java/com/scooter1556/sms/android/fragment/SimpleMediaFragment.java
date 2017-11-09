@@ -115,6 +115,8 @@ public class SimpleMediaFragment extends BaseFragment {
                             break;
 
                         case MediaUtils.MEDIA_ID_RECENTLY_ADDED_VIDEO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_VIDEO:case MediaUtils.MEDIA_ID_COLLECTIONS:case MediaUtils.MEDIA_ID_COLLECTION:
+                            mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
+                            break;
 
                         case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
                             mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);

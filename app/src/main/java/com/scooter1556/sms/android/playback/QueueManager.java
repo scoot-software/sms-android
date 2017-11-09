@@ -499,7 +499,7 @@ public class QueueManager {
             final long elementId = Long.parseLong(parsedMediaId.get(1));
 
             switch(parsedMediaId.get(0)) {
-                case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO: case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
                     RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {

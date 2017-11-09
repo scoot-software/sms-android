@@ -71,9 +71,19 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                             .into((holder).image);
                     break;
 
-                case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                case MediaUtils.MEDIA_ID_AUDIO:
                     options = new RequestOptions()
-                            .error(R.drawable.ic_video);
+                            .error(R.drawable.ic_music);
+
+                    Glide.with(context)
+                            .load(item.getDescription().getIconUri())
+                            .apply(options)
+                            .into((holder).image);
+                    break;
+
+                case MediaUtils.MEDIA_ID_VIDEO: case MediaUtils.MEDIA_ID_COLLECTION:
+                    options = new RequestOptions()
+                            .error(R.drawable.ic_movie);
 
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())

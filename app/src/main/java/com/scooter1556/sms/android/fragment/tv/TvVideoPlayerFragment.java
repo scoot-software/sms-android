@@ -406,16 +406,19 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     private void startSeeking() {
-        if(playbackState != PlaybackStateCompat.STATE_PLAYING) {
+        Log.d(TAG, "startSeeking()");
+
+        if(playbackState != PlaybackStateCompat.STATE_PLAYING && playbackState != PlaybackStateCompat.STATE_PAUSED) {
             return;
         }
 
-        pause();
+        if(playbackState == PlaybackStateCompat.STATE_PLAYING) {
+            pause();
+        }
+
         seekInProgress = true;
         setFadingEnabled(false);
         stopProgressAutomation();
-        playPauseAction.setIndex(PlayPauseAction.PLAY);
-        rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
 
         if (seekRunnable == null) {
             seekRunnable = new Runnable() {
@@ -424,10 +427,12 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
                     int currentTime = playbackControlsRow.getCurrentTime() + seekSpeed;
 
                     if(currentTime < 0) {
-                        seekTo(0);
+                        currentPosition= 0;
+                        playbackControlsRow.setCurrentTime(0);
                     } else if(currentTime > playbackControlsRow.getTotalTime()) {
                         getActivity().finish();
                     } else {
+                        currentPosition = currentTime;
                         playbackControlsRow.setCurrentTime(currentTime);
                         seekHandler.postDelayed(this, DEFAULT_SEEK_DELAY);
                     }
@@ -439,6 +444,8 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     private void stopSeeking() {
+        Log.d(TAG, "stopSeeking()");
+
         if (seekHandler != null && seekRunnable != null) {
             seekHandler.removeCallbacks(seekRunnable);
             seekRunnable = null;
@@ -750,8 +757,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
 
                 state = "Playing";
             } else {
-                mediaPlayer.seekTo(currentPosition);
-                playbackState = PlaybackStateCompat.STATE_BUFFERING;
+                seekTo(currentPosition);
 
                 state = "Seeking to " + currentPosition;
             }

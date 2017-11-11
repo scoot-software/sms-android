@@ -156,8 +156,19 @@ public class CastPlayback implements Playback {
     public void play(MediaSessionCompat.QueueItem item) {
         Log.d(TAG, "play(" + item.getDescription().getMediaId() + ")");
 
-        loadMedia(item, true);
-        playbackState = PlaybackStateCompat.STATE_BUFFERING;
+        boolean mediaHasChanged = !TextUtils.equals(item.getDescription().getMediaId(), currentMediaId);
+
+        if (mediaHasChanged) {
+            currentMediaId = item.getDescription().getMediaId();
+            currentPosition = 0;
+        }
+
+        if (playbackState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && remoteMediaClient.hasMediaSession()) {
+            remoteMediaClient.play();
+        } else {
+            loadMedia(item, true);
+            playbackState = PlaybackStateCompat.STATE_BUFFERING;
+        }
 
         if (callback != null) {
             callback.onPlaybackStatusChanged(playbackState);
@@ -271,11 +282,6 @@ public class CastPlayback implements Playback {
     private void loadMedia(final MediaSessionCompat.QueueItem item, final boolean autoPlay) {
         Log.d(TAG, "loadMedia(" + item.getDescription().getMediaId() + ", " + autoPlay + ")");
 
-        if (!TextUtils.equals(item.getDescription().getMediaId(), currentMediaId)) {
-            currentMediaId = item.getDescription().getMediaId();
-            currentPosition = 0;
-        }
-
         // Get Media Element ID from Media ID
         List<String> mediaID = MediaUtils.parseMediaId(currentMediaId);
 
@@ -289,11 +295,6 @@ public class CastPlayback implements Playback {
 
     private void initialiseStream(final MediaSessionCompat.QueueItem item, final boolean autoPlay) {
         Log.d(TAG, "initialiseStream(" + item.getDescription().getMediaId() + ", " + autoPlay + ")");
-
-        if (!TextUtils.equals(item.getDescription().getMediaId(), currentMediaId)) {
-            currentMediaId = item.getDescription().getMediaId();
-            currentPosition = 0;
-        }
 
         // Get Media Element ID from Media ID
         List<String> mediaID = MediaUtils.parseMediaId(currentMediaId);

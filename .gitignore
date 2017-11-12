@@ -8,3 +8,4 @@ local.properties
 gradlew.bat
 gradlew
 *.iml
+/app/release

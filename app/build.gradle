@@ -16,6 +16,9 @@ android {
         }
     }
     buildToolsVersion project.ext.buildToolsVersion
+    dexOptions {
+        jumboMode true
+    }
 }
 
 dependencies {

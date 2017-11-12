@@ -1608,6 +1608,10 @@ public class MediaService extends MediaBrowserServiceCompat
         List<MediaDescriptionCompat> descriptions = new ArrayList<>();
         List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
 
+        if(!isOnline || !isConnected) {
+            return null;
+        }
+
         // Recently Added
         descriptions.add(new MediaDescriptionCompat.Builder()
                 .setMediaId(MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO)
@@ -1624,24 +1628,6 @@ public class MediaService extends MediaBrowserServiceCompat
         descriptions.add(new MediaDescriptionCompat.Builder()
                 .setMediaId(MediaUtils.MEDIA_ID_PLAYLISTS)
                 .setTitle(getString(R.string.heading_playlists))
-                .build());
-
-        // Artists
-        descriptions.add(new MediaDescriptionCompat.Builder()
-                .setMediaId(MediaUtils.MEDIA_ID_ARTISTS)
-                .setTitle(getString(R.string.heading_artists))
-                .build());
-
-        // Album Artists
-        descriptions.add(new MediaDescriptionCompat.Builder()
-                .setMediaId(MediaUtils.MEDIA_ID_ALBUM_ARTISTS)
-                .setTitle(getString(R.string.heading_album_artists))
-                .build());
-
-        // Albums
-        descriptions.add(new MediaDescriptionCompat.Builder()
-                .setMediaId(MediaUtils.MEDIA_ID_ALBUMS)
-                .setTitle(getString(R.string.heading_albums))
                 .build());
 
         // Add menu items

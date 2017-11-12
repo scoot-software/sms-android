@@ -38,7 +38,7 @@ import java.util.List;
  * Specify receiver application ID for cast
  */
 
-class CastOptionsProvider implements OptionsProvider {
+public class CastOptionsProvider implements OptionsProvider {
     @Override
     public CastOptions getCastOptions(Context context) {
         return new CastOptions.Builder()

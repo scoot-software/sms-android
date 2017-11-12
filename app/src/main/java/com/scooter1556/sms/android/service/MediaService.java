@@ -1017,7 +1017,7 @@ public class MediaService extends MediaBrowserServiceCompat
                 MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                         .setMediaId(MediaUtils.MEDIA_ID_COLLECTION + MediaUtils.SEPARATOR + collection)
                         .setTitle(collection)
-                        .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_video))
+                        .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_movie))
                         .build();
 
                 collections.add(new MediaBrowserCompat.MediaItem(description, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));
@@ -1035,7 +1035,7 @@ public class MediaService extends MediaBrowserServiceCompat
                         MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                                 .setMediaId(MediaUtils.MEDIA_ID_COLLECTION + MediaUtils.SEPARATOR + collection)
                                 .setTitle(collection)
-                                .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_video))
+                                .setIconUri(ResourceUtils.getUriToResource(getApplicationContext(), R.drawable.ic_movie))
                                 .build();
 
                         collections.add(new MediaBrowserCompat.MediaItem(description, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));

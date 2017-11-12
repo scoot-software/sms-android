@@ -8,6 +8,7 @@ android {
         minSdkVersion project.ext.minSdkVersion
         targetSdkVersion project.ext.targetSdkVersion
         versionName project.ext.releaseVersion
+        versionCode project.ext.releaseCode
     }
     buildTypes {
         release {

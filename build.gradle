@@ -29,6 +29,7 @@ allprojects {
         releaseUserOrg = 'scoot.software'
         releaseGroupId = 'com.scooter1556.sms'
         releaseVersion = '1.0.0alpha1'
+        releaseCode = 9
         releaseWebsite = 'https://github.com/scoot-software/sms-android'
     }
 }

@@ -68,6 +68,7 @@ public class HomeFragment extends BaseFragment {
     private MediaFolderAdapter mediaAdapter;
     private List<MediaBrowserCompat.MediaItem> items;
     Snackbar snackbar;
+    OnListItemClickListener clickListener;
 
     boolean online = false;
 
@@ -103,6 +104,7 @@ public class HomeFragment extends BaseFragment {
                     items.clear();
                     items.addAll(children);
 
+                    mediaAdapter = new MediaFolderAdapter(getContext(), items, clickListener);
                     mediaAdapter.notifyDataSetChanged();
                     mediaAdapter.setHasStableIds(true);
 
@@ -131,7 +133,7 @@ public class HomeFragment extends BaseFragment {
                     }
 
                     // Subscribe to media browser event
-                    if(mediaAdapter.getItemCount() == 0) {
+                    if(mediaAdapter == null || mediaAdapter.getItemCount() == 0) {
                         mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
                     }
                 }
@@ -161,7 +163,7 @@ public class HomeFragment extends BaseFragment {
 
         Log.d(TAG, "onCreate()");
 
-        OnListItemClickListener clickListener = new OnListItemClickListener() {
+        clickListener = new OnListItemClickListener() {
             @Override
             public void onItemClicked(MediaBrowserCompat.MediaItem item) {
                 Log.d(TAG, "Item selected: " + item.getMediaId());
@@ -172,7 +174,6 @@ public class HomeFragment extends BaseFragment {
         // Initialisation
         items = new ArrayList<>();
         adapter = new ComposedAdapter();
-        mediaAdapter = new MediaFolderAdapter(getContext(), items, clickListener);
 
         // Subscribe to relevant media service callbacks
         mediaBrowser = new MediaBrowserCompat(getActivity(),
@@ -227,6 +228,7 @@ public class HomeFragment extends BaseFragment {
 
         Log.d(TAG, "onStop()");
 
+        mediaBrowser.unsubscribe(MediaUtils.MEDIA_ID_FOLDERS);
         mediaBrowser.disconnect();
     }
 

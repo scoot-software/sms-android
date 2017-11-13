@@ -130,6 +130,7 @@
     <string name="button_retry">Retry</string>
 
     <string name="cast_application_id">0F717E79</string>
+    <string name="cast_application_id_dev">EE643842</string>
     <string name="cast_to_device">Casting to %1$s</string>
     <string name="cast_stop">Stop Casting</string>
     <string name="cast_first_time_ux">Touch to connect to a Google Cast device</string>

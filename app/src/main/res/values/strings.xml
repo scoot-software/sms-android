@@ -241,13 +241,12 @@
 
     <string-array
         name="preferences_video_quality_names">
-        <item>Very Low</item>
-        <item>Low</item>
-        <item>Medium</item>
-        <item>High</item>
-        <item>Very High</item>
-        <item>HD</item>
-        <item>Full HD</item>
+        <item>240p</item>
+        <item>360p</item>
+        <item>480p</item>
+        <item>576p</item>
+        <item>720p</item>
+        <item>1080p</item>
     </string-array>
 
     <string-array
@@ -258,7 +257,6 @@
         <item>3</item>
         <item>4</item>
         <item>5</item>
-        <item>6</item>
     </string-array>
 
 </resources>

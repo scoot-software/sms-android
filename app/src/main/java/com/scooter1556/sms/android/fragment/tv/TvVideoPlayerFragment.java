@@ -360,7 +360,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     private void addPlaybackControlsRow() {
         playbackControlsRow = new PlaybackControlsRow(currentMedia);
         playbackControlsRow.setCurrentTime(0);
-        playbackControlsRow.setTotalTime(currentMedia.getDescription().getExtras().getInt("Duration", 0) * 1000);
+        playbackControlsRow.setTotalTime(Double.valueOf(currentMedia.getDescription().getExtras().getDouble("Duration", 0)).intValue() * 1000);
 
         rowsAdapter.add(playbackControlsRow);
         ControlButtonPresenterSelector presenterSelector = new ControlButtonPresenterSelector();

@@ -28,7 +28,7 @@ public class AudioItemPresenter extends AbstractMediaItemPresenter {
             vh.getMediaItemNumberView().setVisibility(View.VISIBLE);
 
             vh.getMediaItemNumberView().setText(String.valueOf(description.getExtras().getShort("TrackNumber", (short) 0)));
-            vh.getMediaItemDurationView().setText(DateUtils.formatElapsedTime(description.getExtras().getInt("Duration", 0)));
+            vh.getMediaItemDurationView().setText(DateUtils.formatElapsedTime(Double.valueOf(description.getExtras().getDouble("Duration", 0)).longValue()));
         }
 
         vh.getMediaItemNameView().setText(description.getTitle());

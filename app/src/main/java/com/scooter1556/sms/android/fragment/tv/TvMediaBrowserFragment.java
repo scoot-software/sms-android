@@ -16,11 +16,14 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.domain.MediaFolder;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
+import com.scooter1556.sms.android.views.row.MediaBrowserRow;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class TvMediaBrowserFragment extends BrowseFragment {
     private static final String TAG = "TvMediaBrowserFragment";
@@ -101,7 +104,7 @@ public class TvMediaBrowserFragment extends BrowseFragment {
         backgroundManager = BackgroundManager.getInstance(getActivity());
         backgroundManager.attach(getActivity().getWindow());
 
-        getMainFragmentRegistry().registerFragment(PageRow.class, new PageRowFragmentFactory());
+        getMainFragmentRegistry().registerFragment(MediaBrowserRow.class, new MediaBrowserRowFragmentFactory());
 
         // Initialisation
         rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
@@ -148,16 +151,13 @@ public class TvMediaBrowserFragment extends BrowseFragment {
         prepareEntranceTransition();
     }
 
-    private static class PageRowFragmentFactory extends BrowseFragment.FragmentFactory {
+    private static class MediaBrowserRowFragmentFactory extends BrowseFragment.FragmentFactory {
         @Override
         public Fragment createFragment(Object rowObj) {
-            Row row = (Row)rowObj;
-
-            long id = row.getHeaderItem().getId();
-
+            MediaBrowserRow row = (MediaBrowserRow)rowObj;
             Fragment fragment = new TvMediaFolderFragment();
             Bundle bundle = new Bundle();
-            bundle.putLong(MediaUtils.EXTRA_MEDIA_ID, id);
+            bundle.putString(MediaUtils.EXTRA_MEDIA_ID, row.getMediaId().toString());
             fragment.setArguments(bundle);
 
             return fragment;
@@ -172,12 +172,13 @@ public class TvMediaBrowserFragment extends BrowseFragment {
         }
 
         for(MediaBrowserCompat.MediaItem folder : mediaFolders) {
-            List<String> mediaId = MediaUtils.parseMediaId(folder.getMediaId());
+            List<String> parsedMedia = MediaUtils.parseMediaId(folder.getMediaId());
 
-            if(mediaId.size() == 2) {
-                HeaderItem headerItem = new HeaderItem(Long.parseLong(mediaId.get(1)), folder.getDescription().getTitle().toString());
-                PageRow pageRow = new PageRow(headerItem);
-                rowsAdapter.add(pageRow);
+            if(parsedMedia.size() == 2) {
+                HeaderItem headerItem = new HeaderItem(UUID.fromString(parsedMedia.get(1)).hashCode(), folder.getDescription().getTitle().toString());
+                MediaBrowserRow row = new MediaBrowserRow(headerItem);
+                row.setMediaId(UUID.fromString(parsedMedia.get(1)));
+                rowsAdapter.add(row);
             }
         }
 

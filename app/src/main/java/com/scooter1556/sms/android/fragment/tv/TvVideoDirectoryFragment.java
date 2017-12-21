@@ -71,6 +71,7 @@ import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemViewClickedListener, OnActionClickedListener {
     private static final String TAG = "TvVideoDirFragment";
@@ -366,7 +367,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         }
 
         final ArrayObjectAdapter directoryRowAdapter = new ArrayObjectAdapter(new MediaItemPresenter());
-        final HeaderItem header = new HeaderItem(Long.parseLong(id.get(1)), String.valueOf(directory.getDescription().getTitle()));
+        final HeaderItem header = new HeaderItem(UUID.fromString(id.get(1)).hashCode(), String.valueOf(directory.getDescription().getTitle()));
 
         for(MediaBrowserCompat.MediaItem item : items) {
             directoryRowAdapter.add(item);

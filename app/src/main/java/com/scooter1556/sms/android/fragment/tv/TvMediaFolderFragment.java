@@ -114,16 +114,18 @@ public class TvMediaFolderFragment extends TvGridFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        long id = -1;
+        String id = null;
 
         // Set media folder
         Bundle bundle = this.getArguments();
 
         if (bundle != null) {
-            id = bundle.getLong(MediaUtils.EXTRA_MEDIA_ID, -1);
+            id = bundle.getString(MediaUtils.EXTRA_MEDIA_ID, null);
         }
 
-        if(id > 0) {
+        Log.d(TAG, id == null ? "NOT SET" : id);
+
+        if(id != null) {
             mediaId = MediaUtils.MEDIA_ID_FOLDER + MediaUtils.SEPARATOR + id;
         }
 

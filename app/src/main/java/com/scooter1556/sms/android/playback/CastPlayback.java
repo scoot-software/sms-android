@@ -304,7 +304,7 @@ public class CastPlayback implements Playback {
             return;
         }
 
-        Long id = Long.parseLong(mediaID.get(1));
+        UUID id = UUID.fromString(mediaID.get(1));
 
         // Get settings
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(appContext);

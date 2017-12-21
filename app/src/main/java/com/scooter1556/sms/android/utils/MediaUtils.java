@@ -39,6 +39,7 @@ import com.scooter1556.sms.android.domain.MediaElement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 public class MediaUtils {
 
@@ -198,7 +199,7 @@ public class MediaUtils {
             return null;
         }
 
-        Long id = Long.parseLong(mediaID.get(1));
+        UUID id = UUID.fromString(mediaID.get(1));
 
         if(description.getTitle() != null) {
             metadata.putString(MediaMetadata.KEY_TITLE, description.getTitle().toString());

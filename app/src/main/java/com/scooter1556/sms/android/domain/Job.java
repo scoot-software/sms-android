@@ -25,13 +25,14 @@ package com.scooter1556.sms.android.domain;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 public class Job implements Serializable {
 
-    private Long id;
+    private UUID id;
     private Byte type;
     private String username;
-    private Long mediaElement;
+    private UUID mediaElement;
     private Timestamp startTime;
     private Timestamp endTime;
     private Timestamp lastActivity;
@@ -41,7 +42,7 @@ public class Job implements Serializable {
 
     public Job() {};
 
-    public Job(Long id, Byte type, String username, Long mediaElement, Timestamp startTime, Timestamp endTime, Timestamp lastActivity, Long bytesTransferred)
+    public Job(UUID id, Byte type, String username, UUID mediaElement, Timestamp startTime, Timestamp endTime, Timestamp lastActivity, Long bytesTransferred)
     {
         this.id = id;
         this.type = type;
@@ -60,11 +61,11 @@ public class Job implements Serializable {
                 id == null ? "N/A" : id.toString(), type == null ? "N/A" : type.toString(), username == null ? "N/A" : username, mediaElement == null ? "N/A" : mediaElement, startTime == null ? "N/A" : startTime.toString(), endTime == null ? "N/A" : endTime.toString(), lastActivity == null ? "N/A" : lastActivity.toString(), bytesTransferred == null ? "N/A" : bytesTransferred.toString());
     }
 
-    public Long getID()  {
+    public UUID getID()  {
         return id;
     }
 
-    public void setID(Long id) {
+    public void setID(UUID id) {
         this.id = id;
     }
 
@@ -84,11 +85,11 @@ public class Job implements Serializable {
         this.username = username;
     }
 
-    public Long getMediaElement()  {
+    public UUID getMediaElement()  {
         return mediaElement;
     }
 
-    public void setMediaElement(Long mediaElement) {
+    public void setMediaElement(UUID mediaElement) {
         this.mediaElement = mediaElement;
     }
 
@@ -128,6 +129,5 @@ public class Job implements Serializable {
         public static final byte AUDIO_STREAM = 0;
         public static final byte VIDEO_STREAM = 1;
         public static final byte DOWNLOAD = 2;
-        public static final byte ADAPTIVE_STREAM = 3;
     }
 }

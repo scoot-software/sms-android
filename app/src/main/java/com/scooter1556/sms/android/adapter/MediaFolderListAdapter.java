@@ -60,7 +60,7 @@ public class MediaFolderListAdapter extends ArrayAdapter<MediaFolder> {
 
     @Override
     public long getItemId(int position) {
-        return items.get(position).getID();
+        return items.get(position).getID().hashCode();
     }
 
     @Override

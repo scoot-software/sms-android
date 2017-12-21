@@ -871,7 +871,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         }
 
         // Get media element ID
-        final long id = Long.parseLong(mediaID.get(1));
+        final UUID id = UUID.fromString(mediaID.get(1));
 
         Log.d(TAG, "Initialising stream for media item with id " + id);
 

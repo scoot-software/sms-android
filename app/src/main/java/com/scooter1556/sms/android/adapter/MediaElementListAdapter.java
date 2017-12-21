@@ -79,7 +79,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
 
     @Override
     public long getItemId(int position) {
-        return items.get(position).getID();
+        return items.get(position).getID().hashCode();
     }
 
     @Override
@@ -336,7 +336,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 TextView vidDuration = (TextView) convertView.findViewById(R.id.duration);
 
                 if(items.get(position).getDuration() != null) {
-                    vidDuration.setText(Html.fromHtml("<b>Duration:</b> " + secondsToString(items.get(position).getDuration())));
+                    vidDuration.setText(Html.fromHtml("<b>Duration:</b> " + secondsToString(items.get(position).getDuration().intValue())));
                 }
                 else {
                     vidDuration.setText("");
@@ -382,7 +382,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 TextView sVidDuration = (TextView) convertView.findViewById(R.id.duration);
 
                 if(items.get(position).getDuration() != null) {
-                    sVidDuration.setText(secondsToString(items.get(position).getDuration()));
+                    sVidDuration.setText(secondsToString(items.get(position).getDuration().intValue()));
                 }
                 else {
                     sVidDuration.setVisibility(View.GONE);
@@ -426,7 +426,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 TextView audDuration = (TextView) convertView.findViewById(R.id.duration);
 
                 if(items.get(position).getDuration() != null) {
-                    audDuration.setText(secondsToString(items.get(position).getDuration()));
+                    audDuration.setText(secondsToString(items.get(position).getDuration().intValue()));
                 }
                 else {
                     audDuration.setVisibility(View.GONE);

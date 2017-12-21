@@ -586,7 +586,7 @@ public class MediaService extends MediaBrowserServiceCompat
             case MediaUtils.MEDIA_ID_DIRECTORY: case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO: case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
                 if(mediaId.size() > 1) {
                     result.detach();
-                    getMediaElementContents(Long.parseLong(mediaId.get(1)), result);
+                    getMediaElementContents(UUID.fromString(mediaId.get(1)), result);
                 }
 
                 break;
@@ -594,7 +594,7 @@ public class MediaService extends MediaBrowserServiceCompat
             case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_FOLDER_AUDIO: case MediaUtils.MEDIA_ID_FOLDER_VIDEO:
                 if(mediaId.size() > 1) {
                     result.detach();
-                    getMediaFolderContents(Long.parseLong(mediaId.get(1)), result);
+                    getMediaFolderContents(UUID.fromString(mediaId.get(1)), result);
                 }
 
                 break;
@@ -682,7 +682,7 @@ public class MediaService extends MediaBrowserServiceCompat
                 List<MediaBrowserCompat.MediaItem> folders = new ArrayList<>();
                 MediaFolder folder = parser.fromJson(response.toString(), MediaFolder.class);
 
-                if(folder.getType() != MediaFolder.ContentType.PLAYLIST) {
+                if(folder.getType() == MediaFolder.ContentType.AUDIO || folder.getType() == MediaFolder.ContentType.VIDEO) {
                     folders.add(createMediaItemFromMediaFolder(folder));
                 }
 
@@ -698,7 +698,7 @@ public class MediaService extends MediaBrowserServiceCompat
                     try {
                         MediaFolder folder = parser.fromJson(response.getJSONObject(i).toString(), MediaFolder.class);
 
-                        if(folder.getType() != MediaFolder.ContentType.PLAYLIST) {
+                        if(folder.getType() == MediaFolder.ContentType.AUDIO || folder.getType() == MediaFolder.ContentType.VIDEO) {
                             folders.add(createMediaItemFromMediaFolder(folder));
                         }
                     } catch (JSONException e) {
@@ -724,7 +724,7 @@ public class MediaService extends MediaBrowserServiceCompat
     /**
      * Fetch the contents of a given Media Folder.
      */
-    private void getMediaFolderContents(long id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
+    private void getMediaFolderContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         restService.getMediaFolderContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
 
             @Override
@@ -874,7 +874,7 @@ public class MediaService extends MediaBrowserServiceCompat
     /**
      * Fetch the contents of a given Media Folder.
      */
-    private void getMediaElementContents(long id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
+    private void getMediaElementContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         restService.getMediaElementContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
 
             @Override

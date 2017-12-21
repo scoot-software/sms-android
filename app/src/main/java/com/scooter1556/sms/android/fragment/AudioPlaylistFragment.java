@@ -212,7 +212,7 @@ public class AudioPlaylistFragment extends ListFragment {
                     // Get selected item IDs
                     for (int i = 0; i < selected.size(); i++) {
                         if (selected.valueAt(i)) {
-                            selectedItemIds.add(playlistAdapter.getItem(selected.keyAt(i)).getID());
+                            selectedItemIds.add(Integer.valueOf(playlistAdapter.getItem(selected.keyAt(i)).getID().hashCode()).longValue());
                         }
                     }
 

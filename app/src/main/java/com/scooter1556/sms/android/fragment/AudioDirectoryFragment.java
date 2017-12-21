@@ -52,6 +52,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class AudioDirectoryFragment extends Fragment {
 
@@ -76,7 +77,7 @@ public class AudioDirectoryFragment extends Fragment {
     RESTService restService = null;
 
     // Information we need to retrieve contents
-    Long id = null;
+    UUID id = null;
     String title = null;
     String artist = null;
 
@@ -105,7 +106,7 @@ public class AudioDirectoryFragment extends Fragment {
         restService = RESTService.getInstance();
 
         // Retrieve arguments from main activity
-        id = this.getArguments().getLong("id");
+        id = UUID.fromString(this.getArguments().getString("id"));
         title = this.getArguments().getString("title");
         artist = this.getArguments().getString("artist");
 

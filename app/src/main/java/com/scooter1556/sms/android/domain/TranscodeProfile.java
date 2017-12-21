@@ -65,7 +65,8 @@ public class TranscodeProfile implements Serializable {
     }
 
     public static class StreamType {
-        public static final byte TRANSCODE = 0;
-        public static final byte DIRECT = 1;
+        public static final byte DIRECT = 0;
+        public static final byte LOCAL = 1;
+        public static final byte REMOTE = 2;
     }
 }

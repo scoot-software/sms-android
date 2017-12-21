@@ -45,6 +45,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class MediaElementFragment extends ListFragment {
 
@@ -69,7 +70,7 @@ public class MediaElementFragment extends ListFragment {
     RESTService restService = null;
 
     // Information we need to retrieve contents
-    Long id = null;
+    UUID id = null;
     String title = null;
     Byte directoryType = null;
     Boolean folder = null;
@@ -96,7 +97,7 @@ public class MediaElementFragment extends ListFragment {
         restService = RESTService.getInstance();
 
         // Retrieve arguments from main activity
-        id = this.getArguments().getLong("id");
+        id = UUID.fromString(this.getArguments().getString("id"));
         title = this.getArguments().getString("title");
         directoryType = this.getArguments().getByte("directoryType");
         folder = this.getArguments().getBoolean("folder");

@@ -65,7 +65,7 @@ public class PlaylistAdapter extends ArrayAdapter<MediaElement> {
 
     @Override
     public long getItemId(int position) {
-        return items.get(position).getID();
+        return items.get(position).getID().hashCode();
     }
 
     @Override
@@ -106,7 +106,7 @@ public class PlaylistAdapter extends ArrayAdapter<MediaElement> {
         TextView audDuration = (TextView) convertView.findViewById(R.id.duration);
 
         if(items.get(position).getDuration() != null) {
-            audDuration.setText(secondsToString(items.get(position).getDuration()));
+            audDuration.setText(secondsToString(items.get(position).getDuration().intValue()));
         }
         else {
             audDuration.setVisibility(View.GONE);

@@ -258,7 +258,7 @@ public class QueueManager {
 
                     if (description != null) {
                         List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
-                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                     }
 
                     if (!newQueue.isEmpty()) {
@@ -297,7 +297,7 @@ public class QueueManager {
                             MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                             if (description != null) {
-                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                             }
                         } catch (JSONException e) {
                             Log.e(TAG, "Failed to process JSON", e);
@@ -358,7 +358,7 @@ public class QueueManager {
                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                     if (description != null) {
-                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                     }
 
                     if (!newQueue.isEmpty()) {
@@ -385,7 +385,7 @@ public class QueueManager {
                             MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                             if (description != null) {
-                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                             }
                         } catch (JSONException e) {
                             Log.e(TAG, "Failed to process JSON", e);
@@ -412,7 +412,7 @@ public class QueueManager {
                 return;
             }
 
-            final long elementId = Long.parseLong(parsedMediaId.get(1));
+            final UUID elementId = UUID.fromString(parsedMediaId.get(1));
 
             RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
                 @Override
@@ -429,7 +429,7 @@ public class QueueManager {
                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                     if (description != null) {
-                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                     }
 
                     if (!newQueue.isEmpty()) {
@@ -456,7 +456,7 @@ public class QueueManager {
                             MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                             if (description != null) {
-                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                             }
                         } catch (JSONException e) {
                             Log.e(TAG, "Failed to process JSON", e);
@@ -496,7 +496,7 @@ public class QueueManager {
                 return;
             }
 
-            final long elementId = Long.parseLong(parsedMediaId.get(1));
+            final UUID elementId = UUID.fromString(parsedMediaId.get(1));
 
             switch(parsedMediaId.get(0)) {
                 case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO: case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
@@ -515,7 +515,7 @@ public class QueueManager {
                             MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                             if (description != null) {
-                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                             }
 
                             if (!newQueue.isEmpty()) {
@@ -554,7 +554,7 @@ public class QueueManager {
                                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                                     if (description != null) {
-                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                                     }
                                 } catch (JSONException e) {
                                     Log.e(TAG, "Failed to process JSON", e);
@@ -630,7 +630,7 @@ public class QueueManager {
                             MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                             if (description != null) {
-                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                             }
 
                             if (!newQueue.isEmpty()) {
@@ -669,7 +669,7 @@ public class QueueManager {
                                     MediaDescriptionCompat description = MediaUtils.getMediaDescription(element);
 
                                     if (description != null) {
-                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID()));
+                                        newQueue.add(new MediaSessionCompat.QueueItem(description, element.getID().hashCode()));
                                     }
                                 } catch (JSONException e) {
                                     Log.e(TAG, "Failed to process JSON", e);
@@ -720,7 +720,7 @@ public class QueueManager {
             return;
         }
 
-        final long id = Long.parseLong(parsedMediaId.get(1));
+        final UUID id = UUID.fromString(parsedMediaId.get(1));
 
         RESTService.getInstance().getMediaElement(ctx, id, new JsonHttpResponseHandler() {
             @Override

@@ -119,7 +119,7 @@ public class MediaUtils {
         }
 
         if(mediaElement.getDuration() != null) {
-            metadata.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaElement.getDuration() * 1000);
+            metadata.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Double.valueOf(mediaElement.getDuration() * 1000.0).longValue());
         }
 
         if(mediaElement.getYear() != null) {
@@ -234,10 +234,10 @@ public class MediaUtils {
     public static String getMediaIDFromMediaElement(@NonNull MediaElement element) {
         switch(element.getType()) {
             case MediaElement.MediaElementType.AUDIO:
-                return MEDIA_ID_AUDIO + SEPARATOR + String.valueOf(element.getID());
+                return MEDIA_ID_AUDIO + SEPARATOR + element.getID();
 
             case MediaElement.MediaElementType.VIDEO:
-                return MEDIA_ID_VIDEO + SEPARATOR + String.valueOf(element.getID());
+                return MEDIA_ID_VIDEO + SEPARATOR + element.getID();
 
             default:
                 return null;
@@ -317,7 +317,7 @@ public class MediaUtils {
 
         Bundle extras = new Bundle();
         if(element.getYear() != null) { extras.putShort("Year", element.getYear()); }
-        if(element.getDuration() != null) { extras.putInt("Duration", element.getDuration()); }
+        if(element.getDuration() != null) { extras.putDouble("Duration", element.getDuration()); }
         if(element.getTrackNumber() != null) { extras.putShort("TrackNumber", element.getTrackNumber()); }
         if(element.getDiscNumber() != null) { extras.putShort("DiscNumber", element.getDiscNumber()); }
         if(element.getDiscSubtitle() != null) { extras.putString("DiscSubtitle", element.getDiscSubtitle()); }

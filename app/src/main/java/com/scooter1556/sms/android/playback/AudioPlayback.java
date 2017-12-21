@@ -352,7 +352,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             return;
         }
 
-        final long id = Long.parseLong(mediaID.get(1));
+        final UUID id = UUID.fromString(mediaID.get(1));
 
         Log.d(TAG, "Initialising stream for media item with id " + id);
 
@@ -385,7 +385,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
                     MediaSource sampleSource;
 
-                    if(profile.getType() == TranscodeProfile.StreamType.TRANSCODE) {
+                    if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
                         sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
                     } else {
                         sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);

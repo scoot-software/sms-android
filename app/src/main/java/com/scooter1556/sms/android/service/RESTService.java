@@ -116,21 +116,21 @@ public class RESTService {
     }
 
     // Returns the contents of a Media Folder
-    public void getMediaFolderContents(Context context, Long id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaFolderContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             client.get(context, getAddress() + "/media/folder/" + id + "/contents", responseHandler);
         }
     }
 
     // Returns the contents of a Media Element directory
-    public void getMediaElementContents(Context context, Long id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             client.get(context, getAddress() + "/media/" + id + "/contents", responseHandler);
         }
     }
 
     // Returns a Media Element by ID
-    public void getMediaElement(Context context, long id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElement(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             String url = getAddress() + "/media/" + id;
             Log.d(TAG, url);
@@ -287,7 +287,7 @@ public class RESTService {
     //
 
     // Initialise Stream
-    public void initialiseStream(Context context, UUID sessionId, long mediaElementId, String client_id, String files, String codecs, String mchCodecs, String format, int quality, int sampleRate, Integer aTrack, Integer sTrack, boolean direct, AsyncHttpResponseHandler responseHandler) {
+    public void initialiseStream(Context context, UUID sessionId, UUID mediaElementId, String client_id, String files, String codecs, String mchCodecs, String format, int quality, int sampleRate, Integer aTrack, Integer sTrack, boolean direct, AsyncHttpResponseHandler responseHandler) {
         if(connection != null) {
             String url = getAddress() + "/stream/initialise/" + sessionId.toString() + "/" + mediaElementId + "?";
             url += client_id == null ? "" : "client=" + client_id + "&";

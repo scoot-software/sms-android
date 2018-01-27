@@ -69,6 +69,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -902,7 +903,12 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
                     DataSource.Factory dataSource = new DefaultDataSourceFactory(getActivity(), userAgent, BANDWIDTH_METER);
                     ExtractorsFactory extractor = new DefaultExtractorsFactory();
 
-                    MediaSource sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                    MediaSource sampleSource = null;
+                    if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
+                        sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                    } else {
+                        sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);
+                    }
 
                     playbackState = PlaybackStateCompat.STATE_BUFFERING;
 

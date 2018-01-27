@@ -669,7 +669,12 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                     DataSource.Factory dataSource = new DefaultDataSourceFactory(getApplicationContext(), userAgent, BANDWIDTH_METER);
                     ExtractorsFactory extractor = new DefaultExtractorsFactory();
 
-                    MediaSource sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                    MediaSource sampleSource = null;
+                    if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
+                        sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                    } else {
+                        sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);
+                    }
 
                     playbackState = PlaybackStateCompat.STATE_BUFFERING;
 

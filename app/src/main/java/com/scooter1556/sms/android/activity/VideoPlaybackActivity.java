@@ -681,9 +681,14 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                     MediaSource sampleSource = null;
                     if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
-                        sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                        sampleSource =
+                                new HlsMediaSource.Factory(dataSource)
+                                        .createMediaSource(Uri.parse(url), new Handler(), null);
                     } else {
-                        sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);
+                        sampleSource =
+                                new ExtractorMediaSource.Factory(dataSource)
+                                        .setExtractorsFactory(extractor)
+                                        .createMediaSource(Uri.parse(url));
                     }
 
                     playbackState = PlaybackStateCompat.STATE_BUFFERING;

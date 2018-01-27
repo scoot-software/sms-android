@@ -913,11 +913,16 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
                     DataSource.Factory dataSource = new DefaultDataSourceFactory(getActivity(), userAgent, BANDWIDTH_METER);
                     ExtractorsFactory extractor = new DefaultExtractorsFactory();
 
-                    MediaSource sampleSource = null;
+                    MediaSource sampleSource;
                     if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
-                        sampleSource = new HlsMediaSource(Uri.parse(url),dataSource, new Handler(), null);
+                        sampleSource =
+                                new HlsMediaSource.Factory(dataSource)
+                                        .createMediaSource(Uri.parse(url), new Handler(), null);
                     } else {
-                        sampleSource = new ExtractorMediaSource(Uri.parse(url), dataSource, extractor, null, null);
+                        sampleSource =
+                                new ExtractorMediaSource.Factory(dataSource)
+                                        .setExtractorsFactory(extractor)
+                                        .createMediaSource(Uri.parse(url));
                     }
 
                     playbackState = PlaybackStateCompat.STATE_BUFFERING;

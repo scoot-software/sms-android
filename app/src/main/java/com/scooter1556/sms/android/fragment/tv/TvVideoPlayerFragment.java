@@ -842,17 +842,27 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     @Override
+    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+
+    }
+
+    @Override
     public void onPlayerError(ExoPlaybackException error) {
 
     }
 
     @Override
-    public void onPositionDiscontinuity() {
+    public void onPositionDiscontinuity(int reason) {
 
     }
 
     @Override
     public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+
+    }
+
+    @Override
+    public void onSeekProcessed() {
 
     }
 

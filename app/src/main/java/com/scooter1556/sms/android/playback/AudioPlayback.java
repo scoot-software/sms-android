@@ -601,6 +601,11 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
+    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+
+    }
+
+    @Override
     public void onTimelineChanged(Timeline timeline, Object manifest) {
 
     }
@@ -611,12 +616,12 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
-    public void onPositionDiscontinuity() {
+    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
 
     }
 
     @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+    public void onSeekProcessed() {
 
     }
 
@@ -634,6 +639,11 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         if (callback != null) {
             callback.onError(exception.getMessage());
         }
+    }
+
+    @Override
+    public void onPositionDiscontinuity(int reason) {
+
     }
 
     public void createMediaPlayerIfRequired() {

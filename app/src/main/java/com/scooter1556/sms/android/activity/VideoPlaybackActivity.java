@@ -559,6 +559,11 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
+    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+
+    }
+
+    @Override
     public void onPlayerError(ExoPlaybackException error) {
         InterfaceUtils.showErrorDialog(VideoPlaybackActivity.this, error.toString());
 
@@ -567,12 +572,17 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
-    public void onPositionDiscontinuity() {
+    public void onPositionDiscontinuity(int reason) {
 
     }
 
     @Override
     public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+
+    }
+
+    @Override
+    public void onSeekProcessed() {
 
     }
 

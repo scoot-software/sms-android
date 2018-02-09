@@ -84,8 +84,13 @@ public class TvAudioSettingsActivity extends Activity {
         public void populateActions(List<GuidedAction> actions) {
             Log.d(TAG, "populateActions()");
 
-            int quality = Integer.parseInt(sharedPreferences.getString("pref_audio_quality", getString(R.string.preferences_default_audio_quality_value)));
             String[] audioQualityNames = getResources().getStringArray(R.array.preferences_audio_quality_names);
+            int quality = Integer.parseInt(sharedPreferences.getString("pref_audio_quality", getString(R.string.preferences_default_audio_quality_value)));
+
+            // Check quality
+            if(quality >= getResources().getStringArray(R.array.preferences_audio_quality_values).length) {
+                quality = Integer.parseInt(getString(R.string.preferences_default_audio_quality_value));
+            }
 
             actions.clear();
 

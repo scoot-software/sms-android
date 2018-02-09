@@ -14,7 +14,6 @@ import android.support.v7.preference.PreferenceManager;
 
 import com.scooter1556.sms.android.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TvVideoSettingsActivity extends Activity {
@@ -74,8 +73,13 @@ public class TvVideoSettingsActivity extends Activity {
         public void populateActions(List<GuidedAction> actions) {
             actions.clear();
 
-            int quality = Integer.parseInt(sharedPreferences.getString("pref_video_quality", getString(R.string.preferences_default_video_quality_value)));
             String[] videoQualityNames = getResources().getStringArray(R.array.preferences_video_quality_names);
+            int quality = Integer.parseInt(sharedPreferences.getString("pref_video_quality", getResources().getString(R.string.preferences_default_video_quality_value)));
+
+            // Check quality
+            if(quality >= getResources().getStringArray(R.array.preferences_video_quality_values).length) {
+                quality = Integer.parseInt(getResources().getString(R.string.preferences_default_video_quality_value));
+            }
 
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(VIDEO_QUALITY)

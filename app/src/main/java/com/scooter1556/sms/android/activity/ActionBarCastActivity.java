@@ -23,7 +23,6 @@
  */
 package com.scooter1556.sms.android.activity;
 
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;

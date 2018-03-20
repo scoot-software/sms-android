@@ -40,6 +40,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.activity.ActionBarCastActivity;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;

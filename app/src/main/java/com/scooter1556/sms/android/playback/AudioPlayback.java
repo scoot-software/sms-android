@@ -11,7 +11,6 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
-import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -46,21 +45,15 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.service.MediaService;
-import com.scooter1556.sms.android.utils.AudioUtils;
+import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
-import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.service.RESTService;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import cz.msebera.android.httpclient.Header;
 
 import static com.google.android.exoplayer2.C.CONTENT_TYPE_MUSIC;
 import static com.google.android.exoplayer2.C.USAGE_MEDIA;
@@ -364,12 +357,8 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         // Get quality
         int quality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
 
-        // Audio Capabilities
-        AudioCapabilities audioCapabilities = AudioCapabilities.getCapabilities(context.getApplicationContext());
-        Log.d(TAG, audioCapabilities.toString());
-
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(context, sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, AudioUtils.getSupportedMchAudioCodecs(audioCapabilities), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(context, sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, CodecUtils.getSupportedMchAudioCodecs(context.getApplicationContext()), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

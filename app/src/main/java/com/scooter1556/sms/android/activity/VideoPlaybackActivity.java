@@ -1,15 +1,18 @@
 package com.scooter1556.sms.android.activity;
 
+import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
@@ -21,18 +24,15 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
@@ -48,7 +48,6 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -59,19 +58,19 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.AudioUtils;
+import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.InterfaceUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -90,8 +89,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     static final String FORMAT = "hls";
     static final String SUPPORTED_FILES = "mkv,webm,mp4";
-    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
-    static final String MCH_CODECS = "ac3";
 
     static final int MAX_SAMPLE_RATE = 48000;
 
@@ -662,10 +659,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         // Audio Capabilities
         AudioCapabilities audioCapabilities = AudioCapabilities.getCapabilities(getApplicationContext());
-        Log.d(TAG, audioCapabilities.toString());
 
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, AudioUtils.getSupportedMchAudioCodecs(audioCapabilities), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, CodecUtils.getSupportedCodecs(getApplicationContext()), CodecUtils.getSupportedMchAudioCodecs(getApplicationContext()), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

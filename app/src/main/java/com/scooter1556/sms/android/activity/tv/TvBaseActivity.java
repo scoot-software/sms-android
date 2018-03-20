@@ -1,24 +1,11 @@
 package com.scooter1556.sms.android.activity.tv;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
-
-import com.scooter1556.sms.android.activity.ActionBarCastActivity;
-import com.scooter1556.sms.android.fragment.PlaybackControlsFragment;
-import com.scooter1556.sms.android.provider.MediaBrowserProvider;
-import com.scooter1556.sms.android.service.MediaService;
 
 public class TvBaseActivity extends Activity {
 

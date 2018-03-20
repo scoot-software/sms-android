@@ -59,11 +59,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
@@ -95,7 +93,7 @@ import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.AudioUtils;
+import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
@@ -117,8 +115,6 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
 
     static final String FORMAT = "hls";
     static final String SUPPORTED_FILES = "mkv,webm,mp4";
-    static final String SUPPORTED_CODECS = "h264,vp8,aac,mp3,vorbis";
-    static final String MCH_CODECS = "ac3";
 
     static final int MAX_SAMPLE_RATE = 48000;
 
@@ -894,12 +890,8 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         // Get quality
         int quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
 
-        // Audio Capabilities
-        AudioCapabilities audioCapabilities = AudioCapabilities.getCapabilities(getActivity().getApplicationContext());
-        Log.d(TAG, audioCapabilities.toString());
-
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(getActivity(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, AudioUtils.getSupportedMchAudioCodecs(audioCapabilities), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(getActivity(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, CodecUtils.getSupportedCodecs(getActivity().getApplicationContext()), CodecUtils.getSupportedMchAudioCodecs(getActivity().getApplicationContext()), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

@@ -49,7 +49,6 @@ import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -61,15 +60,14 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.HeaderPresenter;
 import com.scooter1556.sms.android.presenter.QueueItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.MediaUtils;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -426,7 +424,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
 
         // Get cover
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover?scale=" + THUMB_HEIGHT)
                 .into(new SimpleTarget<Bitmap>(THUMB_WIDTH, THUMB_HEIGHT) {
@@ -438,7 +436,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                 });
 
         // Get fanart
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {

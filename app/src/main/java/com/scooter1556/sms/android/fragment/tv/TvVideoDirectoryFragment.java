@@ -27,7 +27,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -56,13 +55,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
@@ -269,7 +268,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         detailsBackground.enableParallax();
         detailsBackground.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
@@ -292,7 +291,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         RequestOptions options = new RequestOptions()
                 .dontAnimate();
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + DETAIL_THUMB_HEIGHT)
                 .apply(options)

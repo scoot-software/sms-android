@@ -26,7 +26,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
@@ -36,15 +35,11 @@ import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
 import com.scooter1556.sms.android.activity.tv.TvSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoActivity;
 import com.scooter1556.sms.android.domain.MenuItem;
-import com.scooter1556.sms.android.presenter.MediaItemPresenter;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.MenuItemPresenter;
-import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.MediaUtils;
-
-import java.util.List;
 
 public class TvHomeFragment extends BrowseFragment {
     private static final String TAG = "TvHomeFragment";
@@ -207,7 +202,7 @@ public class TvHomeFragment extends BrowseFragment {
         int width = getResources().getDisplayMetrics().widthPixels;
         int height = getResources().getDisplayMetrics().heightPixels;
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(backgroundUri)
                 .into(new SimpleTarget<Bitmap>(width, height) {

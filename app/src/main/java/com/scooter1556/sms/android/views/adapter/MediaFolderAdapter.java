@@ -8,13 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.listener.OnListItemClickListener;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.views.viewholder.MediaFolderViewHolder;
 
 import java.util.List;
@@ -54,7 +53,7 @@ public class MediaFolderAdapter extends RecyclerView.Adapter<MediaFolderViewHold
                 .error(R.drawable.ic_placeholder);
 
 
-        Glide.with(context)
+        GlideApp.with(context)
                 .load(item.getDescription().getIconUri())
                 .apply(options)
                 .into((holder).image);

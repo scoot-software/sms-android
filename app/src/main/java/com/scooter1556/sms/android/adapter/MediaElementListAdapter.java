@@ -35,10 +35,10 @@ import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.RESTService;
 
 import java.util.List;
@@ -182,7 +182,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 options = new RequestOptions()
                         .error(R.drawable.ic_content_folder);
 
-                Glide.with(context)
+                GlideApp.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(dirThumbnail);
@@ -238,7 +238,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 options = new RequestOptions()
                         .error(R.drawable.ic_album);
 
-                Glide.with(context)
+                GlideApp.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(aDirThumbnail);
@@ -283,7 +283,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 options = new RequestOptions()
                         .error(R.drawable.ic_content_video);
 
-                Glide.with(context)
+                GlideApp.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=80")
                         .apply(options)
                         .into(vDirThumbnail);
@@ -359,7 +359,7 @@ public class MediaElementListAdapter extends ArrayAdapter<MediaElement> implemen
                 options = new RequestOptions()
                         .error(R.drawable.ic_content_video);
 
-                Glide.with(context)
+                GlideApp.with(context)
                         .load(RESTService.getInstance().getAddress() + "/image/" + items.get(position).getID() + "/cover?scale=150")
                         .apply(options)
                         .into(vidThumbnail);

@@ -46,9 +46,9 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.MediaService;
 
 import java.util.concurrent.Executors;
@@ -369,7 +369,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity {
         RequestOptions options = new RequestOptions()
                 .fallback(R.drawable.ic_not_interested_black_48dp);
 
-        Glide.with(this)
+        GlideApp.with(this)
                 .load(description.getIconUri().toString())
                 .apply(options)
                 .into(backgroundImage);

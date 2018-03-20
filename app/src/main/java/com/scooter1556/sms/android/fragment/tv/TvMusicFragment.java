@@ -24,12 +24,12 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -313,7 +313,7 @@ public class TvMusicFragment extends BrowseFragment implements OnItemViewClicked
         int width = displayMetrics.widthPixels;
         int height = displayMetrics.heightPixels;
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(backgroundURI)
                 .into(new SimpleTarget<Bitmap>(width, height) {

@@ -53,12 +53,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.AudioItemPresenter;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.HeaderPresenter;
@@ -220,7 +220,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
         backgroundController.enableParallax();
         backgroundController.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
@@ -277,7 +277,7 @@ public class TvAudioDirectoryFragment extends DetailsFragment {
                 .error(defaultBackground)
                 .dontAnimate();
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + DETAIL_THUMB_SIZE)
                 .apply(options)

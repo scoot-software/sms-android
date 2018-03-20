@@ -8,13 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.listener.OnListItemClickListener;
-import com.scooter1556.sms.android.service.MediaService;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.views.viewholder.MediaItemViewHolder;
 
@@ -65,7 +64,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     options = new RequestOptions()
                             .error(R.drawable.ic_album);
 
-                    Glide.with(context)
+                    GlideApp.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
                             .into((holder).image);
@@ -75,7 +74,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     options = new RequestOptions()
                             .error(R.drawable.ic_music);
 
-                    Glide.with(context)
+                    GlideApp.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
                             .into((holder).image);
@@ -85,7 +84,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     options = new RequestOptions()
                             .error(R.drawable.ic_movie);
 
-                    Glide.with(context)
+                    GlideApp.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
                             .into((holder).image);
@@ -95,7 +94,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     options = new RequestOptions()
                             .error(R.drawable.ic_folder);
 
-                    Glide.with(context)
+                    GlideApp.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
                             .into((holder).image);

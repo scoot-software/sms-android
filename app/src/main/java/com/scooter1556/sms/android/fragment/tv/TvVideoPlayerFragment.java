@@ -55,7 +55,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
@@ -65,7 +64,6 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.audio.AudioCapabilities;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -90,6 +88,7 @@ import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.RESTService;
@@ -453,7 +452,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     private void updateVideoImage() {
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover?scale=" + CARD_SIZE)
                 .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {

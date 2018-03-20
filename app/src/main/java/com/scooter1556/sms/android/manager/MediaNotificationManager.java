@@ -37,7 +37,6 @@ import android.os.Build;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -47,15 +46,14 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.HomeActivity;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.MediaService;
 
 import static android.os.Build.*;
-import static android.os.Build.VERSION.*;
 
 /**
  * Manages media notification and updates it automatically for a given MediaSession.
@@ -324,7 +322,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
             String url = description.getIconUri().toString();
             url = url + "?scale=" + NOTIFICATION_ICON_SIZE;
 
-            Glide.with(mediaService)
+            GlideApp.with(mediaService)
                     .asBitmap()
                     .load(url)
                     .into(new SimpleTarget<Bitmap>(NOTIFICATION_ICON_SIZE , NOTIFICATION_ICON_SIZE) {

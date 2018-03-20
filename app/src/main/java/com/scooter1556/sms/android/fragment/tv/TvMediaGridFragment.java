@@ -47,12 +47,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
+import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -298,7 +298,7 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         int width = displayMetrics.widthPixels;
         int height = displayMetrics.heightPixels;
 
-        Glide.with(getActivity())
+        GlideApp.with(getActivity())
                 .asBitmap()
                 .load(backgroundURI)
                 .into(new SimpleTarget<Bitmap>(width, height) {

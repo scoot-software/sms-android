@@ -411,7 +411,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
 

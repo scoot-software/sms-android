@@ -605,7 +605,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
 

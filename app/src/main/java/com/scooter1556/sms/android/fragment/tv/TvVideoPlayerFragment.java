@@ -709,7 +709,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
 

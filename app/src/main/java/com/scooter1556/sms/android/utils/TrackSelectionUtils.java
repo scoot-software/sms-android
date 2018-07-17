@@ -17,10 +17,11 @@ import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector.SelectionOverride;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector.SelectionOverride;
 import com.google.android.exoplayer2.trackselection.RandomTrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.util.MimeTypes;
@@ -38,7 +39,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
     private static final TrackSelection.Factory FIXED_FACTORY = new FixedTrackSelection.Factory();
     private static final TrackSelection.Factory RANDOM_FACTORY = new RandomTrackSelection.Factory();
 
-    private final MappingTrackSelector selector;
+    private final DefaultTrackSelector selector;
     private final TrackSelection.Factory adaptiveTrackSelectionFactory;
 
     private MappedTrackInfo trackInfo;
@@ -57,8 +58,8 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
      * @param adaptiveTrackSelectionFactory A factory for adaptive {@link TrackSelection}s, or null
      *     if the selection helper should not support adaptive tracks.
      */
-    public TrackSelectionUtils(MappingTrackSelector selector,
-                                TrackSelection.Factory adaptiveTrackSelectionFactory) {
+    public TrackSelectionUtils(DefaultTrackSelector selector,
+                               TrackSelection.Factory adaptiveTrackSelectionFactory) {
         this.selector = selector;
         this.adaptiveTrackSelectionFactory = adaptiveTrackSelectionFactory;
     }
@@ -208,7 +209,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
             int trackIndex = tag.second;
             if (!trackGroupsAdaptive[groupIndex] || override == null
                     || override.groupIndex != groupIndex) {
-                override = new SelectionOverride(FIXED_FACTORY, groupIndex, trackIndex);
+                override = new SelectionOverride(groupIndex, trackIndex);
             } else {
                 // The group being modified is adaptive and we already have a non-null override.
                 boolean isEnabled = ((CheckedTextView) view).isChecked();
@@ -234,7 +235,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
 
     private void setOverride(int group, int[] tracks) {
         TrackSelection.Factory factory = tracks.length == 1 ? FIXED_FACTORY : adaptiveTrackSelectionFactory;
-        override = new SelectionOverride(factory, group, tracks);
+        override = new SelectionOverride(group, tracks);
     }
 
     // Track array manipulation.

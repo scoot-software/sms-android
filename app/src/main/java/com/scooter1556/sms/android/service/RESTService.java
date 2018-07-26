@@ -34,9 +34,13 @@ import com.scooter1556.sms.android.domain.Connection;
 import com.scooter1556.sms.android.domain.Session;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import cz.msebera.android.httpclient.entity.StringEntity;
+import cz.msebera.android.httpclient.message.BasicHeader;
+import cz.msebera.android.httpclient.protocol.HTTP;
 
 public class RESTService {
     private static final String TAG = "RESTService";
@@ -287,23 +291,24 @@ public class RESTService {
     //
 
     // Initialise Stream
-    public void initialiseStream(Context context, UUID sessionId, UUID mediaElementId, String client_id, String files, String codecs, String mchCodecs, String format, int quality, int sampleRate, Integer aTrack, Integer sTrack, boolean direct, AsyncHttpResponseHandler responseHandler) {
+    public void initialiseStream(Context context, UUID sessionId, UUID mediaElementId, TranscodeProfile profile, AsyncHttpResponseHandler responseHandler) {
         if(connection != null) {
-            String url = getAddress() + "/stream/initialise/" + sessionId.toString() + "/" + mediaElementId + "?";
-            url += client_id == null ? "" : "client=" + client_id + "&";
-            url += files == null ? "" : "files=" + files + "&";
-            url += codecs == null ? "" : "codecs=" + codecs + "&";
-            url += mchCodecs == null ? "" : "mchcodecs=" + mchCodecs + "&";
-            url += format == null ? "" : "format=" + format + "&";
-            url += "quality=" + String.valueOf(quality) + "&";
-            url += "samplerate=" + String.valueOf(sampleRate) + "&";
-            url += aTrack == null ? "" : "atrack=" + aTrack + "&";
-            url += sTrack == null ? "" : "strack=" + sTrack + "&";
-            url += "direct=" + String.valueOf(direct);
+            String url = getAddress() + "/stream/initialise/" + sessionId.toString() + "/" + mediaElementId;
 
             Log.d(TAG, url);
+            Log.d(TAG, profile.toString());
 
-            client.get(context, url, responseHandler);
+            Gson gson = new Gson();
+            String jProfile = gson.toJson(profile);
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(jProfile);
+            } catch (UnsupportedEncodingException e) {
+                Log.e(TAG, null, e);
+                return;
+            }
+
+            client.get(context, url, entity, "application/json", responseHandler);
         }
     }
 

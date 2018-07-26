@@ -44,6 +44,7 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
+import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
@@ -69,10 +70,10 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     public static final String USER_AGENT = "SMSAndroidPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
-    static final String FORMAT = "hls";
-    static final String SUPPORTED_FILES = "mp3,m4a,mp4,oga,ogg,wav";
-    static final String SUPPORTED_CODECS = "aac,mp3,vorbis,pcm";
-    static final String MCH_CODECS = "ac3";
+    static final int FORMAT = SMS.Format.HLS;
+    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP3, SMS.Format.MP4, SMS.Format.OGG, SMS.Format.WAV, SMS.Format.HLS};
+    static final Integer[] SUPPORTED_CODECS = {SMS.Codec.AAC, SMS.Codec.AC3, SMS.Codec.EAC3, SMS.Codec.MP3, SMS.Codec.VORBIS, SMS.Codec.PCM};
+    static final Integer[] MCH_CODECS = {SMS.Codec.AC3, SMS.Codec.EAC3};
 
     static final int MAX_SAMPLE_RATE = 48000;
 
@@ -357,8 +358,19 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         // Get quality
         int quality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
 
+        // Create transcode profile
+        TranscodeProfile profile = new TranscodeProfile();
+        profile.setClient(CLIENT_ID);
+        profile.setFormats(SUPPORTED_FORMATS);
+        profile.setCodecs(SUPPORTED_CODECS);
+        profile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(context.getApplicationContext()));
+        profile.setQuality(quality);
+        profile.setFormat(FORMAT);
+        profile.setMaxSampleRate(MAX_SAMPLE_RATE);
+        profile.setDirectPlayEnabled(settings.getBoolean("pref_direct_play", false));
+
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(context, sessionId, id, CLIENT_ID, SUPPORTED_FILES, SUPPORTED_CODECS, CodecUtils.getSupportedMchAudioCodecs(context.getApplicationContext()), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(context, sessionId, id, profile, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

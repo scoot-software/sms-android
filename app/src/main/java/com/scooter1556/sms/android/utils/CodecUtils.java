@@ -6,18 +6,20 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 
 import com.google.android.exoplayer2.audio.AudioCapabilities;
+import com.scooter1556.sms.android.SMS;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class CodecUtils {
 
-    public static String getSupportedMchAudioCodecs(Context ctx) {
+    public static Integer[] getSupportedMchAudioCodecs(Context ctx) {
         if(ctx == null) {
             return null;
         }
 
-        List<String> codecs =  new ArrayList<>();
+        List<Integer> codecs =  new ArrayList<>();
 
         // Get audio capabilities of current hardware
         AudioCapabilities audioCapabilities = AudioCapabilities.getCapabilities(ctx);
@@ -55,17 +57,27 @@ public class CodecUtils {
             for(String codec : sCodec) {
                 switch(codec) {
                     case "aac":
+                        codecs.add(SMS.Codec.AAC);
+                        break;
+
                     case "ac3":
+                        codecs.add(SMS.Codec.AC3);
+                        break;
+
                     case "eac3":
+                        codecs.add(SMS.Codec.EAC3);
+                        break;
+
                     case "flac":
-                    case "opus":
-                    case "mp3":
+                        codecs.add(SMS.Codec.FLAC);
+                        break;
+
                     case "vorbis":
-                        appendToList(codecs, codec);
+                        codecs.add(SMS.Codec.VORBIS);
                         break;
 
                     case "raw":
-                        appendToList(codecs, "pcm");
+                        codecs.add(SMS.Codec.PCM);
                         break;
                 }
             }
@@ -78,22 +90,20 @@ public class CodecUtils {
             return null;
         }
 
-        StringBuilder list = new StringBuilder();
+        // Remove duplicates
+        HashSet<Integer> codecHashSet = new HashSet<>(codecs);
+        codecs.clear();
+        codecs.addAll(codecHashSet);
 
-        for(String codec : codecs) {
-            list.append(codec);
-            list.append(",");
-        }
-
-        return list.toString();
+        return codecs.toArray(new Integer[codecs.size()]);
     }
 
-    public static String getSupportedCodecs(Context ctx)  {
+    public static Integer[] getSupportedCodecs(Context ctx)  {
         if(ctx == null) {
             return null;
         }
 
-        List<String> codecs =  new ArrayList<>();
+        List<Integer> codecs =  new ArrayList<>();
 
         // Get list of platform supported codecs
         MediaCodecInfo[] mediaCodecInfo = new MediaCodecList(MediaCodecList.ALL_CODECS).getCodecInfos();
@@ -109,28 +119,45 @@ public class CodecUtils {
             for(String codec : sCodec) {
                 switch(codec) {
                     case "aac":
-                    case "ac3":
-                    case "eac3":
-                    case "flac":
-                    case "h264":
-                    case "hevc":
-                    case "mp3":
-                    case "opus":
-                    case "vorbis":
-                    case "vp8":
-                        appendToList(codecs, codec);
+                        codecs.add(SMS.Codec.AAC);
                         break;
 
-                    case "avc":
-                        appendToList(codecs, "h264");
+                    case "ac3":
+                        codecs.add(SMS.Codec.AC3);
+                        break;
+
+                    case "eac3":
+                        codecs.add(SMS.Codec.EAC3);
+                        break;
+
+                    case "flac":
+                        codecs.add(SMS.Codec.FLAC);
+                        break;
+
+                    case "h264": case "avc":
+                        codecs.add(SMS.Codec.AVC_BASELINE);
+                        codecs.add(SMS.Codec.AVC_MAIN);
+                        codecs.add(SMS.Codec.AVC_HIGH);
+                        break;
+
+                    case "hevc":
+                        codecs.add(SMS.Codec.HEVC_MAIN);
+                        break;
+
+                    case "mp3":
+                        codecs.add(SMS.Codec.MP3);
+                        break;
+
+                    case "vorbis":
+                        codecs.add(SMS.Codec.VORBIS);
                         break;
 
                     case "mpeg2":
-                        appendToList(codecs, "mpeg2video");
+                        codecs.add(SMS.Codec.MPEG2);
                         break;
 
                     case "raw":
-                        appendToList(codecs, "pcm");
+                        codecs.add(SMS.Codec.PCM);
                         break;
                 }
             }
@@ -145,39 +172,41 @@ public class CodecUtils {
             return null;
         }
 
-        StringBuilder list = new StringBuilder();
+        // Remove duplicates
+        HashSet<Integer> codecHashSet = new HashSet<>(codecs);
+        codecs.clear();
+        codecs.addAll(codecHashSet);
 
-        for(String codec : codecs) {
-            list.append(codec);
-            list.append(",");
-        }
-
-        return list.toString();
+        return codecs.toArray(new Integer[codecs.size()]);
     }
 
-    private static void parseAudioCapabilities(List<String> list, AudioCapabilities capabilities) {
+    private static void parseAudioCapabilities(List<Integer> list, AudioCapabilities capabilities) {
         if(capabilities == null || list == null) {
             return;
         }
 
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_PCM_16BIT)) {
-            appendToList(list, "pcm");
+            list.add(SMS.Codec.PCM);
         }
 
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_AC3)) {
-            appendToList(list, "ac3");
+            list.add(SMS.Codec.AC3);
         }
 
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_E_AC3)) {
-            appendToList(list, "eac3");
+            list.add(SMS.Codec.EAC3);
         }
 
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_DOLBY_TRUEHD)) {
-            appendToList(list, "truehd");
+            list.add(SMS.Codec.TRUEHD);
         }
 
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_DTS)) {
-            appendToList(list, "dts");
+            list.add(SMS.Codec.DTS);
+        }
+
+        if(capabilities.supportsEncoding(AudioFormat.ENCODING_DTS_HD)) {
+            list.add(SMS.Codec.DTSHD);
         }
     }
 

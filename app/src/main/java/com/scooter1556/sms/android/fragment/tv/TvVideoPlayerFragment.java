@@ -86,6 +86,7 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
 import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.module.GlideApp;
@@ -112,8 +113,8 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     public static final String USER_AGENT = "SMSAndroidPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
-    static final String FORMAT = "hls";
-    static final String SUPPORTED_FILES = "mkv,webm,mp4";
+    static final Integer FORMAT = SMS.Format.HLS;
+    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.HLS};
 
     static final int MAX_SAMPLE_RATE = 48000;
 
@@ -889,8 +890,19 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
         // Get quality
         int quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
 
+        // Setup transcode profile
+        TranscodeProfile profile = new TranscodeProfile();
+        profile.setClient(CLIENT_ID);
+        profile.setFormats(SUPPORTED_FORMATS);
+        profile.setCodecs(CodecUtils.getSupportedCodecs(getActivity()));
+        profile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(getActivity()));
+        profile.setFormat(FORMAT);
+        profile.setQuality(quality);
+        profile.setMaxSampleRate(MAX_SAMPLE_RATE);
+        profile.setDirectPlayEnabled(settings.getBoolean("pref_direct_play", false));
+
         // Initialise Stream
-        RESTService.getInstance().initialiseStream(getActivity(), sessionId, id, CLIENT_ID, SUPPORTED_FILES, CodecUtils.getSupportedCodecs(getActivity().getApplicationContext()), CodecUtils.getSupportedMchAudioCodecs(getActivity().getApplicationContext()), FORMAT, quality, MAX_SAMPLE_RATE, null, null, settings.getBoolean("pref_direct_play", false), new JsonHttpResponseHandler() {
+        RESTService.getInstance().initialiseStream(getActivity(), sessionId, id, profile, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
                 try {

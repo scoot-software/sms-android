@@ -118,16 +118,6 @@ public interface Playback {
     UUID getSessionId();
 
     /**
-     * Set the current job ID. This is only used when switching from one playback to another.
-     */
-    void setCurrentJobId(UUID jobId);
-
-    /**
-     * @return the current job ID being processed in any state or null.
-     */
-    UUID getCurrentJobId();
-
-    /**
      * @return the current media player.
      */
     SimpleExoPlayer getMediaPlayer();

@@ -47,7 +47,7 @@ public class SMS {
         public static final int AVI = 3;
         public static final int DSF = 4;
         public static final int DTS = 5;
-        public static final int FLAC= 6;
+        public static final int FLAC = 6;
         public static final int H264 = 7;
         public static final int H265 = 8;
         public static final int HLS = 9;
@@ -68,4 +68,10 @@ public class SMS {
         public static final int SUBTITLE = 2;
     }
 
+    public static class Client {
+        public static final int UNSUPPORTED = 0;
+        public static final int ANDROID = 1;
+        public static final int ANDROID_TV = 2;
+        public static final int CHROMECAST = 3;
+    }
 }

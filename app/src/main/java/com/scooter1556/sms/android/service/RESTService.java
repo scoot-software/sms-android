@@ -24,23 +24,19 @@
 package com.scooter1556.sms.android.service;
 
 import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.*;
+import com.scooter1556.sms.android.domain.ClientProfile;
 import com.scooter1556.sms.android.utils.URLUtils;
 import com.scooter1556.sms.android.domain.Connection;
-import com.scooter1556.sms.android.domain.Session;
-import com.scooter1556.sms.android.domain.TranscodeProfile;
 
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import cz.msebera.android.httpclient.entity.StringEntity;
-import cz.msebera.android.httpclient.message.BasicHeader;
-import cz.msebera.android.httpclient.protocol.HTTP;
 
 public class RESTService {
     private static final String TAG = "RESTService";
@@ -276,7 +272,7 @@ public class RESTService {
 
     // Returns a list of media elements for a playlist
     public void getPlaylistContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
-        if(connection != null) {
+        if (connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
@@ -287,20 +283,17 @@ public class RESTService {
     }
 
     //
-    // Stream
+    // Session
     //
 
-    // Initialise Stream
-    public void initialiseStream(Context context, UUID sessionId, UUID mediaElementId, TranscodeProfile profile, AsyncHttpResponseHandler responseHandler) {
+    public void addSession(Context context, UUID id, ClientProfile profile, TextHttpResponseHandler responseHandler) {
         if(connection != null) {
-            String url = getAddress() + "/stream/initialise/" + sessionId.toString() + "/" + mediaElementId;
-
-            Log.d(TAG, url);
-            Log.d(TAG, profile.toString());
+            String url = getAddress() + "/session/add" + (id == null ? "" : "?id=" + id);
 
             Gson gson = new Gson();
             String jProfile = gson.toJson(profile);
             StringEntity entity = null;
+
             try {
                 entity = new StringEntity(jProfile);
             } catch (UnsupportedEncodingException e) {
@@ -312,58 +305,39 @@ public class RESTService {
         }
     }
 
-    //
-    // Session
-    //
-
-    public void createSession(TextHttpResponseHandler handler) {
+    public void updateClientProfile(Context context, UUID id, ClientProfile profile, BlackholeHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(getAddress() + "/session/create", handler);
+            if(id == null || profile == null) {
+                return;
+            }
+
+            String url = getAddress() + "/session/" + id.toString() + "/profile";
+
+            Gson gson = new Gson();
+            String jProfile = gson.toJson(profile);
+            StringEntity entity = null;
+
+            try {
+                entity = new StringEntity(jProfile);
+            } catch (UnsupportedEncodingException e) {
+                Log.e(TAG, null, e);
+                return;
+            }
+
+            client.put(context, url, entity, "application/json", responseHandler);
         }
     }
 
-    public void addSession(UUID id) {
+    public void endSession(UUID id, TextHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(getAddress() + "/session/add/" + id, new TextHttpResponseHandler() {
-
-                @Override
-                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-
-                }
-
-                @Override
-                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
-
-                }
-            });
+            client.get(getAddress() + "/session/end/" + id.toString(), responseHandler);
         }
     }
-
-    public void endSession(UUID id) {
-        if(connection != null) {
-            client.get(getAddress() + "/session/end/" + id, new TextHttpResponseHandler() {
-
-                @Override
-                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-
-                }
-
-                @Override
-                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
-
-                }
-            });
-        }
-    }
-
-    //
-    // Job
-    //
 
     // End Job
-    public void endJob(UUID id) {
+    public void endJob(UUID sid, UUID meid) {
         if(connection != null) {
-            client.get(getAddress() + "/job/end/" + id, new TextHttpResponseHandler() {
+            client.get(getAddress() + "/session/end/" + sid.toString() + "/" + meid.toString(), new TextHttpResponseHandler() {
 
                 @Override
                 public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
@@ -377,6 +351,21 @@ public class RESTService {
             });
         }
     }
+
+    //
+    // Stream
+    //
+    public void getStream(Context context, UUID sid, UUID meid, TextHttpResponseHandler responseHandler) {
+        if (connection != null) {
+            URIBuilder uri = new URIBuilder();
+            uri.setScheme("http")
+                    .setHost(getBaseAddress())
+                    .setPath("/stream/" + sid + "/" + meid);
+
+            client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
+        }
+    }
+
 
     //
     // Test Connection

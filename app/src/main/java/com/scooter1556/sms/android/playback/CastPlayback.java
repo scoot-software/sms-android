@@ -31,19 +31,14 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaStatus;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.service.RESTService;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -225,20 +220,6 @@ public class CastPlayback implements Playback {
     @Override
     public UUID getSessionId() {
         return null;
-    }
-
-    @Override
-    public void setCurrentJobId(UUID jobId) {
-        Log.d(TAG, "setCurrentJobId(" + jobId + ")");
-
-        this.currentJobId = jobId;
-    }
-
-    @Override
-    public UUID getCurrentJobId() {
-        Log.d(TAG, "getCurrentJobId()");
-
-        return currentJobId;
     }
 
     @Override

@@ -24,11 +24,13 @@
 package com.scooter1556.sms.android.service;
 
 import android.app.PendingIntent;
+import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
@@ -55,9 +57,13 @@ import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManager;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.gson.Gson;
+import com.loopj.android.http.BlackholeHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.NowPlayingActivity;
+import com.scooter1556.sms.android.domain.ClientProfile;
 import com.scooter1556.sms.android.domain.Playlist;
 import com.scooter1556.sms.android.manager.MediaNotificationManager;
 import com.scooter1556.sms.android.playback.AudioPlayback;
@@ -66,6 +72,7 @@ import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.playback.QueueManager;
 import com.scooter1556.sms.android.utils.AutoUtils;
+import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
 import com.scooter1556.sms.android.utils.ResourceUtils;
 import com.scooter1556.sms.android.utils.TVUtils;
@@ -85,9 +92,21 @@ import java.util.List;
 import java.util.UUID;
 
 public class MediaService extends MediaBrowserServiceCompat
-                          implements PlaybackManager.PlaybackServiceCallback {
+                          implements PlaybackManager.PlaybackServiceCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MediaService";
+
+    // Android
+    static final int FORMAT = SMS.Format.HLS;
+    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP3, SMS.Format.MP4, SMS.Format.OGG, SMS.Format.WAV, SMS.Format.HLS};
+    static final int MAX_SAMPLE_RATE = 48000;
+
+    // Chromecast
+    static final int CAST_FORMAT = SMS.Format.HLS;
+    static final Integer[] CAST_SUPPORTED_FORMATS = {SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.HLS};
+    static final Integer[] CAST_SUPPORTED_CODECS = {SMS.Codec.EAC3, SMS.Codec.AC3, SMS.Codec.PCM, SMS.Codec.VORBIS, SMS.Codec.MP3, SMS.Codec.AAC, SMS.Codec.AVC_BASELINE, SMS.Codec.AVC_HIGH, SMS.Codec.AVC_MAIN, SMS.Codec.FLAC};
+    static final Integer[] CAST_SUPPORTED_MCH_CODECS = {SMS.Codec.EAC3, SMS.Codec.AC3};
+    static final int CAST_MAX_SAMPLE_RATE = 96000;
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
@@ -138,8 +157,14 @@ public class MediaService extends MediaBrowserServiceCompat
     private boolean isConnectedToCar;
     private BroadcastReceiver carConnectionReceiver;
 
+    // Client Profile
+    ClientProfile clientProfile = null;
+
     // REST Client
     RESTService restService = null;
+
+    // Session Service
+    SessionService sessionService = null;
 
     private final BroadcastReceiver connectivityChangeReceiver = new BroadcastReceiver() {
         @Override
@@ -216,6 +241,12 @@ public class MediaService extends MediaBrowserServiceCompat
         playbackManager = PlaybackManager.getInstance();
         playbackManager.initialise(getApplicationContext(), this, queueManager);
 
+        // Populate default client profile
+        updateClientProfile();
+
+        // Start a new SMS session
+        SessionService.getInstance().newSession(getApplicationContext(), null, clientProfile);
+
         // Start a new Media Session
         mediaSession = new MediaSessionCompat(this, MediaService.class.getSimpleName());
         mediaSession.setCallback(playbackManager.getMediaSessionCallback());
@@ -252,6 +283,9 @@ public class MediaService extends MediaBrowserServiceCompat
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         this.registerReceiver(connectivityChangeReceiver, intentFilter);
+
+        // Register shared preferences listener
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -309,6 +343,14 @@ public class MediaService extends MediaBrowserServiceCompat
 
         delayedStopHandler.removeCallbacksAndMessages(null);
         mediaSession.release();
+
+        // End SMS session
+        if(SessionService.getInstance().getSessionId() != null) {
+            SessionService.getInstance().endSession(SessionService.getInstance().getSessionId());
+        }
+
+        // Unregister shared preferences listener
+        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
 
         // Unregister receiver
         this.unregisterReceiver(connectivityChangeReceiver);
@@ -378,6 +420,28 @@ public class MediaService extends MediaBrowserServiceCompat
         unregisterReceiver(carConnectionReceiver);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(TAG, "Preference Changed: " + key);
+
+        // Update client profile if necessary
+        if(clientProfile == null || clientProfile.getClient() == SMS.Client.CHROMECAST) {
+            return;
+        }
+
+        switch(key) {
+            case "pref_video_quality": case "pref_audio_quality": case "pref_direct_play":
+                updateClientProfile();
+                break;
+
+            default:
+                return;
+        }
+
+        // Update client profile
+        RESTService.getInstance().updateClientProfile(getApplicationContext(), SessionService.getInstance().getSessionId(), clientProfile, new BlackholeHttpResponseHandler());
+    }
+
     /**
      * A simple handler that stops the service if playback is not active (playing)
      */
@@ -414,8 +478,15 @@ public class MediaService extends MediaBrowserServiceCompat
             mediaSession.setExtras(mediaSessionExtras);
             mediaRouter.setMediaSessionCompat(null);
 
+            // Update client profile and initialise new session
+            updateClientProfile();
+            SessionService.getInstance().newSession(getApplicationContext(), null, clientProfile);
+
             Playback playback = new AudioPlayback(MediaService.this);
             playbackManager.switchToPlayback(playback, true);
+
+            // End session
+            SessionService.getInstance().endSession(UUID.fromString(session.getSessionId()));
         }
 
         @Override
@@ -435,20 +506,23 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         @Override
-        public void onSessionStarted(CastSession session, String sessionId) {
+        public void onSessionStarted(final CastSession session, String sessionId) {
             Log.d(TAG, "Cast: onSessionStarted() > sessionId = " + sessionId);
 
-            // Activate session ID on server
-            RESTService.getInstance().addSession(UUID.fromString(sessionId));
+            // Create Chromecast profile
+            clientProfile = new ClientProfile();
+            clientProfile.setClient(SMS.Client.CHROMECAST);
+            clientProfile.setFormats(CAST_SUPPORTED_FORMATS);
+            clientProfile.setCodecs(CAST_SUPPORTED_CODECS);
+            clientProfile.setMchCodecs(CAST_SUPPORTED_MCH_CODECS);
+            clientProfile.setAudioQuality(3);
+            clientProfile.setVideoQuality(5);
+            clientProfile.setFormat(CAST_FORMAT);
+            clientProfile.setMaxSampleRate(CAST_MAX_SAMPLE_RATE);
+            clientProfile.setDirectPlay(true);
 
-            // In case we are casting, send the device name as an extra on Media Session metadata.
-            mediaSessionExtras.putString(EXTRA_CONNECTED_CAST, session.getCastDevice().getFriendlyName());
-            mediaSession.setExtras(mediaSessionExtras);
-
-            // Now we can switch to Cast Playback
-            Playback playback = new CastPlayback(MediaService.this);
-            mediaRouter.setMediaSessionCompat(mediaSession);
-            playbackManager.switchToPlayback(playback, true);
+            // Add session
+            SessionService.getInstance().newSession(getApplicationContext(), UUID.fromString(sessionId), clientProfile);
         }
 
         @Override
@@ -1636,5 +1710,34 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         return items;
+    }
+
+    private void updateClientProfile() {
+        // Initialise new client profile instance
+        clientProfile = new ClientProfile();
+
+        // Get settings
+        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Get quality
+        int audioQuality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
+        int videoQuality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
+
+        // Determine what device we are running on
+        UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            clientProfile.setClient(SMS.Client.ANDROID_TV);
+        } else {
+            clientProfile.setClient(SMS.Client.ANDROID);
+        }
+
+        clientProfile.setFormats(SUPPORTED_FORMATS);
+        clientProfile.setCodecs(CodecUtils.getSupportedCodecs(getApplicationContext()));
+        clientProfile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(getApplicationContext()));
+        clientProfile.setAudioQuality(audioQuality);
+        clientProfile.setVideoQuality(videoQuality);
+        clientProfile.setFormat(FORMAT);
+        clientProfile.setMaxSampleRate(MAX_SAMPLE_RATE);
+        clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
     }
 }

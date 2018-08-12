@@ -60,8 +60,7 @@
             android:key="pref_direct_play"
             android:title="@string/preferences_title_direct_play"
             android:summary="@string/preferences_summary_direct_play"
-            android:defaultValue="false"
-            />
+            android:defaultValue="false" />
     </PreferenceCategory>
 
 </PreferenceScreen>

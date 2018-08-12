@@ -1,19 +1,12 @@
 package com.scooter1556.sms.android.activity;
 
-import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.media.MediaCodecInfo;
-import android.media.MediaCodecList;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -36,7 +29,6 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.audio.AudioCapabilities;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -54,22 +46,16 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.SMS;
-import com.scooter1556.sms.android.domain.TranscodeProfile;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
-import com.scooter1556.sms.android.utils.CodecUtils;
+import com.scooter1556.sms.android.service.SessionService;
 import com.scooter1556.sms.android.utils.InterfaceUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
-
-import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -84,14 +70,8 @@ import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
     private static final String TAG = "VideoPlaybackActivity";
 
-    private static final String CLIENT_ID = "android";
     public static final String USER_AGENT = "SMSAndroidPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-
-    static final Integer FORMAT = SMS.Format.HLS;
-    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.HLS};
-
-    static final int MAX_SAMPLE_RATE = 48000;
 
     static final int CONTROLLER_TIMEOUT = 4000;
 
@@ -106,7 +86,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     private volatile long currentPosition = 0;
     private volatile String currentMediaID;
-    private volatile UUID currentJobId;
     private UUID sessionId;
     private int playbackState;
 
@@ -160,24 +139,16 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         // Set playback manager callback
         this.setCallback(playbackManager);
 
-        // Get session ID
-        RESTService.getInstance().createSession(new TextHttpResponseHandler()  {
+        // Retrieve session ID
+        sessionId = SessionService.getInstance().getSessionId();
 
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response, Throwable throwable) {
-                Log.e(TAG, "Failed to initialise session");
-            }
+        if(sessionId == null) {
+            error("Failed to get session ID", null);
+            return;
+        }
 
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String response) {
-                // Parse result
-                sessionId = UUID.fromString(response);
-                Log.d(TAG, "New session ID: " + sessionId);
-
-                // Start Playback
-                play(currentMedia);
-            }
-        });
+        // Start Playback
+        play(currentMedia);
 
         mediaBrowser = new MediaBrowserCompat(this,
                 new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
@@ -198,16 +169,17 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         // Stop playback
         stop(true);
 
+        // End job if required
+        if(sessionId != null && !currentMediaID.isEmpty()) {
+            Log.d(TAG, "Ending job for media with id: " + currentMediaID);
+            RESTService.getInstance().endJob(sessionId, UUID.fromString(MediaUtils.parseMediaId(currentMediaID).get(1)));
+        }
+
         // Remove reference to playback in our playback manager
         playbackManager.setPlayback(null);
 
         // Allow screen to turn off
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        // End session if needed
-        if(sessionId != null) {
-            RESTService.getInstance().endSession(sessionId);
-        }
 
         mediaBrowser.disconnect();
 
@@ -392,16 +364,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
-    public void setCurrentJobId(UUID jobId) {
-        this.currentJobId = jobId;
-    }
-
-    @Override
-    public UUID getCurrentJobId() {
-        return this.currentJobId;
-    }
-
-    @Override
     public SimpleExoPlayer getMediaPlayer() {
         return mediaPlayer;
     }
@@ -500,10 +462,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 videoView.setControllerShowTimeoutMs(-1);
 
                 // End job if required
-                if (currentJobId != null) {
-                    Log.d(TAG, "Ending job with id " + currentJobId);
-                    RESTService.getInstance().endJob(currentJobId);
-                    currentJobId = null;
+                if(sessionId != null && !currentMediaID.isEmpty()) {
+                    Log.d(TAG, "Ending job for media with id: " + currentMediaID);
+                    RESTService.getInstance().endJob(sessionId, UUID.fromString(MediaUtils.parseMediaId(currentMediaID).get(1)));
                 }
 
                 // The media player finished playing the current item, so we go ahead and start the next.
@@ -615,13 +576,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
             trackSelectionUtils = null;
         }
 
-        // End job if required
-        if(releaseMediaPlayer && currentJobId != null) {
-            Log.d(TAG, "Ending job with id " + currentJobId);
-            RESTService.getInstance().endJob(currentJobId);
-            currentJobId = null;
-        }
-
         // We can also release the Wifi and wake lock, if we're holding it
         if (wifiLock.isHeld()) {
             wifiLock.release();
@@ -652,78 +606,61 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         Log.d(TAG, "Initialising stream for media item with id " + id);
 
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        // Build stream URL
+        final String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + sessionId + "/" + id;
 
-        // Get quality
-        int quality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
+        RESTService.getInstance().getStream(getApplicationContext(), sessionId, id, new TextHttpResponseHandler() {
 
-        // Setup transcode profile
-        TranscodeProfile profile = new TranscodeProfile();
-        profile.setClient(CLIENT_ID);
-        profile.setFormats(SUPPORTED_FORMATS);
-        profile.setCodecs(CodecUtils.getSupportedCodecs(getApplicationContext()));
-        profile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(getApplicationContext()));
-        profile.setFormat(FORMAT);
-        profile.setQuality(quality);
-        profile.setMaxSampleRate(MAX_SAMPLE_RATE);
-        profile.setDirectPlayEnabled(settings.getBoolean("pref_direct_play", false));
-
-        // Initialise Stream
-        RESTService.getInstance().initialiseStream(getApplicationContext(), sessionId, id, profile, new JsonHttpResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
-                try {
-                    // Parse profile
-                    Gson parser = new Gson();
-                    TranscodeProfile profile = parser.fromJson(response.toString(), TranscodeProfile.class);
+            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
+                error("Failed to initialise stream", null);
+            }
 
-                    currentJobId = profile.getID();
+            @Override
+            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+                Log.d(TAG, Arrays.toString(headers));
 
-                    // Build stream URL
-                    String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + profile.getID();
+                String type = null;
 
-                    createMediaPlayerIfRequired();
+                createMediaPlayerIfRequired();
 
-                    // Get stream
-                    String userAgent = Util.getUserAgent(getApplicationContext(), USER_AGENT);
-                    DataSource.Factory dataSource = new DefaultDataSourceFactory(getApplicationContext(), userAgent, BANDWIDTH_METER);
-                    ExtractorsFactory extractor = new DefaultExtractorsFactory();
+                // Get stream
+                String userAgent = Util.getUserAgent(getApplicationContext(), USER_AGENT);
+                DataSource.Factory dataSource = new DefaultDataSourceFactory(getApplicationContext(), userAgent, BANDWIDTH_METER);
+                ExtractorsFactory extractor = new DefaultExtractorsFactory();
+                MediaSource sampleSource;
 
-                    MediaSource sampleSource = null;
-                    if(profile.getType() > TranscodeProfile.StreamType.DIRECT) {
-                        sampleSource =
-                                new HlsMediaSource.Factory(dataSource)
-                                        .createMediaSource(Uri.parse(url), new Handler(), null);
-                    } else {
-                        sampleSource =
-                                new ExtractorMediaSource.Factory(dataSource)
-                                        .setExtractorsFactory(extractor)
-                                        .createMediaSource(Uri.parse(url));
+                for(Header header : headers) {
+                    if(header.getName().equals("Content-Type")) {
+                        type = header.getValue().split(";")[0];
+                        break;
                     }
-
-                    playbackState = PlaybackStateCompat.STATE_BUFFERING;
-
-                    mediaPlayer.prepare(sampleSource);
-
-                    updateButtonVisibilities();
-
-                    if (callback != null) {
-                        callback.onPlaybackStatusChanged(playbackState);
-                    }
-                } catch (Exception e) {
-                    error("Error initialising stream", e);
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, Throwable throwable, JSONObject response) {
-                error("Error initialising stream", null);
-            }
+                if(type == null) {
+                    error("Failed to initialise stream", null);
+                    return;
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String error, Throwable throwable) {
-                error("Error initialising stream", null);
+                switch (type) {
+                    case "application/x-mpegurl":
+                        sampleSource = new HlsMediaSource.Factory(dataSource)
+                                .createMediaSource(Uri.parse(url));
+                        break;
+                    default: {
+                        sampleSource = new ExtractorMediaSource.Factory(dataSource)
+                                .setExtractorsFactory(extractor)
+                                .createMediaSource(Uri.parse(url));
+                    }
+                }
+
+                playbackState = PlaybackStateCompat.STATE_BUFFERING;
+                mediaPlayer.prepare(sampleSource);
+                updateButtonVisibilities();
+
+                if (callback != null) {
+                    callback.onPlaybackStatusChanged(playbackState);
+                }
             }
         });
     }

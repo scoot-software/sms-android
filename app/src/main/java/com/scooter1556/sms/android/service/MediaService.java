@@ -91,6 +91,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import cz.msebera.android.httpclient.Header;
+
 public class MediaService extends MediaBrowserServiceCompat
                           implements PlaybackManager.PlaybackServiceCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -98,15 +100,11 @@ public class MediaService extends MediaBrowserServiceCompat
 
     // Android
     static final int FORMAT = SMS.Format.HLS;
-    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP3, SMS.Format.MP4, SMS.Format.OGG, SMS.Format.WAV, SMS.Format.HLS};
+    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP3, SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.OGG, SMS.Format.WAV, SMS.Format.HLS};
     static final int MAX_SAMPLE_RATE = 48000;
 
-    // Chromecast
-    static final int CAST_FORMAT = SMS.Format.HLS;
-    static final Integer[] CAST_SUPPORTED_FORMATS = {SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.HLS};
-    static final Integer[] CAST_SUPPORTED_CODECS = {SMS.Codec.EAC3, SMS.Codec.AC3, SMS.Codec.PCM, SMS.Codec.VORBIS, SMS.Codec.MP3, SMS.Codec.AAC, SMS.Codec.AVC_BASELINE, SMS.Codec.AVC_HIGH, SMS.Codec.AVC_MAIN, SMS.Codec.FLAC};
-    static final Integer[] CAST_SUPPORTED_MCH_CODECS = {SMS.Codec.EAC3, SMS.Codec.AC3};
-    static final int CAST_MAX_SAMPLE_RATE = 96000;
+    // Chromecast channels
+    static final String CC_CHANNEL = "urn:x-cast:com.scooter1556.sms";
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
@@ -478,15 +476,8 @@ public class MediaService extends MediaBrowserServiceCompat
             mediaSession.setExtras(mediaSessionExtras);
             mediaRouter.setMediaSessionCompat(null);
 
-            // Update client profile and initialise new session
-            updateClientProfile();
-            SessionService.getInstance().newSession(getApplicationContext(), null, clientProfile);
-
             Playback playback = new AudioPlayback(MediaService.this);
             playbackManager.switchToPlayback(playback, true);
-
-            // End session
-            SessionService.getInstance().endSession(UUID.fromString(session.getSessionId()));
         }
 
         @Override
@@ -506,28 +497,45 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         @Override
-        public void onSessionStarted(final CastSession session, String sessionId) {
+        public void onSessionStarted(final CastSession session, final String sessionId) {
             Log.d(TAG, "Cast: onSessionStarted() > sessionId = " + sessionId);
 
-            // Create Chromecast profile
-            clientProfile = new ClientProfile();
-            clientProfile.setClient(SMS.Client.CHROMECAST);
-            clientProfile.setFormats(CAST_SUPPORTED_FORMATS);
-            clientProfile.setCodecs(CAST_SUPPORTED_CODECS);
-            clientProfile.setMchCodecs(CAST_SUPPORTED_MCH_CODECS);
-            clientProfile.setAudioQuality(3);
-            clientProfile.setVideoQuality(5);
-            clientProfile.setFormat(CAST_FORMAT);
-            clientProfile.setMaxSampleRate(CAST_MAX_SAMPLE_RATE);
-            clientProfile.setDirectPlay(true);
+            // Register session
+            RESTService.getInstance().addSession(getApplicationContext(), UUID.fromString(sessionId), null, new TextHttpResponseHandler() {
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Log.d(TAG, "Failed to register session for Chromecast.");
+                }
 
-            // Add session
-            SessionService.getInstance().newSession(getApplicationContext(), UUID.fromString(sessionId), clientProfile);
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                    // Send server URL to receiver
+                    try {
+                        JSONObject message = new JSONObject();
+                        message.put("serverUrl", RESTService.getInstance().getAddress());
+                        message.put("sessionId", sessionId);
+                        session.sendMessage(CC_CHANNEL, message.toString());
+                    } catch (JSONException e) {
+                        Log.d(TAG, "Failed to send server URL to Chromecast receiver.", e);
+                    }
+
+                    if(!(playbackManager.getPlayback() instanceof CastPlayback)) {
+                        // In case we are casting, send the device name as an extra on Media Session metadata.
+                        mediaSessionExtras.putString(EXTRA_CONNECTED_CAST, session.getCastDevice().getFriendlyName());
+                        mediaSession.setExtras(mediaSessionExtras);
+
+                        // Now we can switch to Cast Playback
+                        Playback playback = new CastPlayback(MediaService.this);
+                        mediaRouter.setMediaSessionCompat(mediaSession);
+                        playbackManager.switchToPlayback(playback, false);
+                    }
+                }
+            });
         }
 
         @Override
         public void onSessionStarting(CastSession session) {
-            Log.d(TAG, "Cast: onSessionStarting()");
+            Log.d(TAG, "Cast: onSessionStarting() > " + session.toString());
         }
 
         @Override
@@ -546,7 +554,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
         @Override
         public void onSessionResuming(CastSession session, String sessionId) {
-            Log.d(TAG, "Cast: onSessionResuming()");
+            Log.d(TAG, "Cast: onSessionResuming() > " + sessionId);
         }
 
         @Override

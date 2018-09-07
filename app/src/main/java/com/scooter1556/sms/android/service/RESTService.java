@@ -311,7 +311,7 @@ public class RESTService {
                 return;
             }
 
-            String url = getAddress() + "/session/" + id.toString() + "/profile";
+            String url = getAddress() + "/session/update/" + id.toString();
 
             Gson gson = new Gson();
             String jProfile = gson.toJson(profile);
@@ -324,7 +324,7 @@ public class RESTService {
                 return;
             }
 
-            client.put(context, url, entity, "application/json", responseHandler);
+            client.post(context, url, entity, "application/json", responseHandler);
         }
     }
 
@@ -362,7 +362,7 @@ public class RESTService {
                     .setHost(getBaseAddress())
                     .setPath("/stream/" + sid + "/" + meid);
 
-            client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
+            client.head(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
     }
 

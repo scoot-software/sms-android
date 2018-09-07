@@ -63,4 +63,22 @@
             android:defaultValue="false" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/preferences_title_casting_setting" android:key="pref_key_streaming_settings">
+        <ListPreference
+            android:key="pref_cast_video_quality"
+            android:title="@string/preferences_title_video_quality"
+            android:summary="@string/preferences_summary_cast_video_quality"
+            android:entries="@array/preferences_video_quality_names"
+            android:entryValues="@array/preferences_video_quality_values"
+            android:defaultValue="@string/preferences_default_cast_video_quality_value" />
+
+        <ListPreference
+            android:key="pref_cast_audio_quality"
+            android:title="@string/preferences_title_audio_quality"
+            android:summary="@string/preferences_summary_cast_audio_quality"
+            android:entries="@array/preferences_audio_quality_names"
+            android:entryValues="@array/preferences_audio_quality_values"
+            android:defaultValue="@string/preferences_default_cast_audio_quality_value" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

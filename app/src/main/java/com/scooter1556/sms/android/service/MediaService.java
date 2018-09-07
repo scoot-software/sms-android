@@ -104,7 +104,7 @@ public class MediaService extends MediaBrowserServiceCompat
     static final int MAX_SAMPLE_RATE = 48000;
 
     // Chromecast channels
-    static final String CC_CHANNEL = "urn:x-cast:com.scooter1556.sms";
+    static final String CC_CONFIG_CHANNEL = "urn:x-cast:com.scooter1556.sms.config";
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
@@ -149,6 +149,7 @@ public class MediaService extends MediaBrowserServiceCompat
     private MediaRouter mediaRouter;
     private SessionManager castSessionManager;
     private SessionManagerListener<CastSession> castSessionManagerListener;
+    private CastSession castSession;
 
     boolean isOnline = false;
     private boolean isConnected = false;
@@ -337,6 +338,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
         if (castSessionManager != null) {
             castSessionManager.removeSessionManagerListener(castSessionManagerListener, CastSession.class);
+            castSession = null;
         }
 
         delayedStopHandler.removeCallbacksAndMessages(null);
@@ -423,13 +425,19 @@ public class MediaService extends MediaBrowserServiceCompat
         Log.d(TAG, "Preference Changed: " + key);
 
         // Update client profile if necessary
-        if(clientProfile == null || clientProfile.getClient() == SMS.Client.CHROMECAST) {
+        if(clientProfile == null) {
             return;
         }
 
         switch(key) {
             case "pref_video_quality": case "pref_audio_quality": case "pref_direct_play":
                 updateClientProfile();
+                break;
+
+            case "pref_cast_video_quality": case "pref_cast_audio_quality":
+                if(castSession != null) {
+                    updateCastProfile(castSession, castSession.getSessionId());
+                }
                 break;
 
             default:
@@ -484,6 +492,9 @@ public class MediaService extends MediaBrowserServiceCompat
         public void onSessionResumed(CastSession session, boolean wasSuspended) {
             Log.d(TAG, "Cast: onSessionResumed(" + wasSuspended + ")");
 
+            // Update cast session
+            castSession = session;
+
             if(!(playbackManager.getPlayback() instanceof CastPlayback)) {
                 // In case we are casting, send the device name as an extra on Media Session metadata.
                 mediaSessionExtras.putString(EXTRA_CONNECTED_CAST, session.getCastDevice().getFriendlyName());
@@ -509,14 +520,23 @@ public class MediaService extends MediaBrowserServiceCompat
 
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                    // Send server URL to receiver
+                    // Send server URL and settings to receiver
                     try {
+                        // Get settings
+                        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+                        // Get quality
+                        String audioQuality = settings.getString("pref_cast_audio_quality", "0");
+                        String videoQuality = settings.getString("pref_cast_video_quality", "0");
+
                         JSONObject message = new JSONObject();
                         message.put("serverUrl", RESTService.getInstance().getAddress());
+                        message.put("videoQuality", videoQuality);
+                        message.put("audioQuality", audioQuality);
                         message.put("sessionId", sessionId);
-                        session.sendMessage(CC_CHANNEL, message.toString());
+                        session.sendMessage(CC_CONFIG_CHANNEL, message.toString());
                     } catch (JSONException e) {
-                        Log.d(TAG, "Failed to send server URL to Chromecast receiver.", e);
+                        Log.d(TAG, "Failed to send setup information to Chromecast receiver.", e);
                     }
 
                     if(!(playbackManager.getPlayback() instanceof CastPlayback)) {
@@ -531,6 +551,9 @@ public class MediaService extends MediaBrowserServiceCompat
                     }
                 }
             });
+
+            // Update cast session
+            castSession = session;
         }
 
         @Override
@@ -550,6 +573,9 @@ public class MediaService extends MediaBrowserServiceCompat
             // This is our final chance to update the current stream position
             long pos = session.getRemoteMediaClient().getApproximateStreamPosition();
             playbackManager.getPlayback().setCurrentStreamPosition(pos);
+
+            // Cleanup cast session
+            castSession = null;
         }
 
         @Override
@@ -1747,5 +1773,26 @@ public class MediaService extends MediaBrowserServiceCompat
         clientProfile.setFormat(FORMAT);
         clientProfile.setMaxSampleRate(MAX_SAMPLE_RATE);
         clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
+    }
+
+    private void updateCastProfile(CastSession session, String sessionId) {
+        // Get settings
+        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Get quality
+        String audioQuality = settings.getString("pref_cast_audio_quality", "0");
+        String videoQuality = settings.getString("pref_cast_video_quality", "0");
+
+        // Generate and send JSON message containing settings
+        JSONObject message = new JSONObject();
+        try {
+            message.put("videoQuality", videoQuality);
+            message.put("audioQuality", audioQuality);
+            message.put("sessionId", sessionId);
+            session.sendMessage(CC_CONFIG_CHANNEL, message.toString());
+        } catch (JSONException e) {
+            Log.d(TAG, "Failed to send settings to Chromecast receiver.", e);
+        }
+
     }
 }

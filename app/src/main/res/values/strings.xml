@@ -114,15 +114,20 @@
     <string name="preferences_title_audio_multichannel">Enable Audio Passthrough</string>
     <string name="preferences_title_direct_play">Enable Direct Play</string>
     <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
-    <string name="preferences_summary_video_quality">Select the video resolution to use during video playback.</string>
+    <string name="preferences_summary_video_quality">Select the video quality to use during video playback.</string>
     <string name="preferences_summary_direct_play">Enable direct streaming of media on the local network.</string>
+    <string name="preferences_summary_cast_audio_quality">Select the audio quality to use when casting.</string>
+    <string name="preferences_summary_cast_video_quality">Select the video quality to use when casting.</string>
     <string name="preferences_title_connections">Connections</string>
     <string name="preferences_title_manage_connections">Manage Connections</string>
     <string name="preferences_title_streaming_setting">Streaming</string>
+    <string name="preferences_title_casting_setting">Casting</string>
     <string name="preferences_summary_connections">Add and manage SMS server connections.</string>
 
     <string name="preferences_default_audio_quality_value">1</string>
     <string name="preferences_default_video_quality_value">1</string>
+    <string name="preferences_default_cast_audio_quality_value">2</string>
+    <string name="preferences_default_cast_video_quality_value">5</string>
 
     <string name="play_error_message">Impossible to play the video.</string>
     <string name="play_progressive_error_message">Impossible to play the progressive video.</string>

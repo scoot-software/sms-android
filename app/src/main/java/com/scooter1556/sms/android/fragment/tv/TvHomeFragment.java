@@ -176,6 +176,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
     private void setupUI() {
         setTitle(getString(R.string.app_name));
         setBrandColor(ContextCompat.getColor(getActivity(), R.color.primary));
+        setBadgeDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.app_icon));
         setHeadersState(HEADERS_DISABLED);
 
         // Setup background manager

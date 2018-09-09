@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
+import android.util.Log;
 
 import com.google.android.exoplayer2.audio.AudioCapabilities;
 import com.scooter1556.sms.android.SMS;
@@ -13,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class CodecUtils {
+
+    private static final String TAG = "CodecUtils";
 
     public static Integer[] getSupportedMchAudioCodecs(Context ctx) {
         if(ctx == null) {
@@ -114,6 +117,8 @@ public class CodecUtils {
                 continue;
             }
 
+            Log.d(TAG, codecInfo.getName());
+
             String[] sCodec = codecInfo.getName().toLowerCase().split("\\.");
 
             for(String codec : sCodec) {
@@ -167,10 +172,11 @@ public class CodecUtils {
         AudioCapabilities audioCapabilities = AudioCapabilities.getCapabilities(ctx);
         parseAudioCapabilities(codecs, audioCapabilities);
 
-        //  Check if we found any supported codecs
-        if(codecs.isEmpty()) {
-            return null;
-        }
+        // Subtitle Codecs
+        codecs.add(SMS.Codec.DVB);
+        codecs.add(SMS.Codec.SUBRIP);
+        codecs.add(SMS.Codec.PGS);
+        codecs.add(SMS.Codec.WEBVTT);
 
         // Remove duplicates
         HashSet<Integer> codecHashSet = new HashSet<>(codecs);
@@ -208,17 +214,5 @@ public class CodecUtils {
         if(capabilities.supportsEncoding(AudioFormat.ENCODING_DTS_HD)) {
             list.add(SMS.Codec.DTSHD);
         }
-    }
-
-    private static void appendToList(List<String> list, String item) {
-        if(list == null || item == null || item.isEmpty()) {
-            return;
-        }
-
-        if(list.contains(item.trim().toLowerCase())) {
-            return;
-        }
-
-        list.add(item.trim().toLowerCase());
     }
 }

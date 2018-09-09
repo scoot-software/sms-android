@@ -24,7 +24,7 @@
 
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,7 +47,7 @@ public class TvHomeActivity extends TvBaseActivity {
 
         if (savedInstanceState == null) {
             Fragment fragment = new TvHomeFragment();
-            getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, fragment)
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, fragment)
                     .commit();
         }
     }

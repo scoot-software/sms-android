@@ -9,6 +9,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
+import android.support.v17.leanback.app.BrowseSupportFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
@@ -41,7 +42,7 @@ import com.scooter1556.sms.android.presenter.MenuItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 
-public class TvHomeFragment extends BrowseFragment {
+public class TvHomeFragment extends BrowseSupportFragment {
     private static final String TAG = "TvHomeFragment";
 
     private ArrayObjectAdapter rowsAdapter;

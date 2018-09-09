@@ -24,19 +24,11 @@
 
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Fragment;
-import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.fragment.tv.TvHomeFragment;
 import com.scooter1556.sms.android.fragment.tv.TvSettingsFragment;
-import com.scooter1556.sms.android.service.RESTService;
-
-import cz.msebera.android.httpclient.Header;
 
 public class TvSettingsActivity extends TvBaseActivity {
     private static final String TAG = "TvSettingsActivity";
@@ -48,7 +40,7 @@ public class TvSettingsActivity extends TvBaseActivity {
 
         if (savedInstanceState == null) {
             Fragment fragment = new TvSettingsFragment();
-            getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, fragment)
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, fragment)
                     .commit();
         }
     }

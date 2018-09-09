@@ -1,16 +1,15 @@
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.GuidedStepFragment;
+import android.support.v17.leanback.app.GuidedStepSupportFragment;
 import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidedAction;
 import android.support.v17.leanback.widget.GuidedActionsStylist;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Patterns;
 import android.widget.Toast;
@@ -23,7 +22,7 @@ import com.scooter1556.sms.android.service.RESTService;
 
 import java.util.List;
 
-public class TvEditConnectionActivity extends Activity {
+public class TvEditConnectionActivity extends FragmentActivity {
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -57,11 +56,11 @@ public class TvEditConnectionActivity extends Activity {
         }
 
         if (null == savedInstanceState) {
-            GuidedStepFragment.addAsRoot(this, new ConnectionNameFragment(), android.R.id.content);
+            GuidedStepSupportFragment.addAsRoot(this, new ConnectionNameFragment(), android.R.id.content);
         }
     }
 
-    public static class ConnectionNameFragment extends GuidedStepFragment {
+    public static class ConnectionNameFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
@@ -113,8 +112,6 @@ public class TvEditConnectionActivity extends Activity {
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            FragmentManager fm = getFragmentManager();
-
             if (action.getId() == OPTION_NEXT) {
                 if(getActions().get(OPTION_INPUT).getTitle().toString().isEmpty()) {
                     Toast.makeText(getActivity(), getString(R.string.connections_no_name), Toast.LENGTH_SHORT).show();
@@ -125,14 +122,14 @@ public class TvEditConnectionActivity extends Activity {
                 connection.setTitle(getActions().get(OPTION_INPUT).getTitle().toString());
 
                 // Move to next fragment
-                GuidedStepFragment.add(fm, new ConnectionUrlFragment());
+                GuidedStepSupportFragment.add(getFragmentManager(), new ConnectionUrlFragment());
             } else if (action.getId() == OPTION_CANCEL) {
                 ActivityCompat.finishAfterTransition(getActivity());
             }
         }
     }
 
-    public static class ConnectionUrlFragment extends GuidedStepFragment {
+    public static class ConnectionUrlFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
@@ -184,8 +181,6 @@ public class TvEditConnectionActivity extends Activity {
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            FragmentManager fm = getFragmentManager();
-
             if (action.getId() == OPTION_NEXT) {
                 if(!Patterns.WEB_URL.matcher(getActions().get(OPTION_INPUT).getTitle().toString()).matches()) {
                     Toast.makeText(getActivity(), getString(R.string.connections_invalid_url), Toast.LENGTH_SHORT).show();
@@ -196,14 +191,14 @@ public class TvEditConnectionActivity extends Activity {
                 connection.setUrl(getActions().get(OPTION_INPUT).getTitle().toString());
 
                 // Move to next fragment
-                GuidedStepFragment.add(fm, new ConnectionUsernameFragment());
+                GuidedStepSupportFragment.add(getFragmentManager(), new ConnectionUsernameFragment());
             } else if (action.getId() == OPTION_CANCEL) {
                 ActivityCompat.finishAfterTransition(getActivity());
             }
         }
     }
 
-    public static class ConnectionUsernameFragment extends GuidedStepFragment {
+    public static class ConnectionUsernameFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
@@ -255,8 +250,6 @@ public class TvEditConnectionActivity extends Activity {
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            FragmentManager fm = getFragmentManager();
-
             if (action.getId() == OPTION_NEXT) {
                 if (getActions().get(OPTION_INPUT).getTitle().toString().isEmpty()) {
                     Toast.makeText(getActivity(), getString(R.string.connections_no_username), Toast.LENGTH_SHORT).show();
@@ -267,14 +260,14 @@ public class TvEditConnectionActivity extends Activity {
                 connection.setUsername(getActions().get(OPTION_INPUT).getTitle().toString());
 
                 // Move to next fragment
-                GuidedStepFragment.add(fm, new ConnectionPasswordFragment());
+                GuidedStepSupportFragment.add(getFragmentManager(), new ConnectionPasswordFragment());
             } else if (action.getId() == OPTION_CANCEL) {
                 ActivityCompat.finishAfterTransition(getActivity());
             }
         }
     }
 
-    public static class ConnectionPasswordFragment extends GuidedStepFragment {
+    public static class ConnectionPasswordFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {

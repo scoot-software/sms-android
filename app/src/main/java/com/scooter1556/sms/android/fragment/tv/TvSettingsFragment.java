@@ -1,7 +1,6 @@
 package com.scooter1556.sms.android.fragment.tv;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BackgroundManager;
@@ -17,14 +16,11 @@ import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvAudioSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvConnectionActivity;
 import com.scooter1556.sms.android.activity.tv.TvTranscodeSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoSettingsActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.SettingsItemPresenter;
 
 public class TvSettingsFragment extends BrowseSupportFragment {
@@ -32,8 +28,6 @@ public class TvSettingsFragment extends BrowseSupportFragment {
 
     private ArrayObjectAdapter rowsAdapter;
     private BackgroundManager backgroundManager;
-    private Drawable defaultBackground;
-    private String backgroundUri;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,6 +38,15 @@ public class TvSettingsFragment extends BrowseSupportFragment {
         setupUI();
         setupRowAdapter();
         setupEventListeners();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d(TAG, "onResume()");
+
+        backgroundManager.setDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.default_background));
     }
 
     private void setupRowAdapter() {
@@ -78,8 +81,7 @@ public class TvSettingsFragment extends BrowseSupportFragment {
         backgroundManager.attach(getActivity().getWindow());
 
         // Get and set default background
-        defaultBackground = ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
-        updateBackground();
+        backgroundManager.setDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.default_background));
     }
 
     private void setupEventListeners() {
@@ -111,31 +113,5 @@ public class TvSettingsFragment extends BrowseSupportFragment {
                 startActivity(intent, bundle);
             }
         }
-    }
-
-    private void updateBackground() {
-        // Check we have an image url to fetch and otherwise set default
-        if(backgroundUri == null || backgroundUri.isEmpty()) {
-            backgroundManager.setDrawable(defaultBackground);
-            return;
-        }
-
-        // Get screen size
-        int width = getResources().getDisplayMetrics().widthPixels;
-        int height = getResources().getDisplayMetrics().heightPixels;
-
-        GlideApp.with(getActivity())
-                .asBitmap()
-                .load(backgroundUri)
-                .into(new SimpleTarget<Bitmap>(width, height) {
-                    @Override
-                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                        BackgroundManager.getInstance(getActivity()).setBitmap(resource);
-                    }
-
-                    @Override public void onLoadFailed(Drawable errorDrawable) {
-                        BackgroundManager.getInstance(getActivity()).setDrawable(defaultBackground);
-                    }
-                });
     }
 }

@@ -175,7 +175,6 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
     private void setupUI() {
         setTitle(getString(R.string.app_name));
-        setBadgeDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.app_icon));
         setBrandColor(ContextCompat.getColor(getActivity(), R.color.primary));
         setHeadersState(HEADERS_DISABLED);
 

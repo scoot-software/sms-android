@@ -1,16 +1,16 @@
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.GuidedStepFragment;
+import android.support.v17.leanback.app.GuidedStepSupportFragment;
 import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidedAction;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.widget.Toast;
@@ -23,7 +23,7 @@ import com.scooter1556.sms.android.service.RESTService;
 
 import java.util.List;
 
-public class TvConnectionOptionsActivity extends Activity {
+public class TvConnectionOptionsActivity extends FragmentActivity {
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -57,11 +57,11 @@ public class TvConnectionOptionsActivity extends Activity {
         }
 
         if (null == savedInstanceState) {
-            GuidedStepFragment.addAsRoot(this, new ConnectionOptionsFragment(), android.R.id.content);
+            GuidedStepSupportFragment.addAsRoot(this, new ConnectionOptionsFragment(), android.R.id.content);
         }
     }
 
-    public static class ConnectionOptionsFragment extends GuidedStepFragment {
+    public static class ConnectionOptionsFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {

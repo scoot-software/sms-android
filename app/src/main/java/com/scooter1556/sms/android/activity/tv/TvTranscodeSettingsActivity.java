@@ -1,13 +1,13 @@
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.GuidedStepFragment;
+import android.support.v17.leanback.app.GuidedStepSupportFragment;
 import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidedAction;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
 
@@ -15,7 +15,7 @@ import com.scooter1556.sms.android.R;
 
 import java.util.List;
 
-public class TvTranscodeSettingsActivity extends Activity {
+public class TvTranscodeSettingsActivity extends FragmentActivity {
     private static final String TAG = "TvTranscodeSettingsActivity";
 
     // Preferences
@@ -31,11 +31,11 @@ public class TvTranscodeSettingsActivity extends Activity {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (null == savedInstanceState) {
-            GuidedStepFragment.addAsRoot(this, new TranscodeSettingsFragment(), android.R.id.content);
+            GuidedStepSupportFragment.addAsRoot(this, new TranscodeSettingsFragment(), android.R.id.content);
         }
     }
 
-    public static class TranscodeSettingsFragment extends GuidedStepFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static class TranscodeSettingsFragment extends GuidedStepSupportFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {

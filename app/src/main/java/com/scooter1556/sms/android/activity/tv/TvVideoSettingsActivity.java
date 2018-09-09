@@ -1,14 +1,13 @@
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.GuidedStepFragment;
+import android.support.v17.leanback.app.GuidedStepSupportFragment;
 import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidedAction;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
 
@@ -16,7 +15,7 @@ import com.scooter1556.sms.android.R;
 
 import java.util.List;
 
-public class TvVideoSettingsActivity extends Activity {
+public class TvVideoSettingsActivity extends FragmentActivity {
     private static final String TAG = "TvVideoSettingsActivity";
 
     // Preferences
@@ -34,11 +33,11 @@ public class TvVideoSettingsActivity extends Activity {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (null == savedInstanceState) {
-            GuidedStepFragment.addAsRoot(this, new VideoSettingsFragment(), android.R.id.content);
+            GuidedStepSupportFragment.addAsRoot(this, new VideoSettingsFragment(), android.R.id.content);
         }
     }
 
-    public static class VideoSettingsFragment extends GuidedStepFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static class VideoSettingsFragment extends GuidedStepSupportFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
@@ -59,9 +58,8 @@ public class TvVideoSettingsActivity extends Activity {
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            FragmentManager fm = getFragmentManager();
             if (action.getId() == VIDEO_QUALITY) {
-                GuidedStepFragment.add(fm, new VideoQualitySettingsFragment());
+                GuidedStepSupportFragment.add(getFragmentManager(), new VideoQualitySettingsFragment());
             }
         }
 
@@ -91,7 +89,7 @@ public class TvVideoSettingsActivity extends Activity {
         }
     }
 
-    public static class VideoQualitySettingsFragment extends GuidedStepFragment {
+    public static class VideoQualitySettingsFragment extends GuidedStepSupportFragment {
         @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(Bundle savedInstanceState) {

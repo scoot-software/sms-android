@@ -24,7 +24,7 @@
 package com.scooter1556.sms.android.activity.tv;
 
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import androidx.core.app.ActivityCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.widget.Toast;
 

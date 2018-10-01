@@ -31,24 +31,24 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.BackgroundManager;
-import android.support.v17.leanback.app.PlaybackFragment;
-import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
-import android.support.v17.leanback.widget.Action;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.BaseOnItemViewClickedListener;
-import android.support.v17.leanback.widget.ClassPresenterSelector;
-import android.support.v17.leanback.widget.ControlButtonPresenterSelector;
-import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.support.v17.leanback.widget.PlaybackControlsRow;
-import android.support.v17.leanback.widget.PlaybackControlsRow.PlayPauseAction;
-import android.support.v17.leanback.widget.PlaybackControlsRow.SkipNextAction;
-import android.support.v17.leanback.widget.PlaybackControlsRow.SkipPreviousAction;
-import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.app.PlaybackFragment;
+import androidx.leanback.widget.AbstractDetailsDescriptionPresenter;
+import androidx.leanback.widget.Action;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.BaseOnItemViewClickedListener;
+import androidx.leanback.widget.ClassPresenterSelector;
+import androidx.leanback.widget.ControlButtonPresenterSelector;
+import androidx.leanback.widget.OnActionClickedListener;
+import androidx.leanback.widget.PlaybackControlsRow;
+import androidx.leanback.widget.PlaybackControlsRow.PlayPauseAction;
+import androidx.leanback.widget.PlaybackControlsRow.SkipNextAction;
+import androidx.leanback.widget.PlaybackControlsRow.SkipPreviousAction;
+import androidx.leanback.widget.PlaybackControlsRowPresenter;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.RowPresenter;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -60,10 +60,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.HeaderPresenter;
 import com.scooter1556.sms.android.presenter.QueueItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
@@ -75,7 +75,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class TvAudioPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment {
+public class TvAudioPlayerFragment extends androidx.leanback.app.PlaybackFragment {
     private static final String TAG = "TvAudioPlayerFragment";
 
     private static final int BACKGROUND_TYPE = PlaybackFragment.BG_DARK;
@@ -424,7 +424,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
         rowsAdapter.notifyArrayItemRangeChanged(rowsAdapter.indexOf(playbackControlsRow), 1);
 
         // Get cover
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/cover?scale=" + THUMB_HEIGHT)
                 .into(new SimpleTarget<Bitmap>(THUMB_WIDTH, THUMB_HEIGHT) {
@@ -436,7 +436,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
                 });
 
         // Get fanart
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + description.getMediaId() + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
@@ -604,7 +604,7 @@ public class TvAudioPlayerFragment extends android.support.v17.leanback.app.Play
          */
         private StopAction(Context context) {
             super(ACTION_STOP_ID);
-            setIcon(ContextCompat.getDrawable(context, android.support.v17.leanback.R.drawable.lb_ic_stop));
+            setIcon(ContextCompat.getDrawable(context, androidx.leanback.R.drawable.lb_ic_stop));
             setLabel1(context.getString(R.string.action_bar_stop));
             addKeyCode(KeyEvent.KEYCODE_MEDIA_STOP);
         }

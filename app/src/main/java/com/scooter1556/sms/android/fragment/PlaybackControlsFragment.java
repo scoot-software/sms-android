@@ -3,8 +3,8 @@ package com.scooter1556.sms.android.fragment;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -17,10 +17,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.FullScreenPlayerActivity;
 import com.scooter1556.sms.android.activity.HomeActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.MediaService;
 
 /**
@@ -135,7 +135,7 @@ public class PlaybackControlsFragment extends Fragment {
         if (!TextUtils.equals(iconUrl, coverArtUrl)) {
             coverArtUrl = iconUrl;
 
-            GlideApp.with(getActivity())
+            Glide.with(getActivity())
                     .load(coverArtUrl)
                     .into(coverArt);
         }

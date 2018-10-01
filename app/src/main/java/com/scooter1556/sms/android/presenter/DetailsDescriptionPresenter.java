@@ -23,11 +23,8 @@
  */
 package com.scooter1556.sms.android.presenter;
 
-import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
+import androidx.leanback.widget.AbstractDetailsDescriptionPresenter;
 import android.support.v4.media.MediaBrowserCompat;
-
-import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.utils.MediaUtils;
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 

@@ -25,7 +25,7 @@ package com.scooter1556.sms.android.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
@@ -40,12 +40,12 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.RESTService;
 
 import org.json.JSONArray;
@@ -125,7 +125,7 @@ public class AudioDirectoryFragment extends Fragment {
 
         ImageView coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
 
-        GlideApp.with(getActivity().getBaseContext())
+        Glide.with(getActivity().getBaseContext())
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id + "/cover?scale=80")
                 .into(coverArt);
 

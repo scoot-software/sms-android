@@ -24,16 +24,16 @@
 package com.scooter1556.sms.android.presenter;
 
 import android.graphics.drawable.Drawable;
-import android.support.v17.leanback.widget.ImageCardView;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v4.content.ContextCompat;
+import androidx.leanback.widget.ImageCardView;
+import androidx.leanback.widget.Presenter;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.module.GlideApp;
 
 public class MediaMetadataPresenter extends Presenter {
 
@@ -92,7 +92,7 @@ public class MediaMetadataPresenter extends Presenter {
                 .placeholder(defaultIcon)
                 .fallback(defaultIcon);
 
-        GlideApp.with(viewHolder.view.getContext())
+        Glide.with(viewHolder.view.getContext())
                 .load(metadata.getDescription().getIconUri().toString() + "?scale=" + CARD_HEIGHT)
                 .apply(options)
                 .into(cardView.getMainImageView());

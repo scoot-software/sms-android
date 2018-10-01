@@ -1,8 +1,8 @@
 package com.scooter1556.sms.android.presenter;
 
 import android.content.Context;
-import android.support.v17.leanback.widget.AbstractMediaItemPresenter;
-import android.support.v4.media.MediaDescriptionCompat;
+import androidx.leanback.widget.AbstractMediaItemPresenter;
+
 import android.support.v4.media.session.MediaSessionCompat;
 import android.text.format.DateUtils;
 import android.view.View;

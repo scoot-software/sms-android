@@ -6,20 +6,20 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.BackgroundManager;
-import android.support.v17.leanback.app.BrowseFragment;
-import android.support.v17.leanback.app.BrowseSupportFragment;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
-import android.support.v17.leanback.widget.ListRowPresenter;
-import android.support.v17.leanback.widget.OnItemViewClickedListener;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
-import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.app.BrowseFragment;
+import androidx.leanback.app.BrowseSupportFragment;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ListRowPresenter;
+import androidx.leanback.widget.OnItemViewClickedListener;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowPresenter;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -27,6 +27,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
@@ -36,7 +37,6 @@ import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
 import com.scooter1556.sms.android.activity.tv.TvSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoActivity;
 import com.scooter1556.sms.android.domain.MenuItem;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.MenuItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
@@ -203,7 +203,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
         int width = getResources().getDisplayMetrics().widthPixels;
         int height = getResources().getDisplayMetrics().heightPixels;
 
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(backgroundUri)
                 .into(new SimpleTarget<Bitmap>(width, height) {

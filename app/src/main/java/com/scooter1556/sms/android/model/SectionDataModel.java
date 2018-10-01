@@ -23,9 +23,7 @@
  */
 package com.scooter1556.sms.android.model;
 
-import android.support.v7.widget.RecyclerView;
-
-import java.util.ArrayList;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class SectionDataModel {
 

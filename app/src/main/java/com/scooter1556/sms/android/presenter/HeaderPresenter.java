@@ -1,8 +1,6 @@
 package com.scooter1556.sms.android.presenter;
 
-import android.support.v17.leanback.widget.AbstractMediaListHeaderPresenter;
-
-import com.scooter1556.sms.android.R;
+import androidx.leanback.widget.AbstractMediaListHeaderPresenter;
 
 public class HeaderPresenter extends AbstractMediaListHeaderPresenter {
 

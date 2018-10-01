@@ -23,12 +23,10 @@
  */
 package com.scooter1556.sms.android.fragment;
 
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.support.v4.media.MediaBrowserCompat;
-import android.util.Log;
 
 import com.scooter1556.sms.android.provider.MediaBrowserProvider;
-import com.scooter1556.sms.android.service.MediaService;
 
 public abstract class BaseFragment extends Fragment {
 

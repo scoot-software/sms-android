@@ -29,17 +29,17 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.BackgroundManager;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.OnItemViewClickedListener;
-import android.support.v17.leanback.widget.OnItemViewSelectedListener;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
-import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v17.leanback.widget.VerticalGridPresenter;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.OnItemViewClickedListener;
+import androidx.leanback.widget.OnItemViewSelectedListener;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowPresenter;
+import androidx.leanback.widget.VerticalGridPresenter;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
@@ -47,12 +47,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class TvMediaGridFragment extends android.support.v17.leanback.app.VerticalGridFragment {
+public class TvMediaGridFragment extends androidx.leanback.app.VerticalGridFragment {
     private static final String TAG = "TvMediaGridFragment";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;
@@ -298,7 +298,7 @@ public class TvMediaGridFragment extends android.support.v17.leanback.app.Vertic
         int width = displayMetrics.widthPixels;
         int height = displayMetrics.heightPixels;
 
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(backgroundURI)
                 .into(new SimpleTarget<Bitmap>(width, height) {

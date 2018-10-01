@@ -6,24 +6,19 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
 import com.scooter1556.sms.android.service.MediaService;
-import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
-
-import org.json.JSONObject;
 
 /**
  * Manage the interactions among the container service, the queue manager and the actual playback.

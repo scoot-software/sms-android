@@ -1,7 +1,7 @@
 package com.scooter1556.sms.android.views.row;
 
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.PageRow;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.PageRow;
 
 import java.util.UUID;
 

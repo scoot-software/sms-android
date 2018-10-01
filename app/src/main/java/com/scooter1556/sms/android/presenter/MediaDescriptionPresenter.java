@@ -24,17 +24,17 @@
 package com.scooter1556.sms.android.presenter;
 
 import android.graphics.drawable.Drawable;
-import android.support.v17.leanback.widget.ImageCardView;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v4.content.ContextCompat;
+import androidx.leanback.widget.ImageCardView;
+import androidx.leanback.widget.Presenter;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
@@ -120,7 +120,7 @@ public class MediaDescriptionPresenter extends Presenter {
             RequestOptions options = new RequestOptions()
                     .error(icon);
 
-            GlideApp.with(viewHolder.view.getContext())
+            Glide.with(viewHolder.view.getContext())
                     .asBitmap()
                     .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + CARD_HEIGHT)
                     .apply(options)

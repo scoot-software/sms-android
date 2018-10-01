@@ -1,8 +1,7 @@
 package com.scooter1556.sms.android.activity.tv;
 
-import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 
 import com.scooter1556.sms.android.R;
 

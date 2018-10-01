@@ -30,23 +30,23 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.v17.leanback.app.DetailsFragment;
-import android.support.v17.leanback.app.DetailsFragmentBackgroundController;
-import android.support.v17.leanback.widget.Action;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.ClassPresenterSelector;
-import android.support.v17.leanback.widget.DetailsOverviewRow;
-import android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
-import android.support.v17.leanback.widget.ListRowPresenter;
-import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.support.v17.leanback.widget.OnItemViewClickedListener;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
-import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.leanback.app.DetailsFragment;
+import androidx.leanback.app.DetailsFragmentBackgroundController;
+import androidx.leanback.widget.Action;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ClassPresenterSelector;
+import androidx.leanback.widget.DetailsOverviewRow;
+import androidx.leanback.widget.FullWidthDetailsOverviewRowPresenter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ListRowPresenter;
+import androidx.leanback.widget.OnActionClickedListener;
+import androidx.leanback.widget.OnItemViewClickedListener;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowPresenter;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.util.DisplayMetrics;
@@ -55,13 +55,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
@@ -268,7 +268,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         detailsBackground.enableParallax();
         detailsBackground.setCoverBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.default_background));
 
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/fanart?scale=" + displayMetrics.widthPixels)
                 .into(new SimpleTarget<Bitmap>(displayMetrics.widthPixels, displayMetrics.heightPixels) {
@@ -291,7 +291,7 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         RequestOptions options = new RequestOptions()
                 .dontAnimate();
 
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + id.get(1) + "/cover?scale=" + DETAIL_THUMB_HEIGHT)
                 .apply(options)

@@ -24,10 +24,9 @@
 package com.scooter1556.sms.android.playback;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.media.MediaBrowserCompat;
+
+import androidx.annotation.NonNull;
+
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -35,8 +34,6 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.QueueUtils;
 import com.scooter1556.sms.android.domain.MediaElement;

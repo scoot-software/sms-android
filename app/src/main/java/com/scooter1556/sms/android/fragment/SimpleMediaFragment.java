@@ -27,36 +27,24 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.h6ah4i.android.widget.advrecyclerview.composedadapter.ComposedAdapter;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.listener.OnListItemClickListener;
-import com.scooter1556.sms.android.model.SectionDataModel;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
-import com.scooter1556.sms.android.views.adapter.MediaFolderAdapter;
 import com.scooter1556.sms.android.views.adapter.MediaItemAdapter;
-import com.scooter1556.sms.android.views.adapter.SectionDataAdapter;
-import com.scooter1556.sms.android.views.viewholder.MediaItemViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +52,7 @@ import java.util.List;
 /**
  * A Fragment that lists Media Browser content
  */
-public class SimpleMediaFragment extends BaseFragment {
+public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapter.OnItemClicked {
 
     private static final String TAG = "SimpleMediaFragment";
 
@@ -73,10 +61,8 @@ public class SimpleMediaFragment extends BaseFragment {
 
     private View view;
     private RecyclerView recyclerView;
-    private ComposedAdapter adapter;
-    private MediaItemAdapter mediaAdapter;
+    private MediaItemAdapter adapter;
     private List<MediaBrowserCompat.MediaItem> items;
-    OnListItemClickListener clickListener;
     private int lastFirstVisiblePosition = -1;
 
     private String mediaId;
@@ -111,19 +97,19 @@ public class SimpleMediaFragment extends BaseFragment {
 
                     switch(id) {
                         case MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO: case MediaUtils.MEDIA_ID_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTIST: case MediaUtils.MEDIA_ID_ARTIST: case MediaUtils.MEDIA_ID_ALBUMS: case MediaUtils.MEDIA_ID_ALBUM: case MediaUtils.MEDIA_ID_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_ALBUM_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_DIRECTORY: case MediaUtils.MEDIA_ID_PLAYLISTS: case MediaUtils.MEDIA_ID_PLAYLIST:
-                            mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
+                            adapter.setItemResourceId(R.layout.item_media_audio);
                             break;
 
                         case MediaUtils.MEDIA_ID_RECENTLY_ADDED_VIDEO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_VIDEO:case MediaUtils.MEDIA_ID_COLLECTIONS:case MediaUtils.MEDIA_ID_COLLECTION:
-                            mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
+                            adapter.setItemResourceId(R.layout.item_media_audio);
                             break;
 
                         case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
-                            mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
+                            adapter.setItemResourceId(R.layout.item_media_audio);
                             break;
 
                         case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
-                            mediaAdapter = new MediaItemAdapter(getContext(), R.layout.item_media_audio, items, clickListener);
+                            adapter.setItemResourceId(R.layout.item_media_audio);
                             break;
 
                     }
@@ -213,10 +199,9 @@ public class SimpleMediaFragment extends BaseFragment {
                     }
                     */
 
-                    mediaAdapter.notifyDataSetChanged();
-                    mediaAdapter.setHasStableIds(true);
-                    adapter.addAdapter(mediaAdapter);
                     adapter.notifyDataSetChanged();
+
+
 
                     // Restore scroll position
                     recyclerView.getLayoutManager().scrollToPosition(lastFirstVisiblePosition);
@@ -283,18 +268,12 @@ public class SimpleMediaFragment extends BaseFragment {
 
         view = inflater.inflate(R.layout.fragment_simple_media, container, false);
 
-        clickListener = new OnListItemClickListener() {
-            @Override
-            public void onItemClicked(MediaBrowserCompat.MediaItem item) {
-                Log.d(TAG, "Item selected: " + item.getMediaId());
-                mediaFragmentListener.onMediaItemSelected(item);
-            }
-        };
-
         // Initialisation
         items = new ArrayList<>();
-        adapter = new ComposedAdapter();
-        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
+        adapter = new MediaItemAdapter(getContext(), items);
+        adapter.setOnClick(this);
+
+        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
 
         // Initialise UI
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
@@ -386,5 +365,11 @@ public class SimpleMediaFragment extends BaseFragment {
         }
 
         return null;
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
+        mediaFragmentListener.onMediaItemSelected(items.get(position));
     }
 }

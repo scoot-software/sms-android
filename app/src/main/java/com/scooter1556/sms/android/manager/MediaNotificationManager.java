@@ -35,22 +35,23 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
+
 import android.util.Log;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.HomeActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.service.MediaService;
 
 import static android.os.Build.*;
@@ -290,12 +291,6 @@ public class MediaNotificationManager extends BroadcastReceiver {
         final int playPauseButtonPosition = addActions(notificationBuilder);
 
         notificationBuilder
-                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
-                        // Show only play/pause in compact view
-                        .setShowActionsInCompactView(playPauseButtonPosition)
-                        .setShowCancelButton(true)
-                        .setCancelButtonIntent(stopIntent)
-                        .setMediaSession(mediaSessionToken))
                 .setDeleteIntent(stopIntent)
                 .setColor(ContextCompat.getColor(mediaService, R.color.primary))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -322,7 +317,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
             String url = description.getIconUri().toString();
             url = url + "?scale=" + NOTIFICATION_ICON_SIZE;
 
-            GlideApp.with(mediaService)
+            Glide.with(mediaService)
                     .asBitmap()
                     .load(url)
                     .into(new SimpleTarget<Bitmap>(NOTIFICATION_ICON_SIZE , NOTIFICATION_ICON_SIZE) {

@@ -28,21 +28,21 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v17.leanback.app.PlaybackFragment;
-import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
-import android.support.v17.leanback.widget.Action;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.ClassPresenterSelector;
-import android.support.v17.leanback.widget.ControlButtonPresenterSelector;
-import android.support.v17.leanback.widget.ListRow;
-import android.support.v17.leanback.widget.ListRowPresenter;
-import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.support.v17.leanback.widget.PlaybackControlsRow;
-import android.support.v17.leanback.widget.PlaybackControlsRow.FastForwardAction;
-import android.support.v17.leanback.widget.PlaybackControlsRow.PlayPauseAction;
-import android.support.v17.leanback.widget.PlaybackControlsRow.RewindAction;
-import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
-import android.support.v4.content.ContextCompat;
+import androidx.leanback.app.PlaybackFragment;
+import androidx.leanback.widget.AbstractDetailsDescriptionPresenter;
+import androidx.leanback.widget.Action;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ClassPresenterSelector;
+import androidx.leanback.widget.ControlButtonPresenterSelector;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ListRowPresenter;
+import androidx.leanback.widget.OnActionClickedListener;
+import androidx.leanback.widget.PlaybackControlsRow;
+import androidx.leanback.widget.PlaybackControlsRow.FastForwardAction;
+import androidx.leanback.widget.PlaybackControlsRow.PlayPauseAction;
+import androidx.leanback.widget.PlaybackControlsRow.RewindAction;
+import androidx.leanback.widget.PlaybackControlsRowPresenter;
+import androidx.core.content.ContextCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -53,6 +53,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
@@ -84,7 +85,6 @@ import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
-import com.scooter1556.sms.android.module.GlideApp;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.service.RESTService;
@@ -100,7 +100,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 
-public class TvVideoPlayerFragment extends android.support.v17.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, ExoPlayer.EventListener, TextRenderer.Output {
+public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, ExoPlayer.EventListener, TextRenderer.Output {
     private static final String TAG = "TvVideoPlaybackFragment";
 
     private static final String CLIENT_ID = "android";
@@ -439,7 +439,7 @@ public class TvVideoPlayerFragment extends android.support.v17.leanback.app.Play
     }
 
     private void updateVideoImage() {
-        GlideApp.with(getActivity())
+        Glide.with(getActivity())
                 .asBitmap()
                 .load(RESTService.getInstance().getConnection().getUrl() + "/image/" + currentMediaID + "/cover?scale=" + CARD_SIZE)
                 .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {

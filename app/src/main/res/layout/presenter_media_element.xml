@@ -10,9 +10,9 @@
         android:adjustViewBounds="true"
         android:contentDescription="@null" />
 
-    <android.support.v17.leanback.widget.NonOverlappingRelativeLayout
+    <androidx.leanback.widget.NonOverlappingRelativeLayout
         android:id="@+id/info_field"
         style="?attr/imageCardViewStyle">
-    </android.support.v17.leanback.widget.NonOverlappingRelativeLayout>
+    </androidx.leanback.widget.NonOverlappingRelativeLayout>
 
 </merge>

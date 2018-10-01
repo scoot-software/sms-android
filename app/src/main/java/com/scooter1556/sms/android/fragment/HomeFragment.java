@@ -30,32 +30,30 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.snackbar.Snackbar;
+
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
-import com.h6ah4i.android.widget.advrecyclerview.composedadapter.ComposedAdapter;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.listener.OnListItemClickListener;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
-import com.scooter1556.sms.android.views.adapter.HeaderFooterAdapter;
 import com.scooter1556.sms.android.views.adapter.MediaFolderAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomeFragment extends BaseFragment {
+public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnItemClicked {
 
     private static final String TAG = "HomeFragment";
 
@@ -64,8 +62,7 @@ public class HomeFragment extends BaseFragment {
 
     private CoordinatorLayout coordinatorLayout;
     private RecyclerView recyclerView;
-    private ComposedAdapter adapter;
-    private MediaFolderAdapter mediaAdapter;
+    private MediaFolderAdapter adapter;
     private List<MediaBrowserCompat.MediaItem> items;
     Snackbar snackbar;
     OnListItemClickListener clickListener;
@@ -104,15 +101,6 @@ public class HomeFragment extends BaseFragment {
                     items.clear();
                     items.addAll(children);
 
-                    mediaAdapter = new MediaFolderAdapter(getContext(), items, clickListener);
-                    mediaAdapter.notifyDataSetChanged();
-                    mediaAdapter.setHasStableIds(true);
-
-                    HeaderFooterAdapter headerFooterAdapter = new HeaderFooterAdapter(mediaAdapter);
-                    headerFooterAdapter.addHeaderItem(getString(R.string.heading_media_browser));
-                    headerFooterAdapter.setupFullSpanForGridLayoutManager(recyclerView);
-
-                    adapter.addAdapter(headerFooterAdapter);
                     adapter.notifyDataSetChanged();
                 }
 
@@ -133,7 +121,7 @@ public class HomeFragment extends BaseFragment {
                     }
 
                     // Subscribe to media browser event
-                    if(mediaAdapter == null || mediaAdapter.getItemCount() == 0) {
+                    if(adapter == null || adapter.getItemCount() == 0) {
                         mediaBrowser.subscribe(MediaUtils.MEDIA_ID_FOLDERS, subscriptionCallback);
                     }
                 }
@@ -173,12 +161,19 @@ public class HomeFragment extends BaseFragment {
 
         // Initialisation
         items = new ArrayList<>();
-        adapter = new ComposedAdapter();
+        adapter = new MediaFolderAdapter(getContext(), items);
+        adapter.setOnClick(this);
 
         // Subscribe to relevant media service callbacks
         mediaBrowser = new MediaBrowserCompat(getActivity(),
                 new ComponentName(getActivity(), MediaService.class),
                 connectionCallback, null);
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
+        mediaFragmentListener.onMediaItemSelected(items.get(position));
     }
 
     @Override
@@ -189,7 +184,7 @@ public class HomeFragment extends BaseFragment {
 
         coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.coordinatorLayout);
         snackbar = Snackbar.make(coordinatorLayout, "No connection!", Snackbar.LENGTH_INDEFINITE);
-        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false);
+        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
 
         // Initialise UI
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);

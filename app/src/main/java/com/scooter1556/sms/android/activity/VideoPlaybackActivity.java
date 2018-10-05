@@ -29,6 +29,7 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -314,7 +315,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
                 playbackState = PlaybackStateCompat.STATE_PAUSED;
             }
 
-            // While paused, retain the Media Player but give up audio focus
+            // While paused, retain the Media Player
             relaxResources(false);
         }
 
@@ -689,6 +690,14 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         // Create player
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
         mediaPlayer.addListener(this);
+
+        // Set audio attributes so audio focus can be handled correctly
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MOVIE)
+                .build();
+
+        mediaPlayer.setAudioAttributes(audioAttributes, true);
     }
 
     @Override

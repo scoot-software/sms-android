@@ -63,6 +63,7 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -944,6 +945,14 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
         mediaPlayer.setVideoSurfaceHolder(surfaceHolder);
         mediaPlayer.addListener(this);
         mediaPlayer.setTextOutput(this);
+
+        // Set audio attributes so audio focus can be handled correctly
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MOVIE)
+                .build();
+
+        mediaPlayer.setAudioAttributes(audioAttributes, true);
     }
 
 

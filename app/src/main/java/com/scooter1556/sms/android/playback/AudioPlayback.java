@@ -1,15 +1,9 @@
 package com.scooter1556.sms.android.playback;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -41,15 +35,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.loopj.android.http.TextHttpResponseHandler;
-import com.scooter1556.sms.android.SMS;
-import com.scooter1556.sms.android.domain.ClientProfile;
-import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.SessionService;
-import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.service.RESTService;
-
-import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,7 +51,7 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 /**
  * A class that implements local media playback
  */
-public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeListener, ExoPlayer.EventListener {
+public class AudioPlayback implements Playback, ExoPlayer.EventListener {
 
     private static final String TAG = "AudioPlayback";
 
@@ -95,32 +83,10 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     private volatile String currentMediaID;
     private UUID sessionId;
 
-    private int audioFocus = AUDIO_NO_FOCUS_NO_DUCK;
-    private final AudioManager audioManager;
-
     private SimpleExoPlayer mediaPlayer;
-
-    private final IntentFilter audioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-
-    private final BroadcastReceiver audioNoisyReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
-                Log.d(TAG, "Headphones disconnected.");
-
-                if (isPlaying()) {
-                    Intent i = new Intent(context, MediaService.class);
-                    i.setAction(MediaService.ACTION_CMD);
-                    i.putExtra(MediaService.CMD_NAME, MediaService.CMD_PAUSE);
-                    context.startService(i);
-                }
-            }
-        }
-    };
 
     public AudioPlayback(Context context) {
         this.context = context;
-        this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         this.playbackState = PlaybackStateCompat.STATE_NONE;
 
         // Create Wifi lock
@@ -129,7 +95,7 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
         // Create Wake lock
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "sms_lock");
+        this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.scooter1556.sms.android: audio_playback_wake_lock");
     }
 
     @Override
@@ -148,10 +114,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
 
         currentPosition = getCurrentStreamPosition();
-
-        // Give up Audio focus
-        giveUpAudioFocus();
-        unregisterAudioNoisyReceiver();
 
         // Relax all resources
         relaxResources(true);
@@ -198,8 +160,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         Log.d(TAG, "Play media item with id " + item.getDescription().getMediaId());
 
         playOnFocusGain = true;
-        tryToGetAudioFocus();
-        registerAudioNoisyReceiver();
 
         boolean mediaHasChanged = !TextUtils.equals(item.getDescription().getMediaId(), currentMediaID);
 
@@ -246,8 +206,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         if (callback != null) {
             callback.onPlaybackStatusChanged(playbackState);
         }
-
-        unregisterAudioNoisyReceiver();
     }
 
     @Override
@@ -385,82 +343,24 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
     }
 
-    /**
-     * Try to get the system audio focus.
-     */
-    private void tryToGetAudioFocus() {
-        Log.d(TAG, "tryToGetAudioFocus()");
-
-        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                audioFocus = AUDIO_FOCUSED;
-            } else {
-                audioFocus = AUDIO_NO_FOCUS_NO_DUCK;
-        }
-    }
-
-    /**
-     * Give up the audio focus.
-     */
-    private void giveUpAudioFocus() {
-        Log.d(TAG, "giveUpAudioFocus()");
-
-        if (audioManager.abandonAudioFocus(this) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            audioFocus = AUDIO_NO_FOCUS_NO_DUCK;
-        }
-    }
-
-    /**
-     * Reconfigures Media Player according to audio focus settings and
-     * starts/restarts it. This method starts/restarts the Media Player
-     * respecting the current audio focus state. So if we have focus, it will
-     * play normally. If we don't have focus, it will either leave the
-     * Media Player paused or set it to a low volume, depending on what is
-     * allowed by the current focus settings.
-     */
     private void configMediaPlayerState() {
         String state = "?";
-        int oldState = playbackState;
 
-        if (audioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
-            // If we don't have audio focus and can't duck, we have to pause
-            if (playbackState == PlaybackStateCompat.STATE_PLAYING) {
-                state = "Paused";
-                pause();
-            }
-        } else {
-            // We have audio focus
-            if (audioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
-                if (mediaPlayer != null) {
-                    mediaPlayer.setVolume(VOLUME_DUCK);
-                }
+        if (mediaPlayer != null && !mediaPlayer.getPlayWhenReady()) {
+            mediaPlayer.setPlayWhenReady(true);
+
+            if (currentPosition == mediaPlayer.getCurrentPosition()) {
+                playbackState = PlaybackStateCompat.STATE_PLAYING;
+
+                wakeLock.acquire();
+                wifiLock.acquire();
+
+                state = "Playing";
             } else {
-                if (mediaPlayer != null) {
-                    mediaPlayer.setVolume(VOLUME_NORMAL);
-                }
-            }
+                mediaPlayer.seekTo(currentPosition);
+                playbackState = PlaybackStateCompat.STATE_BUFFERING;
 
-            // If we were playing when we lost focus, we need to resume playing.
-            if (playOnFocusGain) {
-                if (mediaPlayer != null && !mediaPlayer.getPlayWhenReady()) {
-                    mediaPlayer.setPlayWhenReady(true);
-
-                    if (currentPosition == mediaPlayer.getCurrentPosition()) {
-                        playbackState = PlaybackStateCompat.STATE_PLAYING;
-
-                        wakeLock.acquire();
-                        wifiLock.acquire();
-
-                        state = "Playing";
-                    } else {
-                        mediaPlayer.seekTo(currentPosition);
-                        playbackState = PlaybackStateCompat.STATE_BUFFERING;
-
-                        state = "Seeking to " + currentPosition;
-                    }
-                }
-
-                playOnFocusGain = false;
+                state = "Seeking to " + currentPosition;
             }
         }
 
@@ -469,36 +369,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
 
         Log.d(TAG, "configMediaPlayerState() > " + state);
-    }
-
-    /**
-     * Called by AudioManager on audio focus changes.
-     */
-    @Override
-    public void onAudioFocusChange(int focusChange) {
-        Log.d(TAG, "onAudioFocusChange(" + focusChange + ")");
-
-        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-            // Focus gained
-            audioFocus = AUDIO_FOCUSED;
-        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS ||
-                   focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
-                   focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-            // Focus lost
-            boolean canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
-            audioFocus = canDuck ? AUDIO_NO_FOCUS_CAN_DUCK : AUDIO_NO_FOCUS_NO_DUCK;
-
-            // If we are playing, we need to reset the Media Player
-            if (playbackState == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
-                // If we don't have audio focus and can't duck, we save the information that
-                // we were playing, so that we can resume playback once we get the focus back.
-                playOnFocusGain = true;
-            }
-        } else {
-            Log.e(TAG, "Ignoring unsupported focus change: " + focusChange);
-        }
-
-        configMediaPlayerState();
     }
 
     //
@@ -547,12 +417,10 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             case ExoPlayer.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
-                if(playWhenReady) {
+                if(mediaPlayer.getPlayWhenReady()) {
                     playbackState = PlaybackStateCompat.STATE_PLAYING;
+                    configMediaPlayerState();
                 }
-
-                // The media player is done preparing. That means we can start playing if we have audio focus.
-                configMediaPlayerState();
 
                 break;
 
@@ -630,13 +498,13 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         mediaPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector, loadControl);
         mediaPlayer.addListener(this);
 
-        // Set audio attributes
-        final AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setContentType(CONTENT_TYPE_MUSIC)
-                .setUsage(USAGE_MEDIA)
+        // Set audio attributes so audio focus can be handled correctly
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MUSIC)
                 .build();
 
-        mediaPlayer.setAudioAttributes(audioAttributes);
+        mediaPlayer.setAudioAttributes(audioAttributes, true);
     }
 
     /**
@@ -660,24 +528,6 @@ public class AudioPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
         if (wakeLock.isHeld()) {
             wakeLock.release();
-        }
-    }
-
-    private void registerAudioNoisyReceiver() {
-        Log.d(TAG, "registerAudioNoisyReceiver()");
-
-        if (!audioNoisyReceiverRegistered) {
-            context.registerReceiver(audioNoisyReceiver, audioNoisyIntentFilter);
-            audioNoisyReceiverRegistered = true;
-        }
-    }
-
-    private void unregisterAudioNoisyReceiver() {
-        Log.d(TAG, "unregisterAudioNoisyReceiver()");
-
-        if (audioNoisyReceiverRegistered) {
-            context.unregisterReceiver(audioNoisyReceiver);
-            audioNoisyReceiverRegistered = false;
         }
     }
 }

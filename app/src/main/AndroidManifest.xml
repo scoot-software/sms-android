@@ -48,6 +48,7 @@
     <application
         tools:replace="android:label"
         android:allowBackup="true"
+        android:usesCleartextTraffic="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/launcher_name"
         android:hardwareAccelerated="true"

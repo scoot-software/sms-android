@@ -79,12 +79,10 @@ import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
 import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
@@ -106,12 +104,6 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
 
     private static final String CLIENT_ID = "android";
     public static final String USER_AGENT = "SMSAndroidPlayer";
-    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-
-    static final Integer FORMAT = SMS.Format.HLS;
-    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.HLS};
-
-    static final int MAX_SAMPLE_RATE = 48000;
 
     private static final int CARD_SIZE = 240;
 
@@ -880,7 +872,7 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
 
                 // Get stream
                 String userAgent = Util.getUserAgent(getActivity().getApplicationContext(), USER_AGENT);
-                DataSource.Factory dataSource = new DefaultDataSourceFactory(getActivity().getApplicationContext(), userAgent, BANDWIDTH_METER);
+                DataSource.Factory dataSource = new DefaultDataSourceFactory(getActivity().getApplicationContext(), userAgent);
                 ExtractorsFactory extractor = new DefaultExtractorsFactory();
                 MediaSource sampleSource;
 
@@ -930,7 +922,7 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
     public void createMediaPlayerIfRequired() {
         Log.d(TAG, "createMediaPlayerIfRequired()");
 
-        TrackSelection.Factory adaptiveTrackSelectionFactory = new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
+        TrackSelection.Factory adaptiveTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
         trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
         trackSelectionUtils = new TrackSelectionUtils(trackSelector, adaptiveTrackSelectionFactory);
         lastSeenTrackGroupArray = null;
@@ -959,7 +951,6 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
     /**
      * Releases resources used by the service for playback. This includes the
      * "foreground service" status, the wake locks and possibly the Media Player.
-
      */
     private void relaxResources(boolean releaseMediaPlayer) {
         Log.d(TAG, "relaxResources()");

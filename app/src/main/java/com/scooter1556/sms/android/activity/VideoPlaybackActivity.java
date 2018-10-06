@@ -44,7 +44,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.loopj.android.http.TextHttpResponseHandler;
@@ -72,7 +71,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     private static final String TAG = "VideoPlaybackActivity";
 
     public static final String USER_AGENT = "SMSAndroidPlayer";
-    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
     static final int CONTROLLER_TIMEOUT = 4000;
 
@@ -131,7 +129,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         // Create Wake lock
         PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-        this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "sms_lock");
+        this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.scooter1556.sms.android: video_playback_wake_lock");
 
         // Set playback instance in our playback manager
         playbackManager = PlaybackManager.getInstance();
@@ -627,7 +625,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                 // Get stream
                 String userAgent = Util.getUserAgent(getApplicationContext(), USER_AGENT);
-                DataSource.Factory dataSource = new DefaultDataSourceFactory(getApplicationContext(), userAgent, BANDWIDTH_METER);
+                DataSource.Factory dataSource = new DefaultDataSourceFactory(getApplicationContext(), userAgent);
                 ExtractorsFactory extractor = new DefaultExtractorsFactory();
                 MediaSource sampleSource;
 
@@ -677,7 +675,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     public void createMediaPlayerIfRequired() {
         Log.d(TAG, "createMediaPlayerIfRequired()");
 
-        TrackSelection.Factory adaptiveTrackSelectionFactory = new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
+        TrackSelection.Factory adaptiveTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
         trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
         trackSelectionUtils = new TrackSelectionUtils(trackSelector, adaptiveTrackSelectionFactory);
         lastSeenTrackGroupArray = null;

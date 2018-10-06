@@ -31,7 +31,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.loopj.android.http.TextHttpResponseHandler;
@@ -57,20 +56,6 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
 
     private static final String CLIENT_ID = "android";
     public static final String USER_AGENT = "SMSAndroidPlayer";
-    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-
-    // The volume we set the media player to when we lose audio focus, but are
-    // allowed to reduce the volume instead of stopping playback.
-    public static final float VOLUME_DUCK = 0.2f;
-    // The volume we set the media player when we have audio focus.
-    public static final float VOLUME_NORMAL = 1.0f;
-
-    // No audio focus, and can't duck (play at a low volume)
-    private static final int AUDIO_NO_FOCUS_NO_DUCK = 0;
-    // No audio focus, but can duck (play at a low volume)
-    private static final int AUDIO_NO_FOCUS_CAN_DUCK = 1;
-    // Full audio focus
-    private static final int AUDIO_FOCUSED  = 2;
 
     private final Context context;
     private final WifiManager.WifiLock wifiLock;
@@ -78,7 +63,6 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
     private int playbackState;
     private boolean playOnFocusGain;
     private Callback callback;
-    private volatile boolean audioNoisyReceiverRegistered;
     private volatile long currentPosition = 0;
     private volatile String currentMediaID;
     private UUID sessionId;
@@ -297,7 +281,7 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
 
                 // Get stream
                 String userAgent = Util.getUserAgent(context, USER_AGENT);
-                DataSource.Factory dataSource = new DefaultDataSourceFactory(context, userAgent, BANDWIDTH_METER);
+                DataSource.Factory dataSource = new DefaultDataSourceFactory(context, userAgent);
                 ExtractorsFactory extractor = new DefaultExtractorsFactory();
                 MediaSource sampleSource;
 
@@ -483,7 +467,7 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
         Log.d(TAG, "createMediaPlayerIfRequired()");
 
         TrackSelection.Factory videoTrackSelectionFactory =
-                new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
+                new AdaptiveTrackSelection.Factory();
         TrackSelector trackSelector =
                 new DefaultTrackSelector(videoTrackSelectionFactory);
 

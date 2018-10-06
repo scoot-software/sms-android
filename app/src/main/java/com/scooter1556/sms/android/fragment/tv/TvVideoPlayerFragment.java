@@ -58,9 +58,9 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -99,7 +99,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 
-public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, ExoPlayer.EventListener, TextRenderer.Output {
+public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragment implements SurfaceHolder.Callback, Playback, Player.EventListener, TextRenderer.Output {
     private static final String TAG = "TvVideoPlaybackFragment";
 
     private static final String CLIENT_ID = "android";
@@ -741,7 +741,7 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int state) {
         switch(state) {
-            case ExoPlayer.STATE_BUFFERING:
+            case Player.STATE_BUFFERING:
                 Log.d(TAG, "onPlayerStateChanged(BUFFERING)");
 
                 // Update state
@@ -749,7 +749,7 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
 
                 break;
 
-            case ExoPlayer.STATE_ENDED:
+            case Player.STATE_ENDED:
                 Log.d(TAG, "onPlayerStateChanged(ENDED)");
 
                 // End job if required
@@ -765,12 +765,12 @@ public class TvVideoPlayerFragment extends androidx.leanback.app.PlaybackFragmen
 
                 break;
 
-            case ExoPlayer.STATE_IDLE:
+            case Player.STATE_IDLE:
                 Log.d(TAG, "onPlayerStateChanged(IDLE)");
 
                 break;
 
-            case ExoPlayer.STATE_READY:
+            case Player.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
                 if(playWhenReady) {

@@ -12,10 +12,10 @@ import android.util.Log;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -50,7 +50,7 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 /**
  * A class that implements local media playback
  */
-public class AudioPlayback implements Playback, ExoPlayer.EventListener {
+public class AudioPlayback implements Playback, Player.EventListener {
 
     private static final String TAG = "AudioPlayback";
 
@@ -372,14 +372,14 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int state) {
         switch(state) {
-            case ExoPlayer.STATE_BUFFERING:
+            case Player.STATE_BUFFERING:
                 Log.d(TAG, "onPlayerStateChanged(BUFFERING)");
 
                 // Update state
                 playbackState = PlaybackStateCompat.STATE_BUFFERING;
                 break;
 
-            case ExoPlayer.STATE_ENDED:
+            case Player.STATE_ENDED:
                 Log.d(TAG, "onPlayerStateChanged(ENDED)");
 
                 // End job if required
@@ -393,12 +393,12 @@ public class AudioPlayback implements Playback, ExoPlayer.EventListener {
                     callback.onCompletion();
                 }
 
-            case ExoPlayer.STATE_IDLE:
+            case Player.STATE_IDLE:
                 Log.d(TAG, "onPlayerStateChanged(IDLE)");
 
                 break;
 
-            case ExoPlayer.STATE_READY:
+            case Player.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
                 if(mediaPlayer.getPlayWhenReady()) {

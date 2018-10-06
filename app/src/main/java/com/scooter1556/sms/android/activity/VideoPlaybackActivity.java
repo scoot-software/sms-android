@@ -24,9 +24,9 @@ import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -67,7 +67,7 @@ import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static com.scooter1556.sms.android.utils.MediaUtils.EXTRA_QUEUE_ITEM;
 
-public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, ExoPlayer.EventListener, PlaybackControlView.VisibilityListener {
+public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, Playback, Player.EventListener, PlaybackControlView.VisibilityListener {
     private static final String TAG = "VideoPlaybackActivity";
 
     public static final String USER_AGENT = "SMSAndroidPlayer";
@@ -439,7 +439,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int state) {
         switch(state) {
-            case ExoPlayer.STATE_BUFFERING:
+            case Player.STATE_BUFFERING:
                 Log.d(TAG, "onPlayerStateChanged(BUFFERING)");
 
                 loading.setVisibility(VISIBLE);
@@ -454,7 +454,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                 break;
 
-            case ExoPlayer.STATE_ENDED:
+            case Player.STATE_ENDED:
                 Log.d(TAG, "onPlayerStateChanged(ENDED)");
 
                 loading.setVisibility(INVISIBLE);
@@ -476,7 +476,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                 break;
 
-            case ExoPlayer.STATE_IDLE:
+            case Player.STATE_IDLE:
                 Log.d(TAG, "onPlayerStateChanged(IDLE)");
 
                 loading.setVisibility(INVISIBLE);
@@ -488,7 +488,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
                 break;
 
-            case ExoPlayer.STATE_READY:
+            case Player.STATE_READY:
                 Log.d(TAG, "onPlayerStateChanged(READY)");
 
                 if(playWhenReady) {

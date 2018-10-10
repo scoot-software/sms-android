@@ -55,7 +55,7 @@ public class MediaFolderAdapter extends RecyclerView.Adapter<MediaFolderViewHold
         RequestOptions options = new RequestOptions()
                 .skipMemoryCache(true)
                 .placeholder(R.drawable.ic_placeholder)
-                .error(R.drawable.ic_placeholder);
+                .fallback(R.drawable.ic_placeholder);
 
         Glide.with(context)
                 .load(item.getDescription().getIconUri())

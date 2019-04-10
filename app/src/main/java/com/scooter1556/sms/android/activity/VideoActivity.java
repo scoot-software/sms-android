@@ -93,7 +93,7 @@ public class VideoActivity extends BaseActivity implements SimpleMediaFragment.M
     }
 
     @Override
-    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item) {
+    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item, int extra) {
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {

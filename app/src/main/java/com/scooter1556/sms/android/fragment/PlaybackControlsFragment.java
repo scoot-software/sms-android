@@ -83,6 +83,7 @@ public class PlaybackControlsFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
         return rootView;
     }
 

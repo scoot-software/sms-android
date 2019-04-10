@@ -198,7 +198,7 @@ public class TvMediaFolderFragment extends TvGridFragment {
                 MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
                 if (mediaItem.isPlayable()) {
-                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().prepareFromMediaId(mediaItem.getMediaId(), null);
                 } else if (mediaItem.isBrowsable()) {
                     Intent intent = null;
 

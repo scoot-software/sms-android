@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.scooter1556.sms.android.activity.tv.TvHomeActivity;
+import com.scooter1556.sms.android.utils.TVUtils;
 
 /**
  * The activity for the Now Playing Card Pending Intent.
@@ -23,9 +24,8 @@ public class NowPlayingActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Intent newIntent;
-        UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
 
-        if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+        if (TVUtils.isTvUiMode(this)) {
             Log.d(TAG, "Running on a TV Device");
             newIntent = new Intent(this, TvHomeActivity.class);
         } else {

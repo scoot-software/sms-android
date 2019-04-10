@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.google.android.exoplayer2.ui.AspectRatioFrameLayout android:id="@id/exo_content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+
+        <ImageView android:id="@+id/player_artwork"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:maxLines="1"
+                android:shadowColor="@android:color/black"
+                android:shadowRadius="20"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/fullscreen_line_color" />
+
+            <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/title"
+                android:layout_centerHorizontal="true"
+                android:fontFamily="sans-serif-light"
+                android:maxLines="1"
+                android:shadowColor="@android:color/black"
+                android:shadowRadius="20"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/fullscreen_secondary_line_color" />
+
+            <TextView
+                android:id="@+id/extra"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/subtitle"
+                android:layout_centerHorizontal="true"
+                android:fontFamily="sans-serif-light"
+                android:maxLines="1"
+                android:shadowColor="@android:color/black"
+                android:shadowRadius="20"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/fullscreen_secondary_line_color" />
+
+        </RelativeLayout>
+
+        <ProgressBar android:id="@id/exo_buffering"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:id="@id/exo_error_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@color/exo_error_message_background_color"
+            android:gravity="center"
+            android:padding="16dp" />
+
+    </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
+
+    <View android:id="@id/exo_controller_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</merge>

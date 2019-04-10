@@ -23,6 +23,7 @@
  */
 package com.scooter1556.sms.android.service;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
@@ -37,7 +38,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,42 +45,32 @@ import androidx.annotation.RequiresApi;
 import android.support.v4.media.MediaBrowserCompat;
 import androidx.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import androidx.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
-import androidx.mediarouter.media.MediaRouter;
 import android.util.Log;
 
+import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
-import com.google.android.gms.cast.framework.SessionManager;
-import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.gson.Gson;
 import com.loopj.android.http.BlackholeHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.NowPlayingActivity;
 import com.scooter1556.sms.android.domain.ClientProfile;
 import com.scooter1556.sms.android.domain.Playlist;
-import com.scooter1556.sms.android.manager.MediaNotificationManager;
-import com.scooter1556.sms.android.playback.AudioPlayback;
-import com.scooter1556.sms.android.playback.CastPlayback;
-import com.scooter1556.sms.android.playback.Playback;
 import com.scooter1556.sms.android.playback.PlaybackManager;
-import com.scooter1556.sms.android.playback.QueueManager;
 import com.scooter1556.sms.android.utils.AutoUtils;
 import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
 import com.scooter1556.sms.android.utils.ResourceUtils;
-import com.scooter1556.sms.android.utils.TVUtils;
 import com.scooter1556.sms.android.database.ConnectionDatabase;
 import com.scooter1556.sms.android.domain.Connection;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.MediaFolder;
 import com.scooter1556.sms.android.utils.MediaUtils;
+import com.scooter1556.sms.android.utils.TVUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,10 +81,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import cz.msebera.android.httpclient.Header;
-
 public class MediaService extends MediaBrowserServiceCompat
-                          implements PlaybackManager.PlaybackServiceCallback, SharedPreferences.OnSharedPreferenceChangeListener {
+                          implements PlayerNotificationManager.NotificationListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MediaService";
 
@@ -104,7 +92,7 @@ public class MediaService extends MediaBrowserServiceCompat
     static final int MAX_SAMPLE_RATE = 48000;
 
     // Chromecast channels
-    static final String CC_CONFIG_CHANNEL = "urn:x-cast:com.scooter1556.sms.config";
+    public static final String CC_CONFIG_CHANNEL = "urn:x-cast:com.scooter1556.sms.config";
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
@@ -133,23 +121,13 @@ public class MediaService extends MediaBrowserServiceCompat
     // Actions
     public static final String ACTION_CLEAR_PLAYLIST = "action_clear_playlist";
 
-    // Delay stopSelf by using a handler.
-    private static final int STOP_DELAY = 30000;
-
     // Number of media elements to fetch when populating lists
     public static final int FETCH_LIMIT = 50;
 
     private PlaybackManager playbackManager;
-    private QueueManager queueManager;
 
     private MediaSessionCompat mediaSession;
     private Bundle mediaSessionExtras;
-    private MediaNotificationManager mediaNotificationManager;
-    private final DelayedStopHandler delayedStopHandler = new DelayedStopHandler(this);
-    private MediaRouter mediaRouter;
-    private SessionManager castSessionManager;
-    private SessionManagerListener<CastSession> castSessionManagerListener;
-    private CastSession castSession;
 
     boolean isOnline = false;
     private boolean isConnected = false;
@@ -161,9 +139,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
     // REST Client
     RESTService restService = null;
-
-    // Session Service
-    SessionService sessionService = null;
 
     private final BroadcastReceiver connectivityChangeReceiver = new BroadcastReceiver() {
         @Override
@@ -205,41 +180,6 @@ public class MediaService extends MediaBrowserServiceCompat
             isConnected = false;
         }
 
-        queueManager = new QueueManager(getApplicationContext(), new QueueManager.MetadataUpdateListener() {
-                    @Override
-                    public void onMetadataChanged(MediaMetadataCompat metadata) {
-                        Log.d(TAG, "onMetadataChanged()");
-
-                        mediaSession.setMetadata(metadata);
-                    }
-
-                    @Override
-                    public void onMetadataRetrieveError() {
-                        Log.d(TAG, "onMetadataRetrieveError()");
-
-                        playbackManager.updatePlaybackState(getString(R.string.error_no_metadata));
-                    }
-
-                    @Override
-                    public void onCurrentQueueIndexUpdated(int queueIndex) {
-                        Log.d(TAG, "onCurrentQueueIndexUpdated(" + queueIndex + ")");
-
-                        playbackManager.handlePlayRequest();
-                    }
-
-                    @Override
-                    public void onQueueUpdated(List<MediaSessionCompat.QueueItem> newQueue) {
-                        Log.d(TAG, "onQueueUpdated()");
-
-                        mediaSession.setQueue(newQueue);
-                        mediaSession.setQueueTitle("Now Playing");
-                    }
-                });
-
-        // Initialise playback manager
-        playbackManager = PlaybackManager.getInstance();
-        playbackManager.initialise(getApplicationContext(), this, queueManager);
-
         // Populate default client profile
         updateClientProfile();
 
@@ -248,7 +188,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
         // Start a new Media Session
         mediaSession = new MediaSessionCompat(this, MediaService.class.getSimpleName());
-        mediaSession.setCallback(playbackManager.getMediaSessionCallback());
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
 
         Context context = getApplicationContext();
@@ -262,20 +201,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
         setSessionToken(mediaSession.getSessionToken());
 
-        try {
-            mediaNotificationManager = new MediaNotificationManager(this);
-        } catch (RemoteException e) {
-            throw new IllegalStateException("Could not create a MediaNotificationManager", e);
-        }
-
-        if (!TVUtils.isTvUiMode(this)) {
-            castSessionManager = CastContext.getSharedInstance(this).getSessionManager();
-            castSessionManagerListener = new CastSessionManagerListener();
-            castSessionManager.addSessionManagerListener(castSessionManagerListener, CastSession.class);
-        }
-
-        mediaRouter = MediaRouter.getInstance(getApplicationContext());
-
         registerCarConnectionReceiver();
 
         // Register connectivity receiver
@@ -285,6 +210,15 @@ public class MediaService extends MediaBrowserServiceCompat
 
         // Register shared preferences listener
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+
+        // Initialise playback manager
+        playbackManager = PlaybackManager.getInstance();
+        playbackManager.initialise(getApplicationContext(), mediaSession, this);
+
+        // Enable Cast
+        if(!TVUtils.isTvUiMode(context)) {
+            playbackManager.initialiseCast(CastContext.getSharedInstance(this));
+        }
     }
 
     @Override
@@ -295,22 +229,9 @@ public class MediaService extends MediaBrowserServiceCompat
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);
 
-            if (ACTION_CMD.equals(action)) {
-                if (CMD_PAUSE.equals(command)) {
-                    playbackManager.handlePauseRequest();
-                } else if (CMD_STOP_CASTING.equals(command)) {
-                    CastContext.getSharedInstance(this).getSessionManager().endCurrentSession(true);
-                }
-            } else {
-                // Try to handle the intent as a media button event wrapped by MediaButtonReceiver
-                MediaButtonReceiver.handleIntent(mediaSession, startIntent);
-            }
+            // Try to handle the intent as a media button event wrapped by MediaButtonReceiver
+            MediaButtonReceiver.handleIntent(mediaSession, startIntent);
         }
-
-        // Reset the delay handler to enqueue a message to stop the service if
-        // nothing is playing.
-        delayedStopHandler.removeCallbacksAndMessages(null);
-        delayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
 
         return START_STICKY;
     }
@@ -332,16 +253,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
         unregisterCarConnectionReceiver();
 
-        // Service is being killed, so make sure we release our resources
-        playbackManager.handleStopRequest(null);
-        mediaNotificationManager.stopNotification();
-
-        if (castSessionManager != null) {
-            castSessionManager.removeSessionManagerListener(castSessionManagerListener, CastSession.class);
-            castSession = null;
-        }
-
-        delayedStopHandler.removeCallbacksAndMessages(null);
+        //delayedStopHandler.removeCallbacksAndMessages(null);
         mediaSession.release();
 
         // End SMS session
@@ -354,51 +266,6 @@ public class MediaService extends MediaBrowserServiceCompat
 
         // Unregister receiver
         this.unregisterReceiver(connectivityChangeReceiver);
-    }
-
-    /**
-     * Callback method called from PlaybackManager whenever the music is about to play.
-     */
-    @Override
-    public void onPlaybackStart() {
-        Log.d(TAG, "onPlaybackStart()");
-
-        mediaSession.setActive(true);
-
-        delayedStopHandler.removeCallbacksAndMessages(null);
-
-        // The service needs to continue running even after the bound client (usually a
-        // MediaController) disconnects, otherwise the media playback will stop.
-        // Calling startService(Intent) will keep the service running until it is explicitly killed.
-        startService(new Intent(getApplicationContext(), MediaService.class));
-    }
-
-
-    /**
-     * Callback method called from PlaybackManager whenever the music stops playing.
-     */
-    @Override
-    public void onPlaybackStop() {
-        Log.d(TAG, "onPlaybackStop()");
-
-        mediaSession.setActive(false);
-
-        // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,
-        // potentially stopping the service.
-        delayedStopHandler.removeCallbacksAndMessages(null);
-        delayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
-        stopForeground(true);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    public void onNotificationRequired() {
-        mediaNotificationManager.startNotification();
-    }
-
-    @Override
-    public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
-        mediaSession.setPlaybackState(newState);
     }
 
     private void registerCarConnectionReceiver() {
@@ -435,8 +302,8 @@ public class MediaService extends MediaBrowserServiceCompat
                 break;
 
             case "pref_cast_video_quality": case "pref_cast_audio_quality":
-                if(castSession != null) {
-                    updateCastProfile(castSession, castSession.getSessionId());
+                if(playbackManager.isCastSessionAvailable()) {
+                    updateCastProfile(playbackManager.getCastSession(), playbackManager.getCastSession().getSessionId());
                 }
                 break;
 
@@ -446,6 +313,21 @@ public class MediaService extends MediaBrowserServiceCompat
 
         // Update client profile
         RESTService.getInstance().updateClientProfile(getApplicationContext(), SessionService.getInstance().getSessionId(), clientProfile, new BlackholeHttpResponseHandler());
+    }
+
+    @Override
+    public void onNotificationStarted(int notificationId, Notification notification) {
+        Log.d(TAG, "onNotificationStarted()");
+
+        startService(new Intent(getApplicationContext(), MediaService.class));
+        startForeground(notificationId, notification);
+    }
+
+    @Override
+    public void onNotificationCancelled(int notificationId) {
+        Log.d(TAG, "onNotificationCancelled()");
+
+        stopForeground(false);
     }
 
     /**
@@ -462,135 +344,9 @@ public class MediaService extends MediaBrowserServiceCompat
         public void handleMessage(Message msg) {
             MediaService service = reference.get();
 
-            if (service != null && service.playbackManager.getPlayback() != null) {
-                if (!service.playbackManager.getPlayback().isPlaying()) {
-                    service.stopSelf();
-                }
+            if (service != null) {
+                service.stopSelf();
             }
-        }
-    }
-
-    /**
-     * Session Manager Listener responsible for switching the Playback instances
-     * depending on whether it is connected to a remote player.
-     */
-    private class CastSessionManagerListener implements SessionManagerListener<CastSession> {
-
-        @Override
-        public void onSessionEnded(CastSession session, int error) {
-            Log.d(TAG, "Cast: onSessionEnded()");
-
-            mediaSessionExtras.remove(EXTRA_CONNECTED_CAST);
-            mediaSession.setExtras(mediaSessionExtras);
-            mediaRouter.setMediaSessionCompat(null);
-
-            Playback playback = new AudioPlayback(MediaService.this);
-            playbackManager.switchToPlayback(playback, true);
-        }
-
-        @Override
-        public void onSessionResumed(CastSession session, boolean wasSuspended) {
-            Log.d(TAG, "Cast: onSessionResumed(" + wasSuspended + ")");
-
-            // Update cast session
-            castSession = session;
-
-            if(!(playbackManager.getPlayback() instanceof CastPlayback)) {
-                // In case we are casting, send the device name as an extra on Media Session metadata.
-                mediaSessionExtras.putString(EXTRA_CONNECTED_CAST, session.getCastDevice().getFriendlyName());
-                mediaSession.setExtras(mediaSessionExtras);
-
-                // Now we can switch to Cast Playback
-                Playback playback = new CastPlayback(MediaService.this);
-                mediaRouter.setMediaSessionCompat(mediaSession);
-                playbackManager.switchToPlayback(playback, !wasSuspended);
-            }
-        }
-
-        @Override
-        public void onSessionStarted(final CastSession session, final String sessionId) {
-            Log.d(TAG, "Cast: onSessionStarted() > sessionId = " + sessionId);
-
-            // Register session
-            RESTService.getInstance().addSession(getApplicationContext(), UUID.fromString(sessionId), null, new TextHttpResponseHandler() {
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    Log.d(TAG, "Failed to register session for Chromecast.");
-                }
-
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                    // Send server URL and settings to receiver
-                    try {
-                        // Get settings
-                        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-                        // Get quality
-                        String audioQuality = settings.getString("pref_cast_audio_quality", "0");
-                        String videoQuality = settings.getString("pref_cast_video_quality", "0");
-
-                        JSONObject message = new JSONObject();
-                        message.put("serverUrl", RESTService.getInstance().getAddress());
-                        message.put("videoQuality", videoQuality);
-                        message.put("audioQuality", audioQuality);
-                        message.put("sessionId", sessionId);
-                        session.sendMessage(CC_CONFIG_CHANNEL, message.toString());
-                    } catch (JSONException e) {
-                        Log.d(TAG, "Failed to send setup information to Chromecast receiver.", e);
-                    }
-
-                    if(!(playbackManager.getPlayback() instanceof CastPlayback)) {
-                        // In case we are casting, send the device name as an extra on Media Session metadata.
-                        mediaSessionExtras.putString(EXTRA_CONNECTED_CAST, session.getCastDevice().getFriendlyName());
-                        mediaSession.setExtras(mediaSessionExtras);
-
-                        // Now we can switch to Cast Playback
-                        Playback playback = new CastPlayback(MediaService.this);
-                        mediaRouter.setMediaSessionCompat(mediaSession);
-                        playbackManager.switchToPlayback(playback, false);
-                    }
-                }
-            });
-
-            // Update cast session
-            castSession = session;
-        }
-
-        @Override
-        public void onSessionStarting(CastSession session) {
-            Log.d(TAG, "Cast: onSessionStarting() > " + session.toString());
-        }
-
-        @Override
-        public void onSessionStartFailed(CastSession session, int error) {
-            Log.d(TAG, "Cast: onSessionStartFailed() > error = " + error);
-        }
-
-        @Override
-        public void onSessionEnding(CastSession session) {
-            Log.d(TAG, "Cast: onSessionEnding()");
-
-            // This is our final chance to update the current stream position
-            long pos = session.getRemoteMediaClient().getApproximateStreamPosition();
-            playbackManager.getPlayback().setCurrentStreamPosition(pos);
-
-            // Cleanup cast session
-            castSession = null;
-        }
-
-        @Override
-        public void onSessionResuming(CastSession session, String sessionId) {
-            Log.d(TAG, "Cast: onSessionResuming() > " + sessionId);
-        }
-
-        @Override
-        public void onSessionResumeFailed(CastSession session, int error) {
-            Log.d(TAG, "Cast: onSessionResumeFailed()");
-        }
-
-        @Override
-        public void onSessionSuspended(CastSession session, int reason) {
-            Log.d(TAG, "Cast: onSessionSuspended()");
         }
     }
 
@@ -833,7 +589,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Media Folder.
      */
     private void getMediaFolderContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaFolderContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
+        restService.getMediaFolderContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -939,7 +695,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Playlist.
      */
     private void getPlaylistContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getPlaylistContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
+        restService.getPlaylistContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), false, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -983,7 +739,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Media Folder.
      */
     private void getMediaElementContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
+        restService.getMediaElementContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1473,7 +1229,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for album and artist
      */
     private void getMediaElementForAlbumAndArtist(final String artist, final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByArtistAndAlbum(getApplicationContext(), artist, album, new JsonHttpResponseHandler() {
+        restService.getMediaElementsByArtistAndAlbum(getApplicationContext(), artist, album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1517,7 +1273,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for album and album artist
      */
     private void getMediaElementForAlbumAndAlbumArtist(final String artist, final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByAlbumArtistAndAlbum(getApplicationContext(), artist, album, new JsonHttpResponseHandler() {
+        restService.getMediaElementsByAlbumArtistAndAlbum(getApplicationContext(), artist, album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1561,7 +1317,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for an album
      */
     private void getMediaElementForAlbum(final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByAlbum(getApplicationContext(), album, new JsonHttpResponseHandler() {
+        restService.getMediaElementsByAlbum(getApplicationContext(), album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {

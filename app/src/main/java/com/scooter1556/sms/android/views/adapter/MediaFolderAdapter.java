@@ -2,6 +2,8 @@ package com.scooter1556.sms.android.views.adapter;
 
 import android.content.Context;
 import android.support.v4.media.MediaBrowserCompat;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,15 +33,15 @@ public class MediaFolderAdapter extends RecyclerView.Adapter<MediaFolderViewHold
         void onItemClick(int position);
     }
 
+    @NonNull
     @Override
-    public MediaFolderViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public MediaFolderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_media_folder, parent, false);
-        MediaFolderViewHolder vh = new MediaFolderViewHolder(v);
-        return vh;
+        return new MediaFolderViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(MediaFolderViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull MediaFolderViewHolder holder, final int position) {
         final MediaBrowserCompat.MediaItem item = list.get(position);
 
         holder.title.setText(item.getDescription().getTitle());

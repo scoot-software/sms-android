@@ -66,7 +66,6 @@
     <string name="audio_player_playlist_button_description">View Current Playlist</string>
     <string name="audio_player_overflow_menu_button_description">Menu</string>
 
-    <string name="video_player_controller.description">Media Controls</string>
     <string name="video_controller_play_button_description">Play/Pause</string>
     <string name="video_player_error">Unable to play media</string>
 
@@ -82,6 +81,7 @@
     <string name="label_delete">Delete</string>
     <string name="label_remove">Remove</string>
     <string name="label_connect">Connect</string>
+    <string name="label_shuffle">Shuffle</string>
 
     <string name="navigation_drawer_title">Navigation</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

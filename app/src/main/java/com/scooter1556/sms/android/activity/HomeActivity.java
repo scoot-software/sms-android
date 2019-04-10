@@ -29,6 +29,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 
@@ -85,11 +87,11 @@ public class HomeActivity extends BaseActivity implements BaseFragment.MediaFrag
     }
 
     @Override
-    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item) {
+    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item, int extra) {
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
+            MediaControllerCompat.getMediaController(this).getTransportControls().prepareFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(HomeActivity.this, BrowseActivity.class)
                     .putExtra(MediaUtils.EXTRA_MEDIA_ID, item.getMediaId());
@@ -117,8 +119,7 @@ public class HomeActivity extends BaseActivity implements BaseFragment.MediaFrag
     private void startFullScreenActivityIfNeeded(Intent intent) {
         if (intent != null && intent.getBooleanExtra(EXTRA_START_FULLSCREEN, false)) {
             Intent fullScreenIntent = new Intent(this, FullScreenPlayerActivity.class)
-                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    .putExtra(EXTRA_CURRENT_MEDIA_DESCRIPTION, (Bundle)intent.getParcelableExtra(EXTRA_CURRENT_MEDIA_DESCRIPTION));
+                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
             startActivity(fullScreenIntent);
         }

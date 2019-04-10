@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -52,7 +53,7 @@ import java.util.List;
 /**
  * A Fragment that lists Media Browser content
  */
-public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapter.OnItemClicked {
+public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapter.OnClicked {
 
     private static final String TAG = "SimpleMediaFragment";
 
@@ -94,25 +95,6 @@ public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapte
 
                     items.clear();
                     items.addAll(children);
-
-                    switch(id) {
-                        case MediaUtils.MEDIA_ID_RECENTLY_ADDED_AUDIO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_AUDIO: case MediaUtils.MEDIA_ID_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTISTS: case MediaUtils.MEDIA_ID_ALBUM_ARTIST: case MediaUtils.MEDIA_ID_ARTIST: case MediaUtils.MEDIA_ID_ALBUMS: case MediaUtils.MEDIA_ID_ALBUM: case MediaUtils.MEDIA_ID_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_ALBUM_ARTIST_ALBUM: case MediaUtils.MEDIA_ID_FOLDER: case MediaUtils.MEDIA_ID_DIRECTORY: case MediaUtils.MEDIA_ID_PLAYLISTS: case MediaUtils.MEDIA_ID_PLAYLIST:
-                            adapter.setItemResourceId(R.layout.item_media_audio);
-                            break;
-
-                        case MediaUtils.MEDIA_ID_RECENTLY_ADDED_VIDEO: case MediaUtils.MEDIA_ID_RECENTLY_PLAYED_VIDEO:case MediaUtils.MEDIA_ID_COLLECTIONS:case MediaUtils.MEDIA_ID_COLLECTION:
-                            adapter.setItemResourceId(R.layout.item_media_audio);
-                            break;
-
-                        case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
-                            adapter.setItemResourceId(R.layout.item_media_audio);
-                            break;
-
-                        case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
-                            adapter.setItemResourceId(R.layout.item_media_audio);
-                            break;
-
-                    }
 
 
                     /*
@@ -368,8 +350,17 @@ public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapte
     }
 
     @Override
-    public void onItemClick(int position) {
+    public void onItemClicked(int position) {
         Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
-        mediaFragmentListener.onMediaItemSelected(items.get(position));
+        mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_NONE);
+    }
+
+    @Override
+    public void onMenuItemClicked(MenuItem item, int position) {
+        Log.d(TAG, "Menu Item selected: " + items.get(position).getMediaId());
+
+        if(item.getItemId() == R.id.shuffle) {
+            mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_SHUFFLE);
+        }
     }
 }

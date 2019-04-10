@@ -116,32 +116,32 @@ public class RESTService {
     }
 
     // Returns the contents of a Media Folder
-    public void getMediaFolderContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaFolderContents(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/folder/" + id + "/contents", responseHandler);
+            client.get(context, getAddress() + "/media/folder/" + id + "/contents" + (sid == null ? "" : "?sid=" + sid), responseHandler);
         }
     }
 
     // Returns the contents of a Media Element directory
-    public void getMediaElementContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementContents(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/" + id + "/contents", responseHandler);
+            client.get(context, getAddress() + "/media/" + id + "/contents" + (sid == null ? "" : "?sid=" + sid), responseHandler);
         }
     }
 
     // Returns a Media Element by ID
-    public void getMediaElement(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElement(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            String url = getAddress() + "/media/" + id;
+            String url = getAddress() + "/media/" + id + (sid == null ? "" : "?sid=" + sid);
             Log.d(TAG, url);
             client.get(context, url, responseHandler);
         }
     }
 
     // Returns random media elements
-    public void getRandomMediaElements(Context context, int limit, Byte type, JsonHttpResponseHandler responseHandler) {
+    public void getRandomMediaElements(Context context, int limit, Byte type, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/random/" + limit + (type == null ? "" : "?type=" + type.toString()), responseHandler);
+            client.get(context, getAddress() + "/media/random/" + limit + "?" + (type == null ? "" : "type=" + type.toString() + "&") + (sid == null ? "" : "sid=" + sid), responseHandler);
         }
     }
 
@@ -205,36 +205,36 @@ public class RESTService {
     }
 
     // Returns a list of media elements for an artist and album
-    public void getMediaElementsByArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByArtistAndAlbum(Context context, String artist, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/artist/" + artist + "/album/" + album + "/");
+                    .setPath("/media/artist/" + artist + "/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
     }
 
     // Returns a list of media elements for an album artist and album
-    public void getMediaElementsByAlbumArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByAlbumArtistAndAlbum(Context context, String artist, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/albumartist/" + artist + "/album/" + album + "/");
+                    .setPath("/media/albumartist/" + artist + "/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
     }
 
     // Returns a list of media elements for an album
-    public void getMediaElementsByAlbum(Context context, String album, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByAlbum(Context context, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/album/" + album);
+                    .setPath("/media/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
@@ -271,12 +271,12 @@ public class RESTService {
     }
 
     // Returns a list of media elements for a playlist
-    public void getPlaylistContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
+    public void getPlaylistContents(Context context, UUID id, UUID sid, boolean random, JsonHttpResponseHandler responseHandler) {
         if (connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/playlist/" + id + "/contents");
+                    .setPath("/playlist/" + id + "/contents?" + (sid == null ? "" : "sid=" + sid + "&")  + "random=" + random);
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
@@ -338,6 +338,24 @@ public class RESTService {
     public void endJob(UUID sid, UUID meid) {
         if(connection != null) {
             client.get(getAddress() + "/session/end/" + sid.toString() + "/" + meid.toString(), new TextHttpResponseHandler() {
+
+                @Override
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+
+                }
+            });
+        }
+    }
+
+    // End Job
+    public void endJobs(UUID sid) {
+        if(connection != null) {
+            client.get(getAddress() + "/session/end/" + sid.toString() + "/all", new TextHttpResponseHandler() {
 
                 @Override
                 public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {

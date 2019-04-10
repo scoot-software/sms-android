@@ -2,30 +2,42 @@ package com.scooter1556.sms.android.views.adapter;
 
 import android.content.Context;
 import android.support.v4.media.MediaBrowserCompat;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.views.viewholder.MediaItemViewHolder;
+import com.scooter1556.sms.android.views.viewholder.PlaylistItemViewHolder;
 
 import java.util.List;
 
-public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> {
+public class MediaItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final String TAG = "MediaItemAdapter";
 
-    private Context context;
-    private int itemResourceId;
-    private List<MediaBrowserCompat.MediaItem> list;
-    private OnItemClicked onClick;
+    public static final int VIEW_TYPE_UNDEFINED = -1;
+    public static final int VIEW_TYPE_AUDIO = 0;
+    public static final int VIEW_TYPE_VIDEO = 1;
+    public static final int VIEW_TYPE_PLAYLIST = 2;
 
-    public interface OnItemClicked {
-        void onItemClick(int position);
+    private Context context;
+    private List<MediaBrowserCompat.MediaItem> list;
+    private OnClicked onClicked;
+
+    public interface OnClicked {
+        void onItemClicked(int position);
+        void onMenuItemClicked(MenuItem item, int position);
     }
 
     public MediaItemAdapter(Context context, List<MediaBrowserCompat.MediaItem> list) {
@@ -34,32 +46,128 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
     }
 
     @Override
-    public MediaItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(itemResourceId, parent, false);
-        MediaItemViewHolder vh = new MediaItemViewHolder(v);
-        return vh;
+    public int getItemViewType(int position) {
+        MediaBrowserCompat.MediaItem item = list.get(position);
+
+        if (item == null || item.getMediaId() == null) {
+            return VIEW_TYPE_UNDEFINED;
+        }
+
+        switch (MediaUtils.parseMediaId(item.getMediaId()).get(0)) {
+            case MediaUtils.MEDIA_ID_PLAYLIST:
+            case MediaUtils.MEDIA_ID_PLAYLISTS:
+                return VIEW_TYPE_PLAYLIST;
+
+            default:
+                return VIEW_TYPE_AUDIO;
+        }
+    }
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        RecyclerView.ViewHolder viewHolder;
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        switch (viewType) {
+            case VIEW_TYPE_PLAYLIST:
+                View playlistView = inflater.inflate(R.layout.item_media_playlist, parent, false);
+                viewHolder = new PlaylistItemViewHolder(playlistView);
+                break;
+
+            default:
+                View defaultView = inflater.inflate(R.layout.item_media_audio, parent, false);
+                viewHolder = new MediaItemViewHolder(defaultView);
+                break;
+        }
+
+        return viewHolder;
     }
 
     @Override
-    public void onBindViewHolder(MediaItemViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, final int position) {
+
+        switch (viewHolder.getItemViewType()) {
+            case VIEW_TYPE_PLAYLIST:
+                PlaylistItemViewHolder playlistItemViewHolder = (PlaylistItemViewHolder) viewHolder;
+                bindPlaylistViewHolder(playlistItemViewHolder, position);
+                break;
+
+            default:
+                MediaItemViewHolder mediaItemViewHolder = (MediaItemViewHolder) viewHolder;
+                bindDefaultViewHolder(mediaItemViewHolder, position);
+                break;
+        }
+    }
+
+    private void bindPlaylistViewHolder(PlaylistItemViewHolder viewHolder, int position) {
         MediaBrowserCompat.MediaItem item = list.get(position);
 
         if(list.get(position) != null) {
             CharSequence title = item.getDescription().getTitle();
             CharSequence subtitle = item.getDescription().getSubtitle();
 
-            holder.title.setText(title);
+            viewHolder.title.setText(title);
 
-            if (holder.subtitle != null) {
-                holder.subtitle.setText(subtitle);
+            if (viewHolder.subtitle != null) {
+                viewHolder.subtitle.setText(subtitle);
             }
 
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+            Glide.with(context)
+                    .load(item.getDescription().getIconUri())
+                    .into((viewHolder).image);
+
+            viewHolder.menu.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    onClick.onItemClick(position);
+                public void onClick(View view) {
+                    // Inflate menu
+                    PopupMenu popup = new PopupMenu(view.getContext(), view);
+                    MenuInflater inflater = popup.getMenuInflater();
+                    inflater.inflate(R.menu.menu_playlist_item, popup.getMenu());
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            onClicked.onMenuItemClicked(item, position);
+                            return true;
+                        }
+                    });
+
+                    popup.show();
                 }
             });
+
+            viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClicked.onItemClicked(position);
+                }
+            });
+        }
+    }
+
+    private void bindDefaultViewHolder(MediaItemViewHolder viewHolder, int position) {
+        MediaBrowserCompat.MediaItem item = list.get(position);
+
+        if(item != null) {
+            CharSequence title = item.getDescription().getTitle();
+            CharSequence subtitle = item.getDescription().getSubtitle();
+
+            viewHolder.title.setText(title);
+
+            if (viewHolder.subtitle != null) {
+                viewHolder.subtitle.setText(subtitle);
+            }
+
+            viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClicked.onItemClicked(position);
+                }
+            });
+
+            if(item.getMediaId()== null) {
+                return;
+            }
 
             RequestOptions options;
 
@@ -71,7 +179,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
-                            .into((holder).image);
+                            .into((viewHolder).image);
                     break;
 
                 case MediaUtils.MEDIA_ID_AUDIO:
@@ -81,7 +189,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
-                            .into((holder).image);
+                            .into((viewHolder).image);
                     break;
 
                 case MediaUtils.MEDIA_ID_VIDEO: case MediaUtils.MEDIA_ID_COLLECTION:
@@ -91,7 +199,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
-                            .into((holder).image);
+                            .into((viewHolder).image);
                     break;
 
                 default:
@@ -101,7 +209,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
                     Glide.with(context)
                             .load(item.getDescription().getIconUri())
                             .apply(options)
-                            .into((holder).image);
+                            .into((viewHolder).image);
                     break;
             }
         }
@@ -117,11 +225,7 @@ public class MediaItemAdapter extends RecyclerView.Adapter<MediaItemViewHolder> 
         return position;
     }
 
-    public void setItemResourceId(int itemResourceId) {
-        this.itemResourceId = itemResourceId;
-    }
-
-    public void setOnClick(OnItemClicked onClick) {
-        this.onClick=onClick;
+    public void setOnClick(OnClicked onClicked) {
+        this.onClicked=onClicked;
     }
 }

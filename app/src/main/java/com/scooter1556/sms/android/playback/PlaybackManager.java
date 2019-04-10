@@ -1,42 +1,132 @@
 package com.scooter1556.sms.android.playback;
 
-import android.app.UiModeManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
+
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
-import androidx.core.content.ContextCompat;
+import android.os.ResultReceiver;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
+import cz.msebera.android.httpclient.Header;
+
+import android.preference.PreferenceManager;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.RenderersFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.ext.cast.CastPlayer;
+import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
+import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider;
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ShuffleOrder;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.ui.PlayerNotificationManager;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
+import com.google.android.exoplayer2.util.ErrorMessageProvider;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.framework.CastContext;
+import com.google.android.gms.cast.framework.CastSession;
+import com.google.android.gms.cast.framework.SessionManager;
+import com.google.android.gms.cast.framework.SessionManagerListener;
+import com.google.gson.Gson;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
-import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
+import com.scooter1556.sms.android.SMS;
+import com.scooter1556.sms.android.activity.HomeActivity;
+import com.scooter1556.sms.android.provider.ShuffleActionProvider;
 import com.scooter1556.sms.android.service.MediaService;
+import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.service.SessionService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
+import com.scooter1556.sms.android.utils.TVUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Manage the interactions among the container service, the queue manager and the actual playback.
  */
-public class PlaybackManager implements Playback.Callback {
+public class PlaybackManager implements Player.EventListener, CastPlayer.SessionAvailabilityListener {
 
     private static final String TAG = "PlaybackManager";
 
     private static final PlaybackManager instance = new PlaybackManager();
 
-    private Context ctx;
-    private QueueManager queueManager;
-    private Playback playback;
-    private PlaybackServiceCallback serviceCallback;
-    private MediaSessionCallback mediaSessionCallback;
+    private static final String USER_AGENT = "SMSAndroidPlayer";
+    private static final DefaultHttpDataSourceFactory DATA_SOURCE_FACTORY = new DefaultHttpDataSourceFactory(USER_AGENT);
 
-    private int repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
-    private int shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_NONE;
+    private static final String CHANNEL_ID = "com.scooter1556.sms.android.CHANNEL_ID";
+    private static final int NOTIFICATION_ID = 412;
+    private static final int REQUEST_CODE = 100;
+
+    private Context ctx;
+    private MediaSessionConnector mediaSessionConnector;
+    private ArrayList<PlaybackListener> listeners;
+    private PlayerNotificationManager playerNotificationManager;
+
+    private CastSession castSession;
+    private SessionManager castSessionManager;
+    private SessionManagerListener<CastSession> castSessionManagerListener;
+    private boolean isCastEnabled = false;
+
+    private List<MediaElement> queue;
+    private SimpleExoPlayer localPlayer;
+    private CastPlayer castPlayer;
+    private ConcatenatingMediaSource concatenatingMediaSource;
+
+    private boolean castMediaQueueCreationPending;
+    private int currentItemIndex;
+    private Player currentPlayer;
+
+    private boolean videoMode = false;
+
+    /**
+     * Listener for playback changes.
+     */
+    public interface PlaybackListener {
+
+        /**
+         * Called when the currently played item of the media queue changes.
+         */
+        void onQueuePositionChanged(int previousIndex, int newIndex);
+
+    }
 
     private PlaybackManager() {}
 
@@ -44,454 +134,943 @@ public class PlaybackManager implements Playback.Callback {
         return instance;
     }
 
-    public void initialise(Context ctx, PlaybackServiceCallback serviceCallback, QueueManager queueManager) {
+    public void initialise(Context ctx, MediaSessionCompat mediaSession, PlayerNotificationManager.NotificationListener nListener) {
+        Log.d(TAG, "initialise()");
+
         this.ctx = ctx;
-        this.serviceCallback = serviceCallback;
-        this.queueManager = queueManager;
-        this.mediaSessionCallback = new MediaSessionCallback();
+
+        this.currentItemIndex = C.INDEX_UNSET;
+
+        this.queue = new ArrayList<>();
+        listeners = new ArrayList<>();
+
+        concatenatingMediaSource =  new ConcatenatingMediaSource();
+
+        DefaultTrackSelector trackSelector = new DefaultTrackSelector();
+        RenderersFactory renderersFactory = new DefaultRenderersFactory(ctx);
+        localPlayer = ExoPlayerFactory.newSimpleInstance(ctx, renderersFactory, trackSelector);
+        localPlayer.addListener(this);
+
+        TimelineQueueNavigator queueNavigator = new TimelineQueueNavigator(mediaSession) {
+            @Override
+            public MediaDescriptionCompat getMediaDescription(Player player, int windowIndex) {
+                // Get media element from queue
+                MediaElement element = queue.get(windowIndex);
+
+                if (element == null) {
+                    return null;
+                }
+
+                return MediaUtils.getMediaDescription(element);
+            }
+        };
+        
+        mediaSessionConnector = new MediaSessionConnector(mediaSession);
+        mediaSessionConnector.setQueueNavigator(queueNavigator);
+
+        playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
+                ctx,
+                CHANNEL_ID,
+                R.string.notification_channel,
+                NOTIFICATION_ID,
+                new DescriptionAdapter());
+
+        playerNotificationManager.setSmallIcon(R.drawable.ic_notification);
+        playerNotificationManager.setNotificationListener(nListener);
+        playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
+        playerNotificationManager.setStopAction(PlayerNotificationManager.ACTION_STOP);
+        playerNotificationManager.setOngoing(false);
+
+        setCurrentPlayer(localPlayer);
     }
 
-    public void setPlayback(Playback playback) {
-        Log.d(TAG, "setPlayback()");
+    public void initialiseCast(CastContext ctx) {
+        castPlayer = new CastPlayer(ctx);
+        castPlayer.addListener(this);
+        castPlayer.setSessionAvailabilityListener(this);
 
-        if(this.playback != null) {
-            this.playback.stop(true);
-            this.playback.destroy();
+        castSessionManager = ctx.getSessionManager();
+        castSessionManagerListener = new CastSessionManagerListener();
+        castSessionManager.addSessionManagerListener(castSessionManagerListener, CastSession.class);
+
+        isCastEnabled = true;
+
+        if(castPlayer.isCastSessionAvailable()) {
+            setCurrentPlayer(castPlayer);
         }
-
-        this.playback = playback;
     }
 
-    public Playback getPlayback() {
-        return playback;
-    }
+    // Queue manipulation methods.
 
-    public MediaSessionCompat.Callback getMediaSessionCallback() {
-        return mediaSessionCallback;
+    /**
+     * Plays a specified queue item in the current player.
+     *
+     * @param itemIndex The index of the item to play.
+     */
+    public void selectQueueItem(int itemIndex) {
+        setCurrentItem(itemIndex, C.TIME_UNSET, true);
     }
 
     /**
-     * Handle a request to play media
+     * Returns the index of the currently played item.
      */
-    public void handlePlayRequest() {
-        Log.d(TAG, "handlePlayRequest()");
+    public int getCurrentItemIndex() {
+        return currentItemIndex;
+    }
 
-        MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
+    /**
+     * Appends {@code sample} to the media queue.
+     *
+     * @param mediaElement The {@link MediaElement} to append.
+     */
+    public void addItem(MediaElement mediaElement) {
+        Log.d(TAG, "addItem() > " + mediaElement.getID());
 
-        if (currentMedia == null || currentMedia.getDescription() == null || currentMedia.getDescription().getMediaId() == null) {
-            handleStopRequest(null);
+        queue.add(mediaElement);
+        concatenatingMediaSource.addMediaSource(buildMediaSource(mediaElement));
+
+        if (currentPlayer == castPlayer) {
+            castPlayer.addItems(MediaUtils.getMediaQueueItem(mediaElement));
+        }
+    }
+
+    /**
+     * Returns the size of the media queue.
+     */
+    public int getMediaQueueSize() {
+        return queue.size();
+    }
+
+    /**
+     * Returns the item at the given index in the media queue.
+     *
+     * @param position The index of the item.
+     * @return The item at the given index in the media queue.
+     */
+    public MediaElement getItem(int position) {
+        return queue.get(position);
+    }
+
+    public MediaDescriptionCompat getMediaDescription() {
+        // Checks
+        if(currentPlayer == null || queue.isEmpty()) {
+            return null;
+        }
+
+        // Get media element from queue
+        MediaElement element = queue.get(currentPlayer.getCurrentWindowIndex());
+
+        if(element == null) {
+            return null;
+        }
+
+        return MediaUtils.getMediaDescription(element);
+    }
+
+    /**
+     * Removes the item at the given index from the media queue.
+     *
+     * @param itemIndex The index of the item to remove.
+     * @return Whether the removal was successful.
+     */
+    public boolean removeItem(int itemIndex) {
+        Log.d(TAG, "removeItem(" + itemIndex + ")");
+
+        concatenatingMediaSource.removeMediaSource(itemIndex);
+
+        if (currentPlayer == castPlayer) {
+            if (castPlayer.getPlaybackState() != Player.STATE_IDLE) {
+                Timeline castTimeline = castPlayer.getCurrentTimeline();
+
+                if (castTimeline.getPeriodCount() <= itemIndex) {
+                    return false;
+                }
+
+                castPlayer.removeItem((int) castTimeline.getPeriod(itemIndex, new Timeline.Period()).id);
+            }
+        }
+
+        queue.remove(itemIndex);
+
+        if (itemIndex == currentItemIndex && itemIndex == queue.size()) {
+            maybeSetCurrentItemAndNotify(C.INDEX_UNSET);
+        } else if (itemIndex < currentItemIndex) {
+            maybeSetCurrentItemAndNotify(currentItemIndex - 1);
+        }
+
+        return true;
+    }
+
+    /**
+     * Moves an item within the queue.
+     *
+     * @param fromIndex The index of the item to move.
+     * @param toIndex The target index of the item in the queue.
+     * @return Whether the item move was successful.
+     */
+    public boolean moveItem(int fromIndex, int toIndex) {
+        Log.d(TAG, "moveitem() -> from=" + fromIndex + " to=" + toIndex);
+
+        // Player update.
+        concatenatingMediaSource.moveMediaSource(fromIndex, toIndex);
+
+        if (currentPlayer == castPlayer && castPlayer.getPlaybackState() != Player.STATE_IDLE) {
+            Timeline castTimeline = castPlayer.getCurrentTimeline();
+            int periodCount = castTimeline.getPeriodCount();
+
+            if (periodCount <= fromIndex || periodCount <= toIndex) {
+                return false;
+            }
+
+            int elementId = (int) castTimeline.getPeriod(fromIndex, new Timeline.Period()).id;
+
+            castPlayer.moveItem(elementId, toIndex);
+        }
+
+        queue.add(toIndex, queue.remove(fromIndex));
+
+        // Index update.
+        if (fromIndex == currentItemIndex) {
+            maybeSetCurrentItemAndNotify(toIndex);
+        } else if (fromIndex < currentItemIndex && toIndex >= currentItemIndex) {
+            maybeSetCurrentItemAndNotify(currentItemIndex - 1);
+        } else if (fromIndex > currentItemIndex && toIndex <= currentItemIndex) {
+            maybeSetCurrentItemAndNotify(currentItemIndex + 1);
+        }
+
+        return true;
+    }
+
+    /**
+     * Releases the manager and the players that it holds.
+     */
+    public void release() {
+        Log.d(TAG, "release()");
+
+        currentItemIndex = C.INDEX_UNSET;
+        queue.clear();
+        concatenatingMediaSource.clear();
+
+        playerNotificationManager.setPlayer(null);
+
+        if(castPlayer != null) {
+            castPlayer.setSessionAvailabilityListener(null);
+
+            castPlayer.release();
+            castPlayer = null;
+        }
+
+        localPlayer.release();
+        localPlayer = null;
+
+        if (castSessionManager != null) {
+            castSessionManager.removeSessionManagerListener(castSessionManagerListener, CastSession.class);
+        }
+    }
+
+    // Player.EventListener implementation.
+
+    @Override
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        Log.d(TAG, "onPlayerStateChanged(" + playWhenReady + ", " + playbackState +  ")");
+
+        updateCurrentItemIndex();
+    }
+
+    @Override
+    public void onPositionDiscontinuity(@Player.DiscontinuityReason int reason) {
+        Log.d(TAG, "onPositionDiscontinuity(" + reason + ")");
+
+        updateCurrentItemIndex();
+    }
+
+    @Override
+    public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, @Player.TimelineChangeReason int reason) {
+        Log.d(TAG, "onTimelineChanged(" + reason + ")");
+
+        updateCurrentItemIndex();
+
+        if (timeline.isEmpty()) {
+            castMediaQueueCreationPending = true;
+        }
+
+        // Timeline reset
+        if(reason == Player.TIMELINE_CHANGE_REASON_RESET) {
+            // End all jobs for the current session
+            RESTService.getInstance().endJobs(SessionService.getInstance().getSessionId());
+        }
+    }
+
+    // CastPlayer.SessionAvailabilityListener implementation.
+
+    @Override
+    public void onCastSessionAvailable() {
+        Log.d(TAG, "onCastSessionAvailable()");
+
+        setCurrentPlayer(castPlayer);
+    }
+
+    @Override
+    public void onCastSessionUnavailable() {
+        Log.d(TAG, "onCastSessionUnavailable()");
+
+        setCurrentPlayer(localPlayer);
+        castSession = null;
+    }
+
+    /**
+     * Session Manager Listener responsible for switching the Playback instances
+     * depending on whether it is connected to a remote player.
+     */
+    private class CastSessionManagerListener implements SessionManagerListener<CastSession> {
+
+        @Override
+        public void onSessionEnded(CastSession session, int error) {
+            Log.d(TAG, "Cast: onSessionEnded()");
+        }
+
+        @Override
+        public void onSessionResumed(CastSession session, boolean wasSuspended) {
+            Log.d(TAG, "Cast: onSessionResumed(" + wasSuspended + ")");
+
+            // Update cast session
+            castSession = session;
+        }
+
+        @Override
+        public void onSessionStarted(final CastSession session, final String sessionId) {
+            Log.d(TAG, "Cast: onSessionStarted() > sessionId = " + sessionId);
+
+            // Register session
+            RESTService.getInstance().addSession(ctx, UUID.fromString(sessionId), null, new TextHttpResponseHandler() {
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Log.d(TAG, "Failed to register session for Chromecast.");
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                    // Send server URL and settings to receiver
+                    try {
+                        // Get settings
+                        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(ctx);
+
+                        // Get quality
+                        String audioQuality = settings.getString("pref_cast_audio_quality", "0");
+                        String videoQuality = settings.getString("pref_cast_video_quality", "0");
+
+                        JSONObject message = new JSONObject();
+                        message.put("serverUrl", RESTService.getInstance().getAddress());
+                        message.put("videoQuality", videoQuality);
+                        message.put("audioQuality", audioQuality);
+                        message.put("sessionId", sessionId);
+                        session.sendMessage(MediaService.CC_CONFIG_CHANNEL, message.toString());
+                    } catch (JSONException e) {
+                        Log.d(TAG, "Failed to send setup information to Chromecast receiver.", e);
+                    }
+                }
+            });
+
+            // Update cast session
+            castSession = session;
+        }
+
+        @Override
+        public void onSessionStarting(CastSession session) {
+            Log.d(TAG, "Cast: onSessionStarting() > " + session.toString());
+        }
+
+        @Override
+        public void onSessionStartFailed(CastSession session, int error) {
+            Log.d(TAG, "Cast: onSessionStartFailed() > error = " + error);
+        }
+
+        @Override
+        public void onSessionEnding(CastSession session) {
+            Log.d(TAG, "Cast: onSessionEnding()");
+
+            // Cleanup cast session
+            castSession = null;
+        }
+
+        @Override
+        public void onSessionResuming(CastSession session, String sessionId) {
+            Log.d(TAG, "Cast: onSessionResuming() > " + sessionId);
+        }
+
+        @Override
+        public void onSessionResumeFailed(CastSession session, int error) {
+            Log.d(TAG, "Cast: onSessionResumeFailed()");
+        }
+
+        @Override
+        public void onSessionSuspended(CastSession session, int reason) {
+            Log.d(TAG, "Cast: onSessionSuspended()");
+        }
+    }
+
+    public CastSession getCastSession() {
+        return castSession;
+    }
+
+    public boolean isCastSessionAvailable() {
+        return castSession != null;
+    }
+
+    private void updateCurrentItemIndex() {
+        Log.d(TAG, "updateCurrentItemIndex()");
+
+        int playbackState = currentPlayer.getPlaybackState();
+        maybeSetCurrentItemAndNotify(
+                playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED
+                        ? currentPlayer.getCurrentWindowIndex() : C.INDEX_UNSET);
+    }
+
+    private void setCurrentPlayer(Player currentPlayer) {
+        Log.d(TAG, "setCurrentPlayer() > " + currentPlayer.getClass().getSimpleName());
+
+        if (this.currentPlayer == currentPlayer) {
             return;
         }
 
-        // Check current playback
-        if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
-            if (playback instanceof VideoPlaybackActivity) {
-                playback.destroy();
-                playback = null;
+        // Player state management.
+        long playbackPositionMs = C.TIME_UNSET;
+        int windowIndex = C.INDEX_UNSET;
+        boolean playWhenReady = false;
+
+        if (this.currentPlayer != null) {
+            int playbackState = this.currentPlayer.getPlaybackState();
+
+            if (!videoMode && playbackState != Player.STATE_ENDED) {
+                playbackPositionMs = this.currentPlayer.getCurrentPosition();
+                playWhenReady = this.currentPlayer.getPlayWhenReady();
+                windowIndex = this.currentPlayer.getCurrentWindowIndex();
+                if (windowIndex != currentItemIndex) {
+                    playbackPositionMs = C.TIME_UNSET;
+                    windowIndex = currentItemIndex;
+                }
             }
 
-            if (playback == null) {
-                playback = new AudioPlayback(ctx);
-                playback.setCallback(this);
+            this.currentPlayer.stop(true);
+        }
+
+        this.currentPlayer = currentPlayer;
+
+        // Setup media session connector
+        RepeatModeActionProvider repeatProvider = new RepeatModeActionProvider(ctx, currentPlayer);
+        ShuffleActionProvider shuffleProvider = new ShuffleActionProvider(ctx, currentPlayer);
+        mediaSessionConnector.setPlayer(currentPlayer, new SMSPlaybackPreparer(), repeatProvider, shuffleProvider);
+
+        // Determine whether to setup player notification
+        if(videoMode && currentPlayer == localPlayer) {
+            playerNotificationManager.setPlayer(null);
+        } else {
+            playerNotificationManager.setPlayer(currentPlayer);
+        }
+
+        // Media queue management.
+        castMediaQueueCreationPending = currentPlayer == castPlayer;
+        if (currentPlayer == localPlayer && concatenatingMediaSource.getSize() > 0) {
+            // Set audio attributes so audio focus can be handled correctly
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(videoMode ? C.CONTENT_TYPE_MOVIE : C.CONTENT_TYPE_MUSIC)
+                    .build();
+
+            localPlayer.setAudioAttributes(audioAttributes, true);
+            localPlayer.prepare(concatenatingMediaSource);
+        }
+
+        // Playback transition.
+        if (windowIndex != C.INDEX_UNSET) {
+            setCurrentItem(windowIndex, playbackPositionMs, playWhenReady);
+        }
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    /**
+     * Starts playback of the item at the given position.
+     *
+     * @param itemIndex The index of the item to play.
+     * @param positionMs The position at which playback should start.
+     * @param playWhenReady Whether the player should proceed when ready to do so.
+     */
+    private void setCurrentItem(int itemIndex, long positionMs, boolean playWhenReady) {
+        Log.d(TAG, "setCurrentItem() > index=" + itemIndex + " position=" + positionMs + " playWhenReady=" + playWhenReady);
+
+        maybeSetCurrentItemAndNotify(itemIndex);
+
+        if (castMediaQueueCreationPending) {
+            MediaQueueItem[] items = new MediaQueueItem[queue.size()];
+            for (int i = 0; i < items.length; i++) {
+                items[i] = MediaUtils.getMediaQueueItem(queue.get(i));
             }
+            castMediaQueueCreationPending = false;
+            castPlayer.loadItems(items, itemIndex, positionMs, Player.REPEAT_MODE_OFF);
+        } else {
+            currentPlayer.seekTo(itemIndex, positionMs);
+            currentPlayer.setPlayWhenReady(playWhenReady);
+        }
+    }
 
-            playback.play(currentMedia);
+    private void maybeSetCurrentItemAndNotify(int currentItemIndex) {
+        Log.d(TAG, "maybeSetCurrentItemAndNotify(" + currentItemIndex + ")");
 
-        } else if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
-            if (playback instanceof AudioPlayback) {
-                playback.stop(true);
-                playback.destroy();
-                playback = null;
-            }
+        if (this.currentItemIndex != currentItemIndex) {
+            int oldIndex = this.currentItemIndex;
+            this.currentItemIndex = currentItemIndex;
 
-            if (playback == null) {
-                // Start video playback activity
-                Intent intent;
-                UiModeManager uiModeManager = (UiModeManager) ctx.getSystemService(ctx.UI_MODE_SERVICE);
+            // Trigger listener events
+            onQueuePositionChanged(oldIndex, currentItemIndex);
 
-                Log.d(TAG, "UI Mode: " + uiModeManager.getCurrentModeType());
-
-                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                    Log.d(TAG, "Launching video playback on a TV Device");
-                    intent = new Intent(ctx, TvVideoPlaybackActivity.class)
-                            .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
-                } else {
-                    intent = new Intent(ctx, VideoPlaybackActivity.class)
-                            .putExtra(MediaUtils.EXTRA_QUEUE_ITEM, currentMedia);
+            // End job
+            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET) {
+                if(currentPlayer.getCurrentTimeline().isEmpty() || currentPlayer.getCurrentTimeline().getWindowCount() < oldIndex) {
+                    return;
                 }
 
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(intent);
-            } else {
-                playback.play(currentMedia);
-            }
-        }
+                Timeline.Window oldWindow = new Timeline.Window();
+                this.currentPlayer.getCurrentTimeline().getWindow(oldIndex, oldWindow, true);
+                String tag = (String) oldWindow.tag;
 
-        // Notify service callback
-        serviceCallback.onPlaybackStart();
-    }
-
-    /**
-     * Handle a request to pause media
-     */
-    public void handlePauseRequest() {
-        if (playback != null && playback.isPlaying()) {
-            playback.pause();
-            serviceCallback.onPlaybackStop();
-        }
-    }
-
-    /**
-     * Handle a request to stop media
-     */
-    public void handleStopRequest(String error) {
-        if(playback != null) {
-            playback.stop(true);
-            playback.setState(PlaybackStateCompat.STATE_NONE);
-            updatePlaybackState(error);
-        }
-
-        serviceCallback.onPlaybackStop();
-    }
-
-
-    /**
-     * Update the current media player state, optionally showing an error message.
-     */
-    public void updatePlaybackState(String error) {
-        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
-
-        if (playback != null && playback.isConnected()) {
-            position = playback.getCurrentStreamPosition();
-        }
-
-        //noinspection ResourceType
-        PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder();
-        stateBuilder.setActions(getAvailableActions());
-
-        // Shuffle
-        switch(shuffleMode) {
-            case PlaybackStateCompat.SHUFFLE_MODE_NONE:
-                stateBuilder.addCustomAction(MediaService.STATE_SHUFFLE_OFF, ctx.getResources().getString(R.string.description_shuffle_off), R.drawable.ic_shuffle_white_48dp);
-                break;
-
-            case PlaybackStateCompat.SHUFFLE_MODE_ALL:
-                stateBuilder.addCustomAction(MediaService.STATE_SHUFFLE_ON, ctx.getResources().getString(R.string.description_shuffle_on), R.drawable.ic_shuffle_enabled_white_48dp);
-                break;
-        }
-
-        // Repeat
-        switch(repeatMode) {
-            case PlaybackStateCompat.REPEAT_MODE_NONE:
-                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_NONE, ctx.getResources().getString(R.string.description_repeat_none), R.drawable.ic_repeat_white_48dp);
-                break;
-
-            case PlaybackStateCompat.REPEAT_MODE_ALL:
-                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_ALL, ctx.getResources().getString(R.string.description_repeat_all), R.drawable.ic_repeat_enable_white_48dp);
-                break;
-
-            case PlaybackStateCompat.REPEAT_MODE_ONE:
-                stateBuilder.addCustomAction(MediaService.STATE_REPEAT_ONE, ctx.getResources().getString(R.string.description_repeat_one), R.drawable.ic_repeat_one_white_48dp);
-                break;
-        }
-
-
-        int state = playback.getState();
-
-        // If there is an error message, send it to the playback state:
-        if (error != null) {
-            stateBuilder.setErrorMessage(-1, error);
-            state = PlaybackStateCompat.STATE_ERROR;
-        }
-
-        //noinspection ResourceType
-        stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
-
-        // Set the active Queue Item ID if the current index is valid.
-        MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
-
-        if (currentMedia != null) {
-            stateBuilder.setActiveQueueItemId(currentMedia.getQueueId());
-        }
-
-        serviceCallback.onPlaybackStateUpdated(stateBuilder.build());
-
-        // Check if notification is required
-        if(!(playback instanceof VideoPlaybackActivity)) {
-            if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
-                serviceCallback.onNotificationRequired();
+                if (tag != null) {
+                    RESTService.getInstance().endJob(SessionService.getInstance().getSessionId(), UUID.fromString(tag));
+                }
             }
         }
     }
 
-    private long getAvailableActions() {
-        long actions = PlaybackStateCompat.ACTION_PLAY_PAUSE |
-                       PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-                       PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                       PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
-                       PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
+    private void updateQueueFromMediaId(final String id, int extra) {
+        Log.d(TAG, "updateQueueFromMediaId() > " + id);
 
-        if (playback != null && playback.isPlaying()) {
-            actions |= PlaybackStateCompat.ACTION_PAUSE;
-        } else {
-            actions |= PlaybackStateCompat.ACTION_PLAY;
-        }
+        final List<MediaElement> newQueue = Collections.synchronizedList(new ArrayList<MediaElement>());
+        List<String> parsedMediaId = MediaUtils.parseMediaId(id);
 
-        // Determine media type
-        MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
-
-        if(currentMedia != null && currentMedia.getDescription() != null && currentMedia.getDescription().getMediaId() != null) {
-            if (MediaUtils.getMediaTypeFromID(currentMedia.getDescription().getMediaId()) == MediaElement.MediaElementType.AUDIO) {
-                actions |= PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
-                           PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE;
-            }
-        }
-
-        return actions;
-    }
-
-    /**
-     * Implementation of the Playback.Callback interface
-     */
-    @Override
-    public void onCompletion() {
-        Log.d(TAG, "onCompletion()");
-
-        if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE) {
-            handlePlayRequest();
-        } else if(queueManager.skipQueuePosition(1)) {
-            handlePlayRequest();
-        } else if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
-            queueManager.setCurrentQueueIndex(0);
-            handlePlayRequest();
-        } else {
-            handleStopRequest(null);
-        }
-
-        queueManager.updateMetadata();
-    }
-
-    @Override
-    public void onPlaybackStatusChanged(int state) {
-        Log.d(TAG, "onPlaybackStatusChanged(" + state + ")");
-
-        updatePlaybackState(null);
-    }
-
-    @Override
-    public void onError(String error) {
-        updatePlaybackState(error);
-    }
-
-    @Override
-    public void setCurrentMediaID(String mediaID) {
-        queueManager.setCurrentQueueItem(mediaID);
-    }
-
-
-    /**
-     * Switch to a different Playback instance, maintaining all playback state, if possible.
-     */
-    public void switchToPlayback(Playback newPlayback, boolean resumePlaying) {
-        // Suspend the current playback
-        int oldState = playback == null ? PlaybackStateCompat.STATE_NONE : playback.getState();
-        long pos = playback == null ? 0 : playback.getCurrentStreamPosition();
-        String currentMediaId = playback == null ? "" : playback.getCurrentMediaId();
-
-        if(playback != null) {
-            playback.stop(MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.VIDEO);
-            playback.destroy();
-        }
-
-        // Only switch playback for audio
-        if (MediaUtils.getMediaTypeFromID(currentMediaId) == MediaElement.MediaElementType.VIDEO) {
-            queueManager.resetQueue();
+        if(parsedMediaId.isEmpty()) {
             return;
         }
 
-        Log.d(TAG, "switchToPlayback(" + newPlayback.getClass().toString() +
-                " Resume: " + resumePlaying +
-                " State: " + oldState +
-                " Position: " + pos +
-                " Media ID: " + currentMediaId +
-                ")");
-
-        // Setup new playback
-        newPlayback.setCallback(this);
-        newPlayback.setCurrentStreamPosition(pos < 0 ? 0 : pos);
-        newPlayback.setCurrentMediaId(currentMediaId);
-        newPlayback.start();
-
-        // Finally swap the instance
-        playback = newPlayback;
-
-        switch (oldState) {
-
-            case PlaybackStateCompat.STATE_BUFFERING:
-
-            case PlaybackStateCompat.STATE_CONNECTING:
-
-            case PlaybackStateCompat.STATE_PAUSED:
-                playback.pause();
-                break;
-
-            case PlaybackStateCompat.STATE_PLAYING:
-                MediaSessionCompat.QueueItem currentMedia = queueManager.getCurrentMedia();
-
-                if (resumePlaying && currentMedia != null) {
-                    playback.play(currentMedia);
-                } else if (!resumePlaying) {
-                    playback.pause();
-                } else {
-                    playback.stop(true);
+        // Handle Playlist
+        switch (parsedMediaId.get(0)) {
+            case MediaUtils.MEDIA_ID_PLAYLIST:
+                if (parsedMediaId.size() < 2) {
+                    return;
                 }
+
+                final UUID playlistId = UUID.fromString(parsedMediaId.get(1));
+
+                // Handle extra options
+                boolean random = extra == MediaUtils.MEDIA_MENU_SHUFFLE;
+
+                RESTService.getInstance().getPlaylistContents(ctx, playlistId, SessionService.getInstance().getSessionId(), random, new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        MediaElement element;
+                        Gson parser = new Gson();
+
+                        element = parser.fromJson(response.toString(), MediaElement.class);
+
+                        if (element == null) {
+                            throw new IllegalArgumentException("Failed to fetch contents of playlist with ID: " + playlistId);
+                        }
+
+                        newQueue.add(element);
+                        updateQueue(newQueue, null);
+                    }
+
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                        Gson parser = new Gson();
+
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                                if (element == null) {
+                                    throw new IllegalArgumentException("Failed to fetch contents of playlist with ID: " + playlistId);
+                                }
+
+                                newQueue.add(element);
+                            } catch (JSONException e) {
+                                Log.e(TAG, "Failed to process JSON", e);
+                            }
+                        }
+
+                        if (!newQueue.isEmpty()) {
+                            updateQueue(newQueue, null);
+                        } else {
+                            Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+                        throw new IllegalArgumentException("Failed to fetch contents for playlist with ID: " + playlistId);
+                    }
+                });
                 break;
 
-            case PlaybackStateCompat.STATE_NONE:
+            case MediaUtils.MEDIA_ID_RANDOM_AUDIO:
+                RESTService.getInstance().getRandomMediaElements(ctx, 200, MediaElement.MediaElementType.AUDIO, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        MediaElement element;
+                        Gson parser = new Gson();
+
+                        element = parser.fromJson(response.toString(), MediaElement.class);
+
+                        if (element == null) {
+                            throw new IllegalArgumentException("Failed to fetch random media elements.");
+                        }
+
+                        newQueue.add(element);
+
+                        if (!newQueue.isEmpty()) {
+                            updateQueue(newQueue, null);
+                        } else {
+                            Log.e(TAG, "No media items to add to queue.");
+                        }
+                    }
+
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                        Gson parser = new Gson();
+
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                                if (element == null) {
+                                    throw new IllegalArgumentException("Failed to fetch random media elements.");
+                                }
+
+                                newQueue.add(element);
+                            } catch (JSONException e) {
+                                Log.e(TAG, "Failed to process JSON", e);
+                            }
+                        }
+
+                        if (!newQueue.isEmpty()) {
+                            updateQueue(newQueue, null);
+                        } else {
+                            Log.e(TAG, "No media items to add to queue");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+                        throw new IllegalArgumentException("Failed to fetch random media elements.");
+                    }
+                });
                 break;
 
             default:
-                Log.d(TAG, "Default called. Old state is " + oldState);
+                if (parsedMediaId.size() < 2) {
+                    return;
+                }
+
+                final String mediaType = parsedMediaId.get(0);
+                final UUID elementId = UUID.fromString(parsedMediaId.get(1));
+
+                switch (mediaType) {
+                    case MediaUtils.MEDIA_ID_DIRECTORY_AUDIO:
+                    case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
+                    case MediaUtils.MEDIA_ID_AUDIO:
+                    case MediaUtils.MEDIA_ID_VIDEO:
+                        RESTService.getInstance().getMediaElementContents(ctx, elementId, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                                MediaElement element;
+                                Gson parser = new Gson();
+
+                                element = parser.fromJson(response.toString(), MediaElement.class);
+
+                                if (element == null) {
+                                    throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                                }
+
+                                newQueue.add(element);
+
+                                if (!newQueue.isEmpty()) {
+                                    updateQueue(newQueue, null);
+                                } else {
+                                    Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                                }
+                            }
+
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                                Gson parser = new Gson();
+
+                                for (int i = 0; i < response.length(); i++) {
+                                    try {
+                                        MediaElement element = parser.fromJson(response.getJSONObject(i).toString(), MediaElement.class);
+
+                                        if (element == null) {
+                                            throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                                        }
+
+                                        newQueue.add(element);
+                                    } catch (JSONException e) {
+                                        Log.e(TAG, "Failed to process JSON", e);
+                                    }
+                                }
+
+                                if (!newQueue.isEmpty()) {
+                                    if (mediaType.equals(MediaUtils.MEDIA_ID_AUDIO) || mediaType.equals(MediaUtils.MEDIA_ID_VIDEO)) {
+                                        updateQueue(newQueue, elementId);
+                                    } else {
+                                        updateQueue(newQueue, null);
+                                    }
+                                } else {
+                                    Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject response) {
+                                throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
+                            }
+                        });
+
+                        break;
+                }
+
+                break;
         }
     }
 
-    private class MediaSessionCallback extends MediaSessionCompat.Callback {
-        @Override
-        public void onAddQueueItem(MediaDescriptionCompat description, int index) {
-            if(index == -1) {
-                queueManager.addToQueue(description, queueManager.getCurrentIndex() + 1);
-            } else {
-                queueManager.addToQueue(description, index);
+    private void updateQueue(@NonNull List<MediaElement> elements, UUID id) {
+        Log.d(TAG, "updateQueue() > id=" + id);
+
+        if(elements.isEmpty()) {
+            return;
+        }
+
+        //  Reset player
+        if(currentPlayer != null) {
+            currentPlayer.stop(true);
+        }
+
+        // Reset queue and create media source array
+        byte type = MediaElement.MediaElementType.NONE;
+        List<MediaSource> mediaSources = new ArrayList<>();
+        queue = new ArrayList<>();
+
+        // Process each media element
+        for(MediaElement element : elements) {
+            // Make sure all elements are of the same type
+            if(type == MediaElement.MediaElementType.NONE) {
+                type = element.getType();
+            }
+
+            if(type == element.getType()) {
+                queue.add(element);
+                mediaSources.add(buildMediaSource(element));
             }
         }
 
-        @Override
-        public void onAddQueueItem(MediaDescriptionCompat description) {
-            queueManager.addToQueue(description, queueManager.getCurrentQueueSize());
+        // Make sure our media queue isn't empty
+        if(queue.isEmpty()) {
+            return;
         }
 
-        @Override
-        public void onPlay() {
-            Log.d(TAG, "onPlay()");
+        // Update current mode
+        videoMode = type == MediaElement.MediaElementType.VIDEO;
 
-            if (queueManager.getCurrentMedia() == null) {
-                return;
+        // Create a new media source
+        concatenatingMediaSource = new ConcatenatingMediaSource(false, true, new ShuffleOrder.DefaultShuffleOrder(0), mediaSources.toArray(new MediaSource[0]));
+
+        // Media queue management.
+        castMediaQueueCreationPending = currentPlayer == castPlayer;
+        if (currentPlayer == localPlayer) {
+            // Set audio attributes so audio focus can be handled correctly
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(videoMode ? C.CONTENT_TYPE_MOVIE : C.CONTENT_TYPE_MUSIC)
+                    .build();
+
+            localPlayer.setAudioAttributes(audioAttributes, true);
+            localPlayer.prepare(concatenatingMediaSource);
+        }
+
+        // Handle notification based on media type
+        if(videoMode && currentPlayer == localPlayer) {
+            playerNotificationManager.setPlayer(null);
+        } else {
+            playerNotificationManager.setPlayer(currentPlayer);
+        }
+
+        // Start playback
+        if(id != null) {
+            for(int i = 0; i < queue.size(); i++) {
+                if(queue.get(i).getID().equals(id)) {
+                    setCurrentItem(i, 0L, true);
+                }
+            }
+        } else {
+            setCurrentItem(0, 0L, true);
+        }
+    }
+
+    private static MediaSource buildMediaSource(MediaElement mediaElement) {
+        String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
+
+        switch (mediaElement.getFormat()) {
+            case SMS.Format.HLS:
+                return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
+                        .setAllowChunklessPreparation(true)
+                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
+                        .setTag(mediaElement.getID().toString())
+                        .createMediaSource(Uri.parse(url));
+            default: {
+                return new ExtractorMediaSource.Factory(DATA_SOURCE_FACTORY)
+                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
+                        .setTag(mediaElement.getID().toString())
+                        .createMediaSource(Uri.parse(url));
+            }
+        }
+    }
+
+    private class SMSPlaybackPreparer implements MediaSessionConnector.PlaybackPreparer {
+        long ACTIONS = PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID
+                | PlaybackStateCompat.ACTION_PREPARE_FROM_SEARCH
+                | PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
+                | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
+
+        @Override
+        public void onPrepareFromMediaId(final String mediaId, Bundle extras) {
+            Log.d(TAG, "onPrepareFromMediaId(" + mediaId + ")");
+
+            // Handle extra options
+            int extra = MediaUtils.MEDIA_MENU_NONE;
+
+            if(extras.containsKey(MediaUtils.EXTRA_MEDIA_OPTION)) {
+                extra = extras.getInt(MediaUtils.EXTRA_MEDIA_OPTION);
             }
 
-            handlePlayRequest();
+            updateQueueFromMediaId(mediaId, extra);
         }
 
         @Override
-        public void onSkipToQueueItem(long queueId) {
-            Log.d(TAG, "onSkipToQueueItem(" + queueId + ")");
+        public void onPrepareFromSearch(String query, Bundle extras) {
+            Log.d(TAG, "onPrepareFromSearch(" + query + ")");
 
-            if(queueManager.setCurrentQueueItem(queueId)) {
-                handlePlayRequest();
-                queueManager.updateMetadata();
+            // Handle extra options
+            int extra = MediaUtils.MEDIA_MENU_NONE;
+
+            if(extras.containsKey(MediaUtils.EXTRA_MEDIA_OPTION)) {
+                extra = extras.getInt(MediaUtils.EXTRA_MEDIA_OPTION);
             }
-        }
-
-        @Override
-        public void onSeekTo(long position) {
-            playback.seekTo((int) position);
-        }
-
-        @Override
-        public void onPause() {
-            handlePauseRequest();
-        }
-
-        @Override
-        public void onStop() {
-            handleStopRequest(null);
-        }
-
-        @Override
-        public void onSkipToNext() {
-            Log.d(TAG, "onSkipToNext()");
-
-            if(queueManager.skipQueuePosition(1)) {
-                handlePlayRequest();
-            } else if(repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) {
-                queueManager.setCurrentQueueIndex(0);
-                handlePlayRequest();
-            }
-
-            queueManager.updateMetadata();
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            Log.d(TAG, "onSkipToPrevious()");
-
-            if (queueManager.skipQueuePosition(-1)) {
-                handlePlayRequest();
-            }
-
-            queueManager.updateMetadata();
-        }
-
-        @Override
-        public void onPlayFromMediaId(String mediaId, Bundle extras) {
-            Log.d(TAG, "onPlayFromMediaId(" + mediaId + ")");
-
-            queueManager.setQueueFromMediaId(mediaId);
-        }
-
-        /**
-         * Handle free and contextual searches.
-         **/
-        @Override
-        public void onPlayFromSearch(final String query, final Bundle extras) {
-            Log.d(TAG, "onPlayFromSearch(" + query + ")");
 
             if (TextUtils.isEmpty(query)) {
-                // The user provided generic string e.g. 'Play music'
                 // Play random music
-                queueManager.setQueueFromMediaId(MediaUtils.MEDIA_ID_RANDOM_AUDIO);
+                updateQueueFromMediaId(MediaUtils.MEDIA_ID_RANDOM_AUDIO, extra);
             }
         }
 
         @Override
-        public void onCustomAction(String action, Bundle extras) {
-            Log.d(TAG, "onCustomAction(" + action + ")");
+        public void onPrepareFromUri(Uri uri, Bundle extras) {
+            // Do nothing...
+        }
 
-            switch(action) {
-                case MediaService.STATE_SHUFFLE_ON:
-                    shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_NONE;
-                    queueManager.setShuffleMode(false);
-                    break;
+        @Override
+        public long getSupportedPrepareActions() {
+            return ACTIONS;
+        }
 
-                case MediaService.STATE_SHUFFLE_OFF:
-                    shuffleMode = PlaybackStateCompat.SHUFFLE_MODE_ALL;
-                    queueManager.setShuffleMode(true);
-                    break;
+        @Override
+        public void onPrepare() {
+            // Do nothing...
+        }
 
-                case MediaService.STATE_REPEAT_NONE:
-                    repeatMode = PlaybackStateCompat.REPEAT_MODE_ALL;
-                    break;
+        @Override
+        public String[] getCommands() {
+            return null;
+        }
 
-                case MediaService.STATE_REPEAT_ALL:
-                    repeatMode = PlaybackStateCompat.REPEAT_MODE_ONE;
-                    break;
-
-                case MediaService.STATE_REPEAT_ONE:
-                    repeatMode = PlaybackStateCompat.REPEAT_MODE_NONE;
-                    break;
-
-                case MediaService.ACTION_CLEAR_PLAYLIST:
-                    queueManager.resetQueue();
-            }
-
-            updatePlaybackState(null);
+        @Override
+        public void onCommand(Player player, String command, Bundle extras, ResultReceiver cb) {
+            // Do nothing...
         }
     }
 
+    private class DescriptionAdapter implements PlayerNotificationManager.MediaDescriptionAdapter {
 
-    public interface PlaybackServiceCallback {
-        void onPlaybackStart();
-        void onNotificationRequired();
-        void onPlaybackStop();
-        void onPlaybackStateUpdated(PlaybackStateCompat newState);
+        @Override
+        public String getCurrentContentTitle(Player player) {
+            MediaDescriptionCompat media = getMediaDescription();
+
+            if(media == null) {
+                return "";
+            }
+
+            return media.getTitle().toString();
+        }
+
+        @Nullable
+        @Override
+        public String getCurrentContentText(Player player) {
+            MediaDescriptionCompat media = getMediaDescription();
+
+            if(media == null) {
+                return "";
+            }
+
+            return media.getSubtitle().toString();
+        }
+
+        @Nullable
+        @Override
+        public Bitmap getCurrentLargeIcon(Player player, PlayerNotificationManager.BitmapCallback callback) {
+            Bitmap placeholder = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_placeholder_audio);
+            MediaDescriptionCompat media = getMediaDescription();
+
+            if(media != null) {
+                Glide.with(ctx)
+                        .asBitmap()
+                        .load(media.getIconUri())
+                        .into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                                callback.onBitmap(resource);
+                            }
+                        });
+            }
+
+            return placeholder;
+        }
+
+        @Nullable
+        @Override
+        public PendingIntent createCurrentContentIntent(Player player) {
+            Intent intent = new Intent(ctx, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.putExtra(HomeActivity.EXTRA_START_FULLSCREEN, true);
+
+            return PendingIntent.getActivity(ctx, REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        }
     }
+
+    /**
+     * Listener
+     */
+
+    public void addListener(@NonNull PlaybackListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(@NonNull  PlaybackListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void onQueuePositionChanged(int previousIndex, int newIndex) {
+        for (PlaybackListener listener : listeners) {
+            listener.onQueuePositionChanged(previousIndex, newIndex);
+        }
+    }
+
 }

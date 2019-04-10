@@ -29,8 +29,13 @@ import androidx.annotation.NonNull;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.common.images.WebImage;
+import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.domain.MediaElement;
 
@@ -47,6 +52,7 @@ public class MediaUtils {
     public static final String EXTRA_MEDIA_ID = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_ID";
     public static final String EXTRA_MEDIA_ITEM = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_ITEM";
     public static final String EXTRA_QUEUE_ITEM = "com.scooter1556.sms.android.activity.EXTRA_QUEUE_ITEM";
+    public static final String EXTRA_MEDIA_OPTION = "com.scooter1556.sms.android.activity.EXTRA_MEDIA_OPTION";
 
     public static final String SEPARATOR = "|";
 
@@ -84,11 +90,25 @@ public class MediaUtils {
     public static final String MEDIA_ID_AUDIO = "__AUDIO__";
     public static final String MEDIA_ID_RANDOM_AUDIO = "__RANDOM_AUDIO__";
 
+    public static final int MEDIA_MENU_NONE = -1;
+    public static final int MEDIA_MENU_SHUFFLE = 0;
+
+    public static final short MEDIA_ID_KEY_TYPE = 0;
+    public static final short MEDIA_ID_KEY_MEID = 1;
+
 
     /*
      * Make sure public utility methods remain static
      */
     private MediaUtils() {}
+
+    public static MediaQueueItem getMediaQueueItem(MediaElement mediaElement) {
+        MediaMetadata metadata = getMediaMetadataFromMediaElement(mediaElement);
+        MediaInfo mediaInfo = new MediaInfo.Builder(mediaElement.getID().toString())
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setMetadata(metadata).build();
+        return new MediaQueueItem.Builder(mediaInfo).build();
+    }
 
     /*
      * Retrieve MediaMetadata for a MediaElement
@@ -335,5 +355,23 @@ public class MediaUtils {
                 .build();
 
         return description;
+    }
+
+    public static MediaElement getMediaElementById(String id, @NonNull List<MediaElement> mediaElements) {
+        if(mediaElements.isEmpty() || id.isEmpty()) {
+            return null;
+        }
+
+        // Create UUID from id
+        UUID uid = UUID.fromString(id);
+
+        // Parse media elements for one with matching id
+        for(MediaElement element : mediaElements) {
+            if(element.getID().equals(uid)) {
+                return element;
+            }
+        }
+
+        return null;
     }
 }

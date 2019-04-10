@@ -248,7 +248,7 @@ public class TvMusicFragment extends BrowseFragment implements OnItemViewClicked
             MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
             if (mediaItem.isPlayable()) {
-                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().prepareFromMediaId(mediaItem.getMediaId(), null);
             } else if (mediaItem.isBrowsable()) {
                 Intent intent = null;
 

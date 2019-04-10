@@ -53,6 +53,8 @@ import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
+import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
@@ -245,7 +247,13 @@ public class TvMediaGridFragment extends androidx.leanback.app.VerticalGridFragm
                 MediaBrowserCompat.MediaItem mediaItem = (MediaBrowserCompat.MediaItem) item;
 
                 if (mediaItem.isPlayable()) {
-                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().playFromMediaId(mediaItem.getMediaId(), null);
+                    MediaControllerCompat.getMediaController(getActivity()).getTransportControls().prepareFromMediaId(mediaItem.getMediaId(), null);
+
+                    // Start video playback activity
+                    if(MediaUtils.getMediaTypeFromID(mediaItem.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+                        Intent intent = new Intent(getActivity(), TvVideoPlaybackActivity.class);
+                        startActivity(intent);
+                    }
                 } else if (mediaItem.isBrowsable()) {
                     Intent intent = null;
 

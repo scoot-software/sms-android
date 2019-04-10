@@ -35,7 +35,7 @@ public abstract class BaseFragment extends Fragment {
     public void onConnected() {};
 
     public interface MediaFragmentListener extends MediaBrowserProvider {
-        void onMediaItemSelected(MediaBrowserCompat.MediaItem item);
+        void onMediaItemSelected(MediaBrowserCompat.MediaItem item, int extra);
         void setToolbarTitle(CharSequence title);
     }
 }

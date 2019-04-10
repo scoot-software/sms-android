@@ -28,6 +28,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
+
 import com.google.android.material.navigation.NavigationView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -323,7 +324,7 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
         Menu menu = toolbar.getMenu();
         View view = menu.findItem(R.id.media_route_menu_item).getActionView();
 
-        if (view != null && view instanceof MediaRouteButton) {
+        if (view instanceof MediaRouteButton) {
             IntroductoryOverlay overlay = new IntroductoryOverlay.Builder(this, mediaRouteMenuItem)
                     .setTitleText(R.string.cast_first_time_ux)
                     .setSingleTime()

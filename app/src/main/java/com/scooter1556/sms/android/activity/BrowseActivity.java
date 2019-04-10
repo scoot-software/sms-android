@@ -31,6 +31,7 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.fragment.SimpleMediaFragment;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
@@ -83,11 +84,17 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
     }
 
     @Override
-    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item) {
+    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item, int extra) {
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
+            MediaControllerCompat.getMediaController(this).getTransportControls().prepareFromMediaId(item.getMediaId(), null);
+
+            // Start video viewer activity
+            if(MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+                Intent intent = new Intent(BrowseActivity.this, VideoPlaybackActivity.class);
+                startActivity(intent);
+            }
         } else if (item.isBrowsable()) {
             SimpleMediaFragment fragment = SimpleMediaFragment.newInstance(item.getMediaId());
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

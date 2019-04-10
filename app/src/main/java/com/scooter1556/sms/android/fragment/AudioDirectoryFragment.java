@@ -47,6 +47,7 @@ import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.service.SessionService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -230,7 +231,7 @@ public class AudioDirectoryFragment extends Fragment {
 
         mediaElements = new ArrayList<>();
 
-        restService.getMediaElementContents(getContext(), id, new JsonHttpResponseHandler() {
+        restService.getMediaElementContents(getContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 

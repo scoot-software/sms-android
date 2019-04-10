@@ -155,7 +155,7 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
             @Override
             public void onItemClicked(MediaBrowserCompat.MediaItem item) {
                 Log.d(TAG, "Item selected: " + item.getMediaId());
-                mediaFragmentListener.onMediaItemSelected(item);
+                mediaFragmentListener.onMediaItemSelected(item, MediaUtils.MEDIA_MENU_NONE);
             }
         };
 
@@ -173,7 +173,7 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
     @Override
     public void onItemClick(int position) {
         Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
-        mediaFragmentListener.onMediaItemSelected(items.get(position));
+        mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_NONE);
     }
 
     @Override

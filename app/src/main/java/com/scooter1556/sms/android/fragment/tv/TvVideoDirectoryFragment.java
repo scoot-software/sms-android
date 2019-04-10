@@ -60,8 +60,12 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.activity.BrowseActivity;
+import com.scooter1556.sms.android.activity.VideoPlaybackActivity;
 import com.scooter1556.sms.android.activity.tv.TvDirectoryDetailsActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaGridActivity;
+import com.scooter1556.sms.android.activity.tv.TvVideoPlaybackActivity;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.presenter.DetailsDescriptionPresenter;
 import com.scooter1556.sms.android.presenter.MediaItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
@@ -382,6 +386,12 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
         if (item instanceof MediaBrowserCompat.MediaItem) {
             if(((MediaBrowserCompat.MediaItem) item).isPlayable()) {
                 mediaController.getTransportControls().playFromMediaId(((MediaBrowserCompat.MediaItem) item).getMediaId(), null);
+
+                // Start video viewer activity
+                if(MediaUtils.getMediaTypeFromID(((MediaBrowserCompat.MediaItem) item).getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+                    Intent intent = new Intent(getActivity(), TvVideoPlaybackActivity.class);
+                    getActivity().startActivity(intent);
+                }
             } else if(((MediaBrowserCompat.MediaItem) item).isBrowsable()) {
                 Intent intent = new Intent(getActivity(), TvMediaGridActivity.class);
                 intent.putExtra(MediaUtils.EXTRA_MEDIA_ID, mediaItem.getMediaId());
@@ -405,6 +415,10 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
             for(MediaBrowserCompat.MediaItem item : mediaItems) {
                 if(MediaUtils.parseMediaId(item.getMediaId()).get(0).equals(MediaUtils.MEDIA_ID_VIDEO)) {
                     mediaController.getTransportControls().playFromMediaId(item.getMediaId(), null);
+
+                    // Start video viewer activity
+                    Intent intent = new Intent(getActivity(), TvVideoPlaybackActivity.class);
+                    getActivity().startActivity(intent);
                     break;
                 }
             }

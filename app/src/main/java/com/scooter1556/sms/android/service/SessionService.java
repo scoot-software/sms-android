@@ -38,7 +38,7 @@ public class SessionService {
 
     private UUID sessionId;
 
-    public SessionService() {}
+    private SessionService() {}
 
     private static final SessionService instance = new SessionService();
 

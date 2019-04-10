@@ -40,6 +40,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scooter1556.sms.android.adapter.MediaElementListAdapter;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.service.SessionService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -179,7 +180,7 @@ public class MediaElementFragment extends ListFragment {
 
         // Retrieve contents of a Media Folder
         if(folder) {
-            restService.getMediaFolderContents(getContext(), id, new JsonHttpResponseHandler() {
+            restService.getMediaFolderContents(getContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
                     // Check fragment has not been destroyed
@@ -210,7 +211,7 @@ public class MediaElementFragment extends ListFragment {
         }
         // Retrieve Media Element directory contents
         else {
-            restService.getMediaElementContents(getContext(), id, new JsonHttpResponseHandler() {
+            restService.getMediaElementContents(getContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
                     // Check fragment has not been destroyed

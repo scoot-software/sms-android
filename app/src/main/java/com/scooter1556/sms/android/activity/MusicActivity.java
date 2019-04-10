@@ -92,11 +92,13 @@ public class MusicActivity extends BaseActivity implements SimpleMediaFragment.M
     }
 
     @Override
-    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item) {
+    public void onMediaItemSelected(MediaBrowserCompat.MediaItem item, int extra) {
         Log.d(TAG, "onMediaItemSelected(): ID=" + item.getMediaId());
 
         if (item.isPlayable()) {
-            MediaControllerCompat.getMediaController(this).getTransportControls().playFromMediaId(item.getMediaId(), null);
+            Bundle extras = new Bundle();
+            extras.putInt(MediaUtils.EXTRA_MEDIA_OPTION, extra);
+            MediaControllerCompat.getMediaController(this).getTransportControls().prepareFromMediaId(item.getMediaId(), extras);
         } else if (item.isBrowsable()) {
             Intent intent = new Intent(MusicActivity.this, BrowseActivity.class)
                     .putExtra(MediaUtils.EXTRA_MEDIA_ID, item.getMediaId())

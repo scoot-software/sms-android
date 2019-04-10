@@ -31,6 +31,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.tv.TvAudioPlaybackActivity;
 import com.scooter1556.sms.android.activity.tv.TvMediaBrowserActivity;
 import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
@@ -41,6 +42,9 @@ import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.MenuItemPresenter;
 import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.MediaUtils;
+
+import java.util.List;
 
 public class TvHomeFragment extends BrowseSupportFragment {
     private static final String TAG = "TvHomeFragment";
@@ -63,9 +67,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             Log.d(TAG, "onMetadataChanged()");
 
-            if (metadata != null) {
-                updateNowPlayingRow(metadata);
-            }
+            updateNowPlayingRow(metadata);
         }
     };
 
@@ -91,9 +93,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
         PlaybackStateCompat state = mediaController.getPlaybackState();
         MediaMetadataCompat metadata = mediaController.getMetadata();
 
-        if (metadata != null) {
-            updateNowPlayingRow(metadata);
-        }
+        updateNowPlayingRow(metadata);
     }
 
     @Override
@@ -127,9 +127,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
         super.onStart();
 
-        if (mediaBrowser != null && !mediaBrowser.isConnected()) {
-            mediaBrowser.connect();
-        }
+        mediaBrowser.connect();
     }
 
     @Override
@@ -139,6 +137,8 @@ public class TvHomeFragment extends BrowseSupportFragment {
         super.onStop();
 
         BackgroundManager.getInstance(getActivity()).release();
+
+        mediaBrowser.disconnect();
     }
 
     private void setupRowAdapter() {
@@ -148,6 +148,29 @@ public class TvHomeFragment extends BrowseSupportFragment {
     }
 
     private void updateNowPlayingRow(MediaMetadataCompat metadata) {
+        if(metadata == null
+                || metadata.getDescription() == null
+                || metadata.getDescription().getMediaId() == null
+                || MediaUtils.getMediaTypeFromID(metadata.getDescription().getMediaId()) == SMS.MediaType.VIDEO) {
+            // Remove now playing
+            if(rowsAdapter.size() > 1) {
+                rowsAdapter.removeItems(0, 1);
+            }
+
+            // Reset background
+            backgroundUri = null;
+            updateBackground();
+
+            return;
+        }
+
+        // Parse media ID
+        List<String> parsedMediaId = MediaUtils.parseMediaId(metadata.getDescription().getMediaId());
+
+        if(parsedMediaId.size() < 2) {
+            return;
+        }
+
         ArrayObjectAdapter nowPlayingAdapter = new ArrayObjectAdapter(new MediaMetadataPresenter());
         nowPlayingAdapter.add(metadata);
         HeaderItem headerItem = new HeaderItem(getString(R.string.heading_now_playing));
@@ -159,7 +182,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
         }
 
         // Update background
-        backgroundUri = RESTService.getInstance().getConnection().getUrl() + "/image/" + metadata.getDescription().getMediaId() + "/fanart?scale=" + getResources().getDisplayMetrics().widthPixels;
+        backgroundUri = RESTService.getInstance().getConnection().getUrl() + "/image/" + parsedMediaId.get(MediaUtils.MEDIA_ID_KEY_MEID) + "/fanart?scale=" + getResources().getDisplayMetrics().widthPixels;
         updateBackground();
     }
 

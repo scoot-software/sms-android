@@ -116,32 +116,32 @@ public class RESTService {
     }
 
     // Returns the contents of a Media Folder
-    public void getMediaFolderContents(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaFolderContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/folder/" + id + "/contents" + (sid == null ? "" : "?sid=" + sid), responseHandler);
+            client.get(context, getAddress() + "/media/folder/" + id + "/contents", responseHandler);
         }
     }
 
     // Returns the contents of a Media Element directory
-    public void getMediaElementContents(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementContents(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/" + id + "/contents" + (sid == null ? "" : "?sid=" + sid), responseHandler);
+            client.get(context, getAddress() + "/media/" + id + "/contents", responseHandler);
         }
     }
 
     // Returns a Media Element by ID
-    public void getMediaElement(Context context, UUID id, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElement(Context context, UUID id, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            String url = getAddress() + "/media/" + id + (sid == null ? "" : "?sid=" + sid);
+            String url = getAddress() + "/media/" + id;
             Log.d(TAG, url);
             client.get(context, url, responseHandler);
         }
     }
 
     // Returns random media elements
-    public void getRandomMediaElements(Context context, int limit, Byte type, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getRandomMediaElements(Context context, int limit, Byte type, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
-            client.get(context, getAddress() + "/media/random/" + limit + "?" + (type == null ? "" : "type=" + type.toString() + "&") + (sid == null ? "" : "sid=" + sid), responseHandler);
+            client.get(context, getAddress() + "/media/random/" + limit + "?" + (type == null ? "" : "type=" + type.toString()), responseHandler);
         }
     }
 
@@ -205,36 +205,36 @@ public class RESTService {
     }
 
     // Returns a list of media elements for an artist and album
-    public void getMediaElementsByArtistAndAlbum(Context context, String artist, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/artist/" + artist + "/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
+                    .setPath("/media/artist/" + artist + "/album/" + album);
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
     }
 
     // Returns a list of media elements for an album artist and album
-    public void getMediaElementsByAlbumArtistAndAlbum(Context context, String artist, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByAlbumArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/albumartist/" + artist + "/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
+                    .setPath("/media/albumartist/" + artist + "/album/" + album);
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
     }
 
     // Returns a list of media elements for an album
-    public void getMediaElementsByAlbum(Context context, String album, UUID sid, JsonHttpResponseHandler responseHandler) {
+    public void getMediaElementsByAlbum(Context context, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/media/album/" + album + "?" + (sid == null ? "" : "sid=" + sid));
+                    .setPath("/media/album/" + album);
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }
@@ -271,12 +271,12 @@ public class RESTService {
     }
 
     // Returns a list of media elements for a playlist
-    public void getPlaylistContents(Context context, UUID id, UUID sid, boolean random, JsonHttpResponseHandler responseHandler) {
+    public void getPlaylistContents(Context context, UUID id, boolean random, JsonHttpResponseHandler responseHandler) {
         if (connection != null) {
             URIBuilder uri = new URIBuilder();
             uri.setScheme("http")
                     .setHost(getBaseAddress())
-                    .setPath("/playlist/" + id + "/contents?" + (sid == null ? "" : "sid=" + sid + "&")  + "random=" + random);
+                    .setPath("/playlist/" + id + "/contents?" + "random=" + random);
 
             client.get(context, URLUtils.encodeURL(uri.toString()), responseHandler);
         }

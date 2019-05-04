@@ -665,7 +665,7 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
                 // Handle extra options
                 boolean random = extra == MediaUtils.MEDIA_MENU_SHUFFLE;
 
-                RESTService.getInstance().getPlaylistContents(ctx, playlistId, SessionService.getInstance().getSessionId(), random, new JsonHttpResponseHandler() {
+                RESTService.getInstance().getPlaylistContents(ctx, playlistId, random, new JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         MediaElement element;
@@ -714,7 +714,7 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
                 break;
 
             case MediaUtils.MEDIA_ID_RANDOM_AUDIO:
-                RESTService.getInstance().getRandomMediaElements(ctx, 200, MediaElement.MediaElementType.AUDIO, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+                RESTService.getInstance().getRandomMediaElements(ctx, 200, MediaElement.MediaElementType.AUDIO, new JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         MediaElement element;
@@ -780,7 +780,7 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
                     case MediaUtils.MEDIA_ID_DIRECTORY_VIDEO:
                     case MediaUtils.MEDIA_ID_AUDIO:
                     case MediaUtils.MEDIA_ID_VIDEO:
-                        RESTService.getInstance().getMediaElementContents(ctx, elementId, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+                        RESTService.getInstance().getMediaElementContents(ctx, elementId, new JsonHttpResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                                 MediaElement element;
@@ -919,20 +919,11 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
     private static MediaSource buildMediaSource(MediaElement mediaElement) {
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
-        switch (mediaElement.getFormat()) {
-            case SMS.Format.HLS:
-                return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
-                        .setAllowChunklessPreparation(true)
-                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
-                        .setTag(mediaElement.getID().toString())
-                        .createMediaSource(Uri.parse(url));
-            default: {
-                return new ExtractorMediaSource.Factory(DATA_SOURCE_FACTORY)
-                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
-                        .setTag(mediaElement.getID().toString())
-                        .createMediaSource(Uri.parse(url));
-            }
-        }
+        return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
+                .setAllowChunklessPreparation(true)
+                .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
+                .setTag(mediaElement.getID().toString())
+                .createMediaSource(Uri.parse(url));
     }
 
     private class SMSPlaybackPreparer implements MediaSessionConnector.PlaybackPreparer {

@@ -88,7 +88,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
     // Android
     static final int FORMAT = SMS.Format.HLS;
-    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.MP3, SMS.Format.MP4, SMS.Format.MATROSKA, SMS.Format.OGG, SMS.Format.WAV, SMS.Format.HLS};
+    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.HLS};
     static final int MAX_SAMPLE_RATE = 48000;
 
     // Chromecast channels
@@ -589,7 +589,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Media Folder.
      */
     private void getMediaFolderContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaFolderContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaFolderContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -695,7 +695,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Playlist.
      */
     private void getPlaylistContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getPlaylistContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), false, new JsonHttpResponseHandler() {
+        restService.getPlaylistContents(getApplicationContext(), id, false, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -739,7 +739,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch the contents of a given Media Folder.
      */
     private void getMediaElementContents(UUID id, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementContents(getApplicationContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaElementContents(getApplicationContext(), id, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1229,7 +1229,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for album and artist
      */
     private void getMediaElementForAlbumAndArtist(final String artist, final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByArtistAndAlbum(getApplicationContext(), artist, album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaElementsByArtistAndAlbum(getApplicationContext(), artist, album, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1273,7 +1273,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for album and album artist
      */
     private void getMediaElementForAlbumAndAlbumArtist(final String artist, final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByAlbumArtistAndAlbum(getApplicationContext(), artist, album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaElementsByAlbumArtistAndAlbum(getApplicationContext(), artist, album, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {
@@ -1317,7 +1317,7 @@ public class MediaService extends MediaBrowserServiceCompat
      * Fetch media elements for an album
      */
     private void getMediaElementForAlbum(final String album, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        restService.getMediaElementsByAlbum(getApplicationContext(), album, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaElementsByAlbum(getApplicationContext(), album, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONObject response) {

@@ -231,7 +231,7 @@ public class AudioDirectoryFragment extends Fragment {
 
         mediaElements = new ArrayList<>();
 
-        restService.getMediaElementContents(getContext(), id, SessionService.getInstance().getSessionId(), new JsonHttpResponseHandler() {
+        restService.getMediaElementContents(getContext(), id, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, JSONArray response) {
 

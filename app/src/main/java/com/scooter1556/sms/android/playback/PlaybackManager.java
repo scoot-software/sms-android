@@ -360,6 +360,7 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
             castPlayer = null;
         }
 
+        localPlayer.stop(true);
         localPlayer.release();
         localPlayer = null;
 

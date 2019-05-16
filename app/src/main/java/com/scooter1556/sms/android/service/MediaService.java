@@ -258,7 +258,8 @@ public class MediaService extends MediaBrowserServiceCompat
 
         // End SMS session
         if(SessionService.getInstance().getSessionId() != null) {
-            SessionService.getInstance().endSession(SessionService.getInstance().getSessionId());
+            SessionService.getInstance().
+                    endSession(SessionService.getInstance().getSessionId());
         }
 
         // Unregister shared preferences listener
@@ -316,18 +317,18 @@ public class MediaService extends MediaBrowserServiceCompat
     }
 
     @Override
-    public void onNotificationStarted(int notificationId, Notification notification) {
-        Log.d(TAG, "onNotificationStarted()");
+    public void onNotificationPosted(int notificationId, Notification notification, boolean ongoing) {
+        Log.d(TAG, "onNotificationPosted()");
 
         startService(new Intent(getApplicationContext(), MediaService.class));
         startForeground(notificationId, notification);
     }
 
     @Override
-    public void onNotificationCancelled(int notificationId) {
+    public void onNotificationCancelled(int notificationId, boolean dismissedByUser) {
         Log.d(TAG, "onNotificationCancelled()");
 
-        stopForeground(false);
+        stopForeground(true);
     }
 
     /**

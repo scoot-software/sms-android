@@ -77,8 +77,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
             }
         }
 
-        // Connect a media browser just to get the media session token. There are other ways
-        // this can be done, for example by sharing the session token directly.
+        // Connect a media browser just to get the media session token.
         mediaBrowser = new MediaBrowserCompat(this,
                 new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
     }

@@ -3,6 +3,8 @@ package com.scooter1556.sms.android.provider;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.media.session.PlaybackStateCompat;
+
+import com.google.android.exoplayer2.ControlDispatcher;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.scooter1556.sms.android.R;
@@ -14,7 +16,6 @@ public final class ShuffleActionProvider implements MediaSessionConnector.Custom
 
     private static final String ACTION_SHUFFLE_MODE = "ACTION_EXO_SHUFFLE_MODE";
 
-    private final Player player;
     private final CharSequence shuffleOnDescription;
     private final CharSequence shuffleOffDescription;
 
@@ -22,22 +23,20 @@ public final class ShuffleActionProvider implements MediaSessionConnector.Custom
      * Creates a new instance.
      *
      * @param context The context.
-     * @param player The player on which to toggle the repeat mode.
      */
-    public ShuffleActionProvider(Context context, Player player) {
-        this.player = player;
+    public ShuffleActionProvider(Context context) {
         shuffleOnDescription = context.getString(R.string.description_shuffle_on);
         shuffleOffDescription = context.getString(R.string.description_shuffle_off);
     }
 
     @Override
-    public void onCustomAction(String action, Bundle extras) {
+    public void onCustomAction(Player player, ControlDispatcher controlDispatcher, String action, Bundle extras) {
         boolean isShuffleModeEnabled = player.getShuffleModeEnabled();
         player.setShuffleModeEnabled(!isShuffleModeEnabled);
     }
 
     @Override
-    public PlaybackStateCompat.CustomAction getCustomAction() {
+    public PlaybackStateCompat.CustomAction getCustomAction(Player player) {
         CharSequence actionLabel;
         int iconResourceId;
 
@@ -54,5 +53,4 @@ public final class ShuffleActionProvider implements MediaSessionConnector.Custom
 
         return repeatBuilder.build();
     }
-
 }

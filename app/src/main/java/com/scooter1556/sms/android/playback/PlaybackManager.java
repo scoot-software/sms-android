@@ -17,20 +17,18 @@ import android.os.ResultReceiver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.Pair;
 import cz.msebera.android.httpclient.Header;
 
 import android.preference.PreferenceManager;
 import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ControlDispatcher;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.RenderersFactory;
@@ -38,11 +36,11 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ext.cast.CastPlayer;
+import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider;
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ShuffleOrder;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -50,7 +48,6 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
-import com.google.android.exoplayer2.util.ErrorMessageProvider;
 import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
@@ -60,7 +57,6 @@ import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.activity.HomeActivity;
 import com.scooter1556.sms.android.provider.ShuffleActionProvider;
 import com.scooter1556.sms.android.service.MediaService;
@@ -68,7 +64,6 @@ import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.service.SessionService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 import com.scooter1556.sms.android.domain.MediaElement;
-import com.scooter1556.sms.android.utils.TVUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -82,7 +77,7 @@ import java.util.UUID;
 /**
  * Manage the interactions among the container service, the queue manager and the actual playback.
  */
-public class PlaybackManager implements Player.EventListener, CastPlayer.SessionAvailabilityListener {
+public class PlaybackManager implements Player.EventListener, SessionAvailabilityListener {
 
     private static final String TAG = "PlaybackManager";
 
@@ -173,13 +168,14 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
                 CHANNEL_ID,
                 R.string.notification_channel,
                 NOTIFICATION_ID,
-                new DescriptionAdapter());
+                new DescriptionAdapter(),
+                nListener);
 
         playerNotificationManager.setSmallIcon(R.drawable.ic_notification);
-        playerNotificationManager.setNotificationListener(nListener);
         playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
-        playerNotificationManager.setStopAction(PlayerNotificationManager.ACTION_STOP);
-        playerNotificationManager.setOngoing(false);
+        playerNotificationManager.setUseStopAction(true);
+        playerNotificationManager.setFastForwardIncrementMs(0);
+        playerNotificationManager.setRewindIncrementMs(0);
 
         setCurrentPlayer(localPlayer);
     }
@@ -397,6 +393,9 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
 
         // Timeline reset
         if(reason == Player.TIMELINE_CHANGE_REASON_RESET) {
+            // Cancel notification
+            playerNotificationManager.setPlayer(null);
+
             // End all jobs for the current session
             RESTService.getInstance().endJobs(SessionService.getInstance().getSessionId());
         }
@@ -558,9 +557,11 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
         this.currentPlayer = currentPlayer;
 
         // Setup media session connector
-        RepeatModeActionProvider repeatProvider = new RepeatModeActionProvider(ctx, currentPlayer);
-        ShuffleActionProvider shuffleProvider = new ShuffleActionProvider(ctx, currentPlayer);
-        mediaSessionConnector.setPlayer(currentPlayer, new SMSPlaybackPreparer(), repeatProvider, shuffleProvider);
+        RepeatModeActionProvider repeatProvider = new RepeatModeActionProvider(ctx, RepeatModeActionProvider.DEFAULT_REPEAT_TOGGLE_MODES);
+        ShuffleActionProvider shuffleProvider = new ShuffleActionProvider(ctx);
+        mediaSessionConnector.setPlayer(currentPlayer);
+        mediaSessionConnector.setPlaybackPreparer(new SMSPlaybackPreparer());
+        mediaSessionConnector.setCustomActionProviders(repeatProvider, shuffleProvider);
 
         // Determine whether to setup player notification
         if(videoMode && currentPlayer == localPlayer) {
@@ -921,7 +922,7 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
         return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
-                .setAllowChunklessPreparation(true)
+                .setAllowChunklessPreparation(false) // TODO: Change to 'true' when fixed in ExoPlayer
                 .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));
@@ -980,13 +981,8 @@ public class PlaybackManager implements Player.EventListener, CastPlayer.Session
         }
 
         @Override
-        public String[] getCommands() {
-            return null;
-        }
-
-        @Override
-        public void onCommand(Player player, String command, Bundle extras, ResultReceiver cb) {
-            // Do nothing...
+        public boolean onCommand(Player player, ControlDispatcher controlDispatcher, String command, Bundle extras, ResultReceiver cb) {
+            return false;
         }
     }
 

@@ -173,7 +173,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
         playerNotificationManager.setSmallIcon(R.drawable.ic_notification);
         playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
-        playerNotificationManager.setUseStopAction(true);
         playerNotificationManager.setFastForwardIncrementMs(0);
         playerNotificationManager.setRewindIncrementMs(0);
 

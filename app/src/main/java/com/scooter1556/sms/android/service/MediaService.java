@@ -318,10 +318,14 @@ public class MediaService extends MediaBrowserServiceCompat
 
     @Override
     public void onNotificationPosted(int notificationId, Notification notification, boolean ongoing) {
-        Log.d(TAG, "onNotificationPosted()");
+        Log.d(TAG, "onNotificationPosted() > id=" + notificationId + ", ongoing=" + ongoing);
 
-        startService(new Intent(getApplicationContext(), MediaService.class));
-        startForeground(notificationId, notification);
+        if(ongoing) {
+            startService(new Intent(getApplicationContext(), MediaService.class));
+            startForeground(notificationId, notification);
+        } else {
+            stopForeground(false);
+        }
     }
 
     @Override

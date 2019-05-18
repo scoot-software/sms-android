@@ -91,10 +91,12 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
         PlaybackManager playbackManager = PlaybackManager.getInstance();
         Player player = playbackManager.getCurrentPlayer();
 
-        // Add listener
-        playbackManager.addListener(this);
+        if(player == null) {
+            finish();
+        } else {
+            // Add listener
+            playbackManager.addListener(this);
 
-        if(player != null) {
             playerView.setPlayer(player);
             updateMetadata();
         }
@@ -123,7 +125,7 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
         MediaDescriptionCompat mediaDescription = PlaybackManager.getInstance().getMediaDescription();
 
         if(mediaDescription == null) {
-            return;
+            finish();
         }
 
         Glide.with(this)

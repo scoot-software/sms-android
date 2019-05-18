@@ -253,14 +253,16 @@ public class MediaService extends MediaBrowserServiceCompat
 
         unregisterCarConnectionReceiver();
 
-        //delayedStopHandler.removeCallbacksAndMessages(null);
-        mediaSession.release();
+        // Release PlaybackManager
+        if(playbackManager != null) {
+            playbackManager.release();
+            playbackManager = null;
+        }
 
         // End SMS session
-        if(SessionService.getInstance().getSessionId() != null) {
-            SessionService.getInstance().
-                    endSession(SessionService.getInstance().getSessionId());
-        }
+        SessionService.getInstance().endCurrentSession();
+
+        mediaSession.release();
 
         // Unregister shared preferences listener
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);

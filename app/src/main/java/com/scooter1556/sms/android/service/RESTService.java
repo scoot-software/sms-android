@@ -329,6 +329,8 @@ public class RESTService {
     }
 
     public void endSession(UUID id, TextHttpResponseHandler responseHandler) {
+        Log.d(TAG, "endSession() > " + id);
+
         if(connection != null) {
             client.get(getAddress() + "/session/end/" + id.toString(), responseHandler);
         }

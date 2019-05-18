@@ -47,6 +47,8 @@ public class SessionService {
     }
 
     public void newSession(Context context, UUID id, ClientProfile profile) {
+        Log.d(TAG, "newSession() > " + id);
+
         if(id == null && profile == null) {
             return;
         }
@@ -69,13 +71,18 @@ public class SessionService {
         });
     }
 
+    public void endCurrentSession() {
+        endSession(sessionId);
+    }
+
     public void endSession(final UUID id) {
+        Log.d(TAG, "endSession() > " + id);
+
         if(id == null) {
             return;
         }
 
         RESTService.getInstance().endSession(id, new TextHttpResponseHandler() {
-
             @Override
             public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
                 Log.d(TAG, "Failed to end session with id: " + id);
@@ -83,6 +90,8 @@ public class SessionService {
 
             @Override
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
+                Log.d(TAG, "Session ended with id: " + id);
+
                 if(sessionId.equals(id)) {
                     sessionId = null;
                 }

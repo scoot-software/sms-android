@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
@@ -63,6 +64,7 @@ public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapte
     private View view;
     private RecyclerView recyclerView;
     private MediaItemAdapter adapter;
+    private GridLayoutManager lm;
     private List<MediaBrowserCompat.MediaItem> items;
     private int lastFirstVisiblePosition = -1;
 
@@ -255,7 +257,7 @@ public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapte
         adapter = new MediaItemAdapter(getContext(), items);
         adapter.setOnClick(this);
 
-        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
+        lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
 
         // Initialise UI
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
@@ -362,5 +364,18 @@ public class SimpleMediaFragment extends BaseFragment implements MediaItemAdapte
         if(item.getItemId() == R.id.shuffle) {
             mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_SHUFFLE);
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        Log.d(TAG, "onConfigurationChanged()");
+
+        float viewWidth = newConfig.screenWidthDp * (newConfig.densityDpi / 160f);
+        float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
+        int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
+        lm.setSpanCount(newSpanCount);
+        lm.requestLayout();
     }
 }

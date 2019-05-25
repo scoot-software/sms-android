@@ -42,7 +42,6 @@ import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.fragment.PlaybackControlsFragment;
 import com.scooter1556.sms.android.provider.MediaBrowserProvider;
 import com.scooter1556.sms.android.service.MediaService;
-import com.scooter1556.sms.android.utils.NetworkUtils;
 
 /**
  * Base activity for activities that need to show a playback control fragment when media is playing.
@@ -83,6 +82,15 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        Log.d(TAG, "onDestroy()");
+
+        mediaBrowser.disconnect();
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
 
@@ -94,9 +102,13 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
             throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
         }
 
-        hidePlaybackControls();
-
-        mediaBrowser.connect();
+        if(mediaBrowser.isConnected()) {
+            if (shouldShowControls()) {
+                showPlaybackControls();
+            }
+        } else {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
@@ -108,8 +120,6 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         if (MediaControllerCompat.getMediaController(this) != null) {
             MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
         }
-
-        mediaBrowser.disconnect();
     }
 
     @Override
@@ -122,17 +132,19 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
     }
 
     protected void showPlaybackControls() {
-        if (NetworkUtils.isOnline(this)) {
-            getFragmentManager().beginTransaction()
-                    .setCustomAnimations(
-                            R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
-                            R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
-                    .show(controlsFragment)
-                    .commit();
-        }
+        Log.d(TAG, "showPlaybackControls()");
+
+        getFragmentManager().beginTransaction()
+                .setCustomAnimations(
+                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
+                        R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
+                .show(controlsFragment)
+                .commit();
     }
 
     protected void hidePlaybackControls() {
+        Log.d(TAG, "hidePlaybackControls()");
+
         getFragmentManager().beginTransaction()
                 .hide(controlsFragment)
                 .commit();
@@ -148,7 +160,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
             return false;
         }
 
-        switch (mediaController.getPlaybackState().getState()) {
+        switch(mediaController.getPlaybackState().getState()) {
             case PlaybackStateCompat.STATE_ERROR:
             case PlaybackStateCompat.STATE_NONE:
             case PlaybackStateCompat.STATE_STOPPED:
@@ -207,7 +219,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
                     try {
                         connectToSession(mediaBrowser.getSessionToken());
                     } catch (RemoteException e) {
-                        Log.e(TAG, "could not connect media controller", e);
+                        Log.e(TAG, "Could not connect media controller", e);
                         hidePlaybackControls();
                     }
                 }

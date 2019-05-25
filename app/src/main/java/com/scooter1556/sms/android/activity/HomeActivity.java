@@ -44,7 +44,7 @@ import com.scooter1556.sms.android.utils.MediaUtils;
  * This class holds the MediaBrowser and the MediaController instances. It will create a MediaBrowser
  * when it is created and connect/disconnect on start/stop.
  */
-public class HomeActivity extends BaseActivity implements BaseFragment.MediaFragmentListener  {
+public class HomeActivity extends BaseActivity implements HomeFragment.MediaFragmentListener  {
 
     private static final String TAG = "HomeActivity";
 

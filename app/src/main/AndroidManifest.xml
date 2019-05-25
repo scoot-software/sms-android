@@ -59,6 +59,7 @@
         <activity
             android:name=".activity.HomeActivity"
             android:label="@string/app_name"
+            android:configChanges="orientation|screenSize"
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -173,6 +174,7 @@
             android:name=".activity.MusicActivity"
             android:label="@string/heading_music"
             android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -183,6 +185,7 @@
             android:name=".activity.VideoActivity"
             android:label="@string/heading_video"
             android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -191,12 +194,14 @@
 
         <activity
             android:name=".activity.BrowseActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize" />
 
         <activity
             android:name=".activity.SettingsActivity"
             android:label="@string/preferences_title"
             android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -217,7 +222,7 @@
 
         <activity
             android:name=".activity.NowPlayingActivity"
-            android:icon="@drawable/ic_launcher">
+            android:icon="@drawable/ic_launcher" >
         </activity>
 
         <!-- A full screen activity showing controls and a seek bar for the current playing media -->
@@ -225,6 +230,7 @@
             android:name=".activity.FullScreenPlayerActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.HomeActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

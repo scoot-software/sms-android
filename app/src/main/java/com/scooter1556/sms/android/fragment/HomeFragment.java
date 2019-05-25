@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -64,6 +65,7 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
     private RecyclerView recyclerView;
     private MediaFolderAdapter adapter;
     private List<MediaBrowserCompat.MediaItem> items;
+    private GridLayoutManager lm;
     Snackbar snackbar;
     OnListItemClickListener clickListener;
 
@@ -151,6 +153,21 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
 
         Log.d(TAG, "onCreate()");
 
+        setRetainInstance(true);
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
+        mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_NONE);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView()");
+
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+
         clickListener = new OnListItemClickListener() {
             @Override
             public void onItemClicked(MediaBrowserCompat.MediaItem item) {
@@ -164,27 +181,9 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
         adapter = new MediaFolderAdapter(getContext(), items);
         adapter.setOnClick(this);
 
-        // Subscribe to relevant media service callbacks
-        mediaBrowser = new MediaBrowserCompat(getActivity(),
-                new ComponentName(getActivity(), MediaService.class),
-                connectionCallback, null);
-    }
-
-    @Override
-    public void onItemClick(int position) {
-        Log.d(TAG, "Item selected: " + items.get(position).getMediaId());
-        mediaFragmentListener.onMediaItemSelected(items.get(position), MediaUtils.MEDIA_MENU_NONE);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView()");
-
-        final View view = inflater.inflate(R.layout.fragment_home, container, false);
-
         coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.coordinatorLayout);
         snackbar = Snackbar.make(coordinatorLayout, "No connection!", Snackbar.LENGTH_INDEFINITE);
-        final GridLayoutManager lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
+        lm = new GridLayoutManager(getContext(), 2, RecyclerView.VERTICAL, false);
 
         // Initialise UI
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
@@ -204,6 +203,11 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(lm);
+
+        // Subscribe to relevant media service callbacks
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class),
+                connectionCallback, null);
 
         return view;
     }
@@ -251,5 +255,18 @@ public class HomeFragment extends BaseFragment implements MediaFolderAdapter.OnI
 
         // Unregister receiver
         getActivity().unregisterReceiver(connectivityChangeReceiver);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        Log.d(TAG, "onConfigurationChanged()");
+
+        float viewWidth = newConfig.screenWidthDp * (newConfig.densityDpi / 160f);
+        float cardViewWidth = getActivity().getResources().getDimension(R.dimen.card_media_width);
+        int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
+        lm.setSpanCount(newSpanCount);
+        lm.requestLayout();
     }
 }

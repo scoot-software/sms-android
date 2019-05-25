@@ -37,7 +37,7 @@ import com.scooter1556.sms.android.utils.MediaUtils;
 
 public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.MediaFragmentListener  {
 
-    private static final String TAG = "HomeActivity";
+    private static final String TAG = "BrowseActivity";
 
     public static final String TAG_FRAGMENT = "fragment_browse";
 

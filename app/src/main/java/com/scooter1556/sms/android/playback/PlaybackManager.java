@@ -45,6 +45,7 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ShuffleOrder;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
@@ -104,6 +105,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
     private SimpleExoPlayer localPlayer;
     private CastPlayer castPlayer;
     private ConcatenatingMediaSource concatenatingMediaSource;
+    private DefaultTrackSelector trackSelector;
 
     private boolean castMediaQueueCreationPending;
     private int currentItemIndex;
@@ -141,7 +143,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
         concatenatingMediaSource =  new ConcatenatingMediaSource();
 
-        DefaultTrackSelector trackSelector = new DefaultTrackSelector();
+        trackSelector = new DefaultTrackSelector();
         RenderersFactory renderersFactory = new DefaultRenderersFactory(ctx);
         localPlayer = ExoPlayerFactory.newSimpleInstance(ctx, renderersFactory, trackSelector);
         localPlayer.addListener(this);
@@ -592,6 +594,10 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         return currentPlayer;
     }
 
+    public DefaultTrackSelector getCurrentTrackSelector() {
+        return trackSelector;
+    }
+
     /**
      * Starts playback of the item at the given position.
      *
@@ -921,7 +927,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
         return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
-                .setAllowChunklessPreparation(false) // TODO: Change to 'true' when fixed in ExoPlayer
+                .setAllowChunklessPreparation(true)
                 .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));

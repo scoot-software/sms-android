@@ -10,11 +10,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <LinearLayout android:id="@+id/settingsRoot"
+    <LinearLayout android:id="@+id/controls_root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:visibility="gone">
+
+        <Button android:id="@+id/select_tracks_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/heading_track_selection"
+            android:enabled="false"/>
+
     </LinearLayout>
 
 </FrameLayout>

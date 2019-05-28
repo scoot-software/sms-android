@@ -36,7 +36,7 @@ import cz.msebera.android.httpclient.Header;
 public class SessionService {
     private static final String TAG = "SessionService";
 
-    private UUID sessionId;
+    private UUID sessionId = null;
 
     private SessionService() {}
 

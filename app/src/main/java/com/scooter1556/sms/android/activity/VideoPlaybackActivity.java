@@ -1,43 +1,54 @@
 package com.scooter1556.sms.android.activity;
 
+import android.content.ComponentName;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.Button;
 import android.widget.LinearLayout;
 
-import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.playback.PlaybackManager;
-import com.scooter1556.sms.android.utils.TrackSelectionUtils;
+import com.scooter1556.sms.android.service.MediaService;
 
-public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, PlayerControlView.VisibilityListener {
+import static com.google.android.exoplayer2.trackselection.MappingTrackSelector.*;
+
+public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, PlayerControlView.VisibilityListener, Player.EventListener {
     private static final String TAG = "VideoPlaybackActivity";
 
-    public static final String USER_AGENT = "SMSAndroidPlayer";
+    // Saved instance state keys.
+    private static final String KEY_TRACK_SELECTOR_PARAMETERS = "track_selector_parameters";
 
-    static final int CONTROLLER_TIMEOUT = 4000;
+    private Player player;
 
     private PlayerView playerView;
-    private LinearLayout settingsRootView;
+    private LinearLayout controlsRootView;
+    private Button trackSelectionButton;
+
+    private boolean isShowingTrackSelectionDialog;
+
+    private DefaultTrackSelector trackSelector;
+    private DefaultTrackSelector.Parameters trackSelectorParameters;
+    private TrackGroupArray lastSeenTrackGroupArray;
 
     private PowerManager.WakeLock wakeLock;
 
-    private DefaultTrackSelector trackSelector;
-    private TrackSelectionUtils trackSelectionUtils;
-    private TrackGroupArray lastSeenTrackGroupArray;
+    private MediaBrowserCompat mediaBrowser;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,7 +58,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         setContentView(R.layout.activity_video_player);
 
-        settingsRootView = (LinearLayout) findViewById(R.id.settingsRoot);
+        controlsRootView = (LinearLayout) findViewById(R.id.controls_root);
+
+        trackSelectionButton = findViewById(R.id.select_tracks_button);
+        trackSelectionButton.setOnClickListener(this);
 
         playerView = findViewById(R.id.player);
         playerView.setControllerVisibilityListener(this);
@@ -55,15 +69,31 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         // Create Wake lock
         PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.scooter1556.sms.android: video_playback_wake_lock");
+
+        mediaBrowser = new MediaBrowserCompat(this,
+                new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
+
+        if (savedInstanceState != null) {
+            trackSelectorParameters = savedInstanceState.getParcelable(KEY_TRACK_SELECTOR_PARAMETERS);
+        } else {
+            trackSelectorParameters = new DefaultTrackSelector.ParametersBuilder().build();
+        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
-
         Log.d(TAG, "onStart()");
 
-        playerView.setPlayer(PlaybackManager.getInstance().getCurrentPlayer());
+        if(!mediaBrowser.isConnected()) {
+            mediaBrowser.connect();
+        }
+
+        player = PlaybackManager.getInstance().getCurrentPlayer();
+        trackSelector = PlaybackManager.getInstance().getCurrentTrackSelector();
+
+        playerView.setPlayer(player);
+        player.addListener(this);
     }
 
     @Override
@@ -77,7 +107,22 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
 
-        PlaybackManager.getInstance().getCurrentPlayer().stop(true);
+        if(player != null) {
+            player.stop(true);
+            player.removeListener(this);
+            player = null;
+            trackSelector = null;
+        }
+
+        mediaBrowser.disconnect();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        updateTrackSelectorParameters();
+        outState.putParcelable(KEY_TRACK_SELECTOR_PARAMETERS, trackSelectorParameters);
     }
 
     @Override
@@ -91,60 +136,64 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public void onClick(View view) {
-        if (view.getParent() == settingsRootView) {
-            MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-
-            if (mappedTrackInfo != null) {
-                trackSelectionUtils.showSelectionDialog(this, trackSelector.getCurrentMappedTrackInfo(), (int) view.getTag());
-            }
-        }
-    }
-
-    private void updateButtonVisibilities() {
-        settingsRootView.removeAllViews();
-
-        Player player = PlaybackManager.getInstance().getCurrentPlayer();
-
-        if (PlaybackManager.getInstance() == null) {
-            return;
-        }
-
-        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-
-        if (mappedTrackInfo == null) {
-            return;
-        }
-
-        for (int i = 0; i < mappedTrackInfo.length; i++) {
-            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
-
-            if (trackGroups.length != 0) {
-                ImageButton button = new ImageButton(this);
-                switch (player.getRendererType(i)) {
-
-                    case C.TRACK_TYPE_AUDIO:
-                        button.setImageResource(R.drawable.ic_surround_sound_white_36dp);
-                        break;
-                    case C.TRACK_TYPE_VIDEO:
-                        button.setImageResource(R.drawable.ic_settings_white_36dp);
-                        break;
-                    case C.TRACK_TYPE_TEXT:
-                        button.setImageResource(R.drawable.ic_subtitles_white_36dp);
-                        break;
-                    default:
-                        continue;
-                }
-
-                button.setTag(i);
-                button.setBackgroundColor(Color.TRANSPARENT);
-                button.setOnClickListener(this);
-                settingsRootView.addView(button, settingsRootView.getChildCount() - 1);
-            }
+        if(view == trackSelectionButton && !isShowingTrackSelectionDialog && TrackSelectionDialog.isContentAvailable(trackSelector)) {
+            isShowingTrackSelectionDialog = true;
+            TrackSelectionDialog trackSelectionDialog =
+                    TrackSelectionDialog.createForTrackSelector(
+                            trackSelector,
+                            dismissedDialog -> isShowingTrackSelectionDialog = false);
+            trackSelectionDialog.show(getSupportFragmentManager(), null);
         }
     }
 
     @Override
-    public void onVisibilityChange(int visibility) {
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        if (playbackState == Player.STATE_ENDED) {
+            finish();
+        }
 
+        updateButtonVisibility();
     }
+
+    @Override
+    public void onPlayerError(ExoPlaybackException e) {
+        updateButtonVisibility();
+        showControls();
+    }
+
+    @Override
+    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+        updateButtonVisibility();
+        if (trackGroups != lastSeenTrackGroupArray) {
+            MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+            lastSeenTrackGroupArray = trackGroups;
+        }
+    }
+
+    private void updateTrackSelectorParameters() {
+        if(trackSelector != null) {
+            trackSelectorParameters = trackSelector.getParameters();
+        }
+    }
+
+    private void updateButtonVisibility() {
+        trackSelectionButton.setEnabled(player != null && TrackSelectionDialog.isContentAvailable(trackSelector));
+    }
+
+    @Override
+    public void onVisibilityChange(int visibility) {
+        controlsRootView.setVisibility(visibility);
+    }
+
+    private void showControls() {
+        controlsRootView.setVisibility(View.VISIBLE);
+    }
+
+    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+                }
+            };
 }

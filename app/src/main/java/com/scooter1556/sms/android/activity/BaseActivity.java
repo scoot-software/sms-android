@@ -103,9 +103,11 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         }
 
         if(mediaBrowser.isConnected()) {
-            if (shouldShowControls()) {
-                showPlaybackControls();
+            if (MediaControllerCompat.getMediaController(this) != null) {
+                MediaControllerCompat.getMediaController(this).registerCallback(mediaControllerCallback);
             }
+
+            updateControls();
         } else {
             mediaBrowser.connect();
         }
@@ -153,33 +155,34 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
     /**
      * Check if the Media Session is active
      */
-    protected boolean shouldShowControls() {
+    protected void updateControls() {
         MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(this);
 
         if (mediaController == null || mediaController.getMetadata() == null || mediaController.getPlaybackState() == null) {
-            return false;
+            hidePlaybackControls();
         }
+
+        Log.d(TAG, "shouldShowControls() -> PlaybackState: " + mediaController.getPlaybackState().getState());
 
         switch(mediaController.getPlaybackState().getState()) {
             case PlaybackStateCompat.STATE_ERROR:
             case PlaybackStateCompat.STATE_NONE:
             case PlaybackStateCompat.STATE_STOPPED:
-                return false;
+                hidePlaybackControls();
+                break;
             default:
-                return true;
+                showPlaybackControls();
         }
     }
 
     private void connectToSession(MediaSessionCompat.Token token) throws RemoteException {
+        Log.d(TAG, "connectToSession()");
+
         MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
         MediaControllerCompat.setMediaController(this, mediaController);
         mediaController.registerCallback(mediaControllerCallback);
 
-        if (shouldShowControls()) {
-            showPlaybackControls();
-        } else {
-            hidePlaybackControls();
-        }
+        updateControls();
 
         if (controlsFragment != null) {
             controlsFragment.onConnected();
@@ -193,20 +196,16 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
             new MediaControllerCompat.Callback() {
                 @Override
                 public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        hidePlaybackControls();
-                    }
+                    Log.d(TAG, "onPlaybackStateChanged() -> State: " + state);
+
+                    updateControls();
                 }
 
                 @Override
                 public void onMetadataChanged(MediaMetadataCompat metadata) {
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        hidePlaybackControls();
-                    }
+                    Log.d(TAG, "onMetadataChanged()");
+
+                    updateControls();
                 }
             };
 
@@ -220,6 +219,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
                         connectToSession(mediaBrowser.getSessionToken());
                     } catch (RemoteException e) {
                         Log.e(TAG, "Could not connect media controller", e);
+
                         hidePlaybackControls();
                     }
                 }

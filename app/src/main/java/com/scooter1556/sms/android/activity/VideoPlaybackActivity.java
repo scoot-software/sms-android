@@ -11,7 +11,7 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -38,7 +38,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     private PlayerView playerView;
     private LinearLayout controlsRootView;
-    private Button trackSelectionButton;
+    private ImageButton trackSelectionButton;
 
     private boolean isShowingTrackSelectionDialog;
 

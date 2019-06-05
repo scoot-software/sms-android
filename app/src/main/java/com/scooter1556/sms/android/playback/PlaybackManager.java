@@ -685,7 +685,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                         }
 
                         newQueue.add(element);
-                        updateQueue(newQueue, null);
+                        updateQueue(newQueue);
                     }
 
                     @Override
@@ -707,7 +707,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                         }
 
                         if (!newQueue.isEmpty()) {
-                            updateQueue(newQueue, null);
+                            updateQueue(newQueue);
                         } else {
                             Log.e(TAG, "No media items to add to queue after processing playlist with ID: " + playlistId);
                         }
@@ -736,7 +736,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                         newQueue.add(element);
 
                         if (!newQueue.isEmpty()) {
-                            updateQueue(newQueue, null);
+                            updateQueue(newQueue);
                         } else {
                             Log.e(TAG, "No media items to add to queue.");
                         }
@@ -761,7 +761,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                         }
 
                         if (!newQueue.isEmpty()) {
-                            updateQueue(newQueue, null);
+                            updateQueue(newQueue);
                         } else {
                             Log.e(TAG, "No media items to add to queue");
                         }
@@ -802,7 +802,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                                 newQueue.add(element);
 
                                 if (!newQueue.isEmpty()) {
-                                    updateQueue(newQueue, null);
+                                    updateQueue(newQueue);
                                 } else {
                                     Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
                                 }
@@ -810,6 +810,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
                             @Override
                             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                                boolean initQueue = false;
                                 Gson parser = new Gson();
 
                                 for (int i = 0; i < response.length(); i++) {
@@ -820,18 +821,20 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                                             throw new IllegalArgumentException("Failed to fetch item with ID: " + id);
                                         }
 
-                                        newQueue.add(element);
+                                        if (!initQueue && element.getID().equals(elementId)) {
+                                            initQueue = true;
+                                        }
+
+                                        if (initQueue) {
+                                            newQueue.add(element);
+                                        }
                                     } catch (JSONException e) {
                                         Log.e(TAG, "Failed to process JSON", e);
                                     }
                                 }
 
                                 if (!newQueue.isEmpty()) {
-                                    if (mediaType.equals(MediaUtils.MEDIA_ID_AUDIO) || mediaType.equals(MediaUtils.MEDIA_ID_VIDEO)) {
-                                        updateQueue(newQueue, elementId);
-                                    } else {
-                                        updateQueue(newQueue, null);
-                                    }
+                                    updateQueue(newQueue);
                                 } else {
                                     Log.e(TAG, "No media items to add to queue after processing media ID: " + id);
                                 }
@@ -850,8 +853,8 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         }
     }
 
-    private void updateQueue(@NonNull List<MediaElement> elements, UUID id) {
-        Log.d(TAG, "updateQueue() > id=" + id);
+    private void updateQueue(@NonNull List<MediaElement> elements) {
+        Log.d(TAG, "updateQueue()");
 
         if(elements.isEmpty()) {
             return;
@@ -885,11 +888,23 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
             return;
         }
 
+        // Create a new media source
+        concatenatingMediaSource = new ConcatenatingMediaSource(false, true, new ShuffleOrder.DefaultShuffleOrder(0), mediaSources.toArray(new MediaSource[0]));
+
         // Update current mode
         videoMode = type == MediaElement.MediaElementType.VIDEO;
 
-        // Create a new media source
-        concatenatingMediaSource = new ConcatenatingMediaSource(false, true, new ShuffleOrder.DefaultShuffleOrder(0), mediaSources.toArray(new MediaSource[0]));
+        // Handle differences between audio and video
+        if(videoMode) {
+            currentPlayer.setShuffleModeEnabled(false);
+            currentPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
+
+            if(currentPlayer == localPlayer) {
+                playerNotificationManager.setPlayer(null);
+            }
+        } else {
+            playerNotificationManager.setPlayer(currentPlayer);
+        }
 
         // Media queue management.
         castMediaQueueCreationPending = currentPlayer == castPlayer;
@@ -901,26 +916,10 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                     .build();
 
             localPlayer.setAudioAttributes(audioAttributes, true);
-            localPlayer.prepare(concatenatingMediaSource);
+            localPlayer.prepare(concatenatingMediaSource, true, true);
         }
 
-        // Handle notification based on media type
-        if(videoMode && currentPlayer == localPlayer) {
-            playerNotificationManager.setPlayer(null);
-        } else {
-            playerNotificationManager.setPlayer(currentPlayer);
-        }
-
-        // Start playback
-        if(id != null) {
-            for(int i = 0; i < queue.size(); i++) {
-                if(queue.get(i).getID().equals(id)) {
-                    setCurrentItem(i, 0L, true);
-                }
-            }
-        } else {
-            setCurrentItem(0, 0L, true);
-        }
+        setCurrentItem(0, 0L, true);
     }
 
     private static MediaSource buildMediaSource(MediaElement mediaElement) {

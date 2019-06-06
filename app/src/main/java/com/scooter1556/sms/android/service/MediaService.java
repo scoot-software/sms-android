@@ -300,7 +300,7 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         switch(key) {
-            case "pref_video_quality": case "pref_audio_quality": case "pref_direct_play":
+            case "pref_video_quality": case "pref_audio_quality": case "pref_audio_multichannel": case "pref_direct_play":
                 updateClientProfile();
                 break;
 
@@ -1520,6 +1520,9 @@ public class MediaService extends MediaBrowserServiceCompat
         int audioQuality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
         int videoQuality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
 
+        // Passthrough
+        boolean audioPassthrough = settings.getBoolean("pref_audio_multichannel", false);
+
         // Determine what device we are running on
         UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
         if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
@@ -1530,7 +1533,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
         clientProfile.setFormats(SUPPORTED_FORMATS);
         clientProfile.setCodecs(CodecUtils.getSupportedCodecs(getApplicationContext()));
-        clientProfile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(getApplicationContext()));
+        clientProfile.setMchCodecs(CodecUtils.getSupportedMchAudioCodecs(getApplicationContext(), audioPassthrough));
         clientProfile.setAudioQuality(audioQuality);
         clientProfile.setVideoQuality(videoQuality);
         clientProfile.setFormat(FORMAT);

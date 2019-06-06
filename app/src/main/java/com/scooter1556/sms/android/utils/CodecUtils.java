@@ -17,8 +17,13 @@ public class CodecUtils {
 
     private static final String TAG = "CodecUtils";
 
-    public static Integer[] getSupportedMchAudioCodecs(Context ctx) {
+    public static Integer[] getSupportedMchAudioCodecs(Context ctx, boolean external) {
         if(ctx == null) {
+            return null;
+        }
+
+        // If this is a mobile device we can assume a maximum of 2 channels
+        if(!TVUtils.isTvUiMode(ctx)) {
             return null;
         }
 
@@ -87,7 +92,9 @@ public class CodecUtils {
         }
 
         // Get list of codecs supported by external hardware
-        parseAudioCapabilities(codecs, audioCapabilities);
+        if(external) {
+            parseAudioCapabilities(codecs, audioCapabilities);
+        }
 
         if(codecs.isEmpty()) {
             return null;
@@ -98,7 +105,7 @@ public class CodecUtils {
         codecs.clear();
         codecs.addAll(codecHashSet);
 
-        return codecs.toArray(new Integer[codecs.size()]);
+        return codecs.toArray(new Integer[0]);
     }
 
     public static Integer[] getSupportedCodecs(Context ctx)  {
@@ -183,7 +190,7 @@ public class CodecUtils {
         codecs.clear();
         codecs.addAll(codecHashSet);
 
-        return codecs.toArray(new Integer[codecs.size()]);
+        return codecs.toArray(new Integer[0]);
     }
 
     private static void parseAudioCapabilities(List<Integer> list, AudioCapabilities capabilities) {

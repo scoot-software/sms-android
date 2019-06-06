@@ -62,7 +62,6 @@ public class TvTranscodeSettingsActivity extends FragmentActivity {
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
-
             populateActions(actions);
         }
 
@@ -83,7 +82,7 @@ public class TvTranscodeSettingsActivity extends FragmentActivity {
             populateActions(getActions());
         }
 
-        public void populateActions(List<GuidedAction> actions) {
+        private void populateActions(List<GuidedAction> actions) {
             Log.d(TAG, "populateActions()");
 
             actions.clear();

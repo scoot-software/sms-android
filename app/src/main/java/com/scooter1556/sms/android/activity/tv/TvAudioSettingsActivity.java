@@ -17,7 +17,7 @@ import com.scooter1556.sms.android.R;
 import java.util.List;
 
 public class TvAudioSettingsActivity extends FragmentActivity {
-    private static final String TAG = "TvAudioSettingsActivity";
+    private static final String TAG = "TvAudioSettings";
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -47,6 +47,15 @@ public class TvAudioSettingsActivity extends FragmentActivity {
             String breadcrumb = getString(R.string.preferences_title);
             Drawable icon = ContextCompat.getDrawable(getActivity(), R.drawable.ic_audio_settings);
             return new GuidanceStylist.Guidance(title, null, breadcrumb, icon);
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+
+            Log.d(TAG, "onDestroy()");
+
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         }
 
         @Override

@@ -72,6 +72,15 @@ public class TvConnectionActivity extends Activity {
         }
 
         @Override
+        public void onDestroy() {
+            super.onDestroy();
+
+            Log.d(TAG, "onDestroy()");
+
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
         @NonNull
         public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
             Log.d(TAG, "onCreateGuidance()");

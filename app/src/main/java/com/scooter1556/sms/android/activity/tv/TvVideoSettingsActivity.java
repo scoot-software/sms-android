@@ -3,6 +3,8 @@ package com.scooter1556.sms.android.activity.tv;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.leanback.app.GuidedStepSupportFragment;
 import androidx.leanback.widget.GuidanceStylist;
@@ -16,7 +18,7 @@ import com.scooter1556.sms.android.R;
 import java.util.List;
 
 public class TvVideoSettingsActivity extends FragmentActivity {
-    private static final String TAG = "TvVideoSettingsActivity";
+    private static final String TAG = "TvVideoSettings";
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -45,6 +47,15 @@ public class TvVideoSettingsActivity extends FragmentActivity {
             String breadcrumb = getString(R.string.preferences_title);
             Drawable icon = ContextCompat.getDrawable(getActivity(), R.drawable.ic_video_settings);
             return new GuidanceStylist.Guidance(title, null, breadcrumb, icon);
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+
+            Log.d(TAG, "onDestroy()");
+
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         }
 
         @Override

@@ -3,6 +3,8 @@ package com.scooter1556.sms.android.activity.tv;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.leanback.app.GuidedStepSupportFragment;
 import androidx.leanback.widget.GuidanceStylist;
@@ -16,7 +18,7 @@ import com.scooter1556.sms.android.R;
 import java.util.List;
 
 public class TvTranscodeSettingsActivity extends FragmentActivity {
-    private static final String TAG = "TvTranscodeSettingsActivity";
+    private static final String TAG = "TvTranscodeSettings";
 
     // Preferences
     private static SharedPreferences sharedPreferences;
@@ -46,16 +48,28 @@ public class TvTranscodeSettingsActivity extends FragmentActivity {
         }
 
         @Override
+        public void onDestroy() {
+            super.onDestroy();
+
+            Log.d(TAG, "onDestroy()");
+
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
         public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
             // Register preferences listener
             sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
             // Set actions
+
             populateActions(actions);
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
+            Log.d(TAG, "onGuidedActionClicked()");
+
             if (action.getId() == DIRECT_PLAY) {
                 boolean enabled = sharedPreferences.getBoolean("pref_direct_play", false);
                 sharedPreferences.edit().putBoolean("pref_direct_play", !enabled).apply();
@@ -64,10 +78,14 @@ public class TvTranscodeSettingsActivity extends FragmentActivity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Log.d(TAG, "onSharedPreferencesChanged() -> Key=" + key);
+
             populateActions(getActions());
         }
 
         public void populateActions(List<GuidedAction> actions) {
+            Log.d(TAG, "populateActions()");
+
             actions.clear();
 
             actions.add(new GuidedAction.Builder(getActivity())

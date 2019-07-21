@@ -45,7 +45,6 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ShuffleOrder;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
@@ -107,7 +106,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
     private ConcatenatingMediaSource concatenatingMediaSource;
     private DefaultTrackSelector trackSelector;
 
-    private boolean castMediaQueueCreationPending;
     private int currentItemIndex;
     private Player currentPlayer;
 
@@ -195,6 +193,33 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         if(castPlayer.isCastSessionAvailable()) {
             setCurrentPlayer(castPlayer);
         }
+    }
+
+    /**
+     * Releases the manager and the players that it holds.
+     */
+    public void release() {
+        Log.d(TAG, "release()");
+
+        currentItemIndex = C.INDEX_UNSET;
+        queue.clear();
+        concatenatingMediaSource.clear();
+
+        playerNotificationManager.setPlayer(null);
+
+        if(castPlayer != null) {
+            castPlayer.setSessionAvailabilityListener(null);
+            castPlayer.release();
+            castPlayer = null;
+        }
+
+        if (castSessionManager != null) {
+            castSessionManager.removeSessionManagerListener(castSessionManagerListener, CastSession.class);
+        }
+
+        localPlayer.stop(true);
+        localPlayer.release();
+        localPlayer = null;
     }
 
     // Queue manipulation methods.
@@ -338,34 +363,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         return true;
     }
 
-    /**
-     * Releases the manager and the players that it holds.
-     */
-    public void release() {
-        Log.d(TAG, "release()");
-
-        currentItemIndex = C.INDEX_UNSET;
-        queue.clear();
-        concatenatingMediaSource.clear();
-
-        playerNotificationManager.setPlayer(null);
-
-        if(castPlayer != null) {
-            castPlayer.setSessionAvailabilityListener(null);
-
-            castPlayer.release();
-            castPlayer = null;
-        }
-
-        localPlayer.stop(true);
-        localPlayer.release();
-        localPlayer = null;
-
-        if (castSessionManager != null) {
-            castSessionManager.removeSessionManagerListener(castSessionManagerListener, CastSession.class);
-        }
-    }
-
     // Player.EventListener implementation.
 
     @Override
@@ -387,10 +384,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         Log.d(TAG, "onTimelineChanged(" + reason + ")");
 
         updateCurrentItemIndex();
-
-        if (timeline.isEmpty()) {
-            castMediaQueueCreationPending = true;
-        }
 
         // Timeline reset
         if(reason == Player.TIMELINE_CHANGE_REASON_RESET) {
@@ -564,15 +557,9 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         mediaSessionConnector.setPlaybackPreparer(new SMSPlaybackPreparer());
         mediaSessionConnector.setCustomActionProviders(repeatProvider, shuffleProvider);
 
-        // Determine whether to setup player notification
-        if(videoMode && currentPlayer == localPlayer) {
-            playerNotificationManager.setPlayer(null);
-        } else {
-            playerNotificationManager.setPlayer(currentPlayer);
-        }
+        playerNotificationManager.setPlayer(currentPlayer);
 
         // Media queue management.
-        castMediaQueueCreationPending = currentPlayer == castPlayer;
         if (currentPlayer == localPlayer && concatenatingMediaSource.getSize() > 0) {
             // Set audio attributes so audio focus can be handled correctly
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -610,12 +597,11 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
         maybeSetCurrentItemAndNotify(itemIndex);
 
-        if (castMediaQueueCreationPending) {
+        if (currentPlayer == castPlayer && castPlayer.getCurrentTimeline().isEmpty()) {
             MediaQueueItem[] items = new MediaQueueItem[queue.size()];
             for (int i = 0; i < items.length; i++) {
                 items[i] = MediaUtils.getMediaQueueItem(queue.get(i));
             }
-            castMediaQueueCreationPending = false;
             castPlayer.loadItems(items, itemIndex, positionMs, Player.REPEAT_MODE_OFF);
         } else {
             currentPlayer.seekTo(itemIndex, positionMs);
@@ -898,16 +884,11 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         if(videoMode) {
             currentPlayer.setShuffleModeEnabled(false);
             currentPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
-
-            if(currentPlayer == localPlayer) {
-                playerNotificationManager.setPlayer(null);
-            }
-        } else {
-            playerNotificationManager.setPlayer(currentPlayer);
         }
 
+         playerNotificationManager.setPlayer(currentPlayer);
+
         // Media queue management.
-        castMediaQueueCreationPending = currentPlayer == castPlayer;
         if (currentPlayer == localPlayer) {
             // Set audio attributes so audio focus can be handled correctly
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -939,7 +920,17 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                 | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
 
         @Override
-        public void onPrepareFromMediaId(final String mediaId, Bundle extras) {
+        public long getSupportedPrepareActions() {
+            return ACTIONS;
+        }
+
+        @Override
+        public void onPrepare(boolean playWhenReady) {
+            // Do nothing...
+        }
+
+        @Override
+        public void onPrepareFromMediaId(String mediaId, boolean playWhenReady, Bundle extras) {
             Log.d(TAG, "onPrepareFromMediaId(" + mediaId + ")");
 
             // Handle extra options
@@ -953,7 +944,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         }
 
         @Override
-        public void onPrepareFromSearch(String query, Bundle extras) {
+        public void onPrepareFromSearch(String query, boolean playWhenReady, Bundle extras) {
             Log.d(TAG, "onPrepareFromSearch(" + query + ")");
 
             // Handle extra options
@@ -970,17 +961,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         }
 
         @Override
-        public void onPrepareFromUri(Uri uri, Bundle extras) {
-            // Do nothing...
-        }
-
-        @Override
-        public long getSupportedPrepareActions() {
-            return ACTIONS;
-        }
-
-        @Override
-        public void onPrepare() {
+        public void onPrepareFromUri(Uri uri, boolean playWhenReady, Bundle extras) {
             // Do nothing...
         }
 

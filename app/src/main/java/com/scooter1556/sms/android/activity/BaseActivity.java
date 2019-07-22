@@ -86,8 +86,6 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         super.onDestroy();
 
         Log.d(TAG, "onDestroy()");
-
-        mediaBrowser.disconnect();
     }
 
     @Override
@@ -122,6 +120,8 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         if (MediaControllerCompat.getMediaController(this) != null) {
             MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
         }
+
+        mediaBrowser.disconnect();
     }
 
     @Override

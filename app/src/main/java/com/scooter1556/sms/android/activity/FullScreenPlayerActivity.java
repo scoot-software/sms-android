@@ -30,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -103,10 +104,10 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
-        Log.d(TAG, "onDestroy()");
+        Log.d(TAG, "onStop()");
 
         // Remove listener
         PlaybackManager.getInstance().removeListener(this);
@@ -122,10 +123,17 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
     private void updateMetadata() {
         Log.d(TAG, "updateMetadata()");
 
+        int index = PlaybackManager.getInstance().getCurrentItemIndex();
+
+        if(index == C.INDEX_UNSET) {
+            return;
+        }
+
         MediaDescriptionCompat mediaDescription = PlaybackManager.getInstance().getMediaDescription();
 
         if(mediaDescription == null) {
             finish();
+            return;
         }
 
         Glide.with(this)

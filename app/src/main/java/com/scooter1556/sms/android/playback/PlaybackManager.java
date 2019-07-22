@@ -275,12 +275,11 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
     public MediaDescriptionCompat getMediaDescription() {
         // Checks
-        if(currentPlayer == null || queue.isEmpty()) {
+        if(currentPlayer == null || queue.isEmpty() || currentItemIndex == C.INDEX_UNSET) {
             return null;
         }
 
-        // Get media element from queue
-        MediaElement element = queue.get(currentPlayer.getCurrentWindowIndex());
+        MediaElement element = queue.get(currentItemIndex);
 
         if(element == null) {
             return null;

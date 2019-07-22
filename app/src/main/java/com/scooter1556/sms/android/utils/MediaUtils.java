@@ -110,6 +110,55 @@ public class MediaUtils {
         return new MediaQueueItem.Builder(mediaInfo).build();
     }
 
+    public static MediaElement getMediaElement(@NonNull MediaQueueItem item) {
+        if(item.getMedia() == null) {
+            return null;
+        }
+
+        MediaMetadata metadata = item.getMedia().getMetadata();
+
+        // Populate media element
+        MediaElement element = new MediaElement();
+        element.setID(UUID.fromString(item.getMedia().getContentId()));
+
+        if(metadata != null) {
+            // Type
+            element.setType(Integer.valueOf(metadata.getMediaType()).byteValue());
+
+            // Artist
+            if(metadata.containsKey(MediaMetadata.KEY_ARTIST)) {
+                element.setArtist(metadata.getString(MediaMetadata.KEY_ARTIST));
+            }
+
+            // Album
+            if(metadata.containsKey(MediaMetadata.KEY_ALBUM_TITLE)) {
+                element.setAlbum(metadata.getString(MediaMetadata.KEY_ALBUM_TITLE));
+            }
+
+            // Title
+            if(metadata.containsKey(MediaMetadata.KEY_TITLE)) {
+                element.setTitle(metadata.getString(MediaMetadata.KEY_TITLE));
+            }
+
+            // Track Number
+            if(metadata.containsKey(MediaMetadata.KEY_TRACK_NUMBER)) {
+                element.setTrackNumber(Integer.valueOf(metadata.getInt(MediaMetadata.KEY_TRACK_NUMBER)).shortValue());
+            }
+
+            // Disc Number
+            if(metadata.containsKey(MediaMetadata.KEY_DISC_NUMBER)) {
+                element.setDiscNumber(Integer.valueOf(metadata.getInt(MediaMetadata.KEY_DISC_NUMBER)).shortValue());
+            }
+
+            // Album Artist
+            if(metadata.containsKey(MediaMetadata.KEY_ALBUM_ARTIST)) {
+                element.setAlbumArtist(metadata.getString(MediaMetadata.KEY_ALBUM_ARTIST));
+            }
+        }
+
+        return element;
+    }
+
     /*
      * Retrieve MediaMetadata for a MediaElement
      */
@@ -345,7 +394,7 @@ public class MediaUtils {
         if(element.getCertificate() != null) { extras.putString("Certificate", element.getCertificate()); }
         if(element.getTagline() != null) { extras.putString("Tagline", element.getTagline()); }
 
-        MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
+        return new MediaDescriptionCompat.Builder()
                 .setMediaId(mediaId)
                 .setTitle(element.getTitle() == null ? "" : element.getTitle())
                 .setSubtitle(getSubtitle(element))
@@ -353,8 +402,6 @@ public class MediaUtils {
                 .setExtras(extras)
                 .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                 .build();
-
-        return description;
     }
 
     public static MediaElement getMediaElementById(String id, @NonNull List<MediaElement> mediaElements) {

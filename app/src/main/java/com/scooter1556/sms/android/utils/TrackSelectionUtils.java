@@ -35,12 +35,7 @@ import java.util.Locale;
  */
 
 public final class TrackSelectionUtils implements View.OnClickListener, DialogInterface.OnClickListener {
-
-    private static final TrackSelection.Factory FIXED_FACTORY = new FixedTrackSelection.Factory();
-    private static final TrackSelection.Factory RANDOM_FACTORY = new RandomTrackSelection.Factory();
-
     private final DefaultTrackSelector selector;
-    private final TrackSelection.Factory adaptiveTrackSelectionFactory;
 
     private MappedTrackInfo trackInfo;
     private int rendererIndex;
@@ -55,13 +50,9 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
 
     /**
      * @param selector The track selector.
-     * @param adaptiveTrackSelectionFactory A factory for adaptive {@link TrackSelection}s, or null
-     *     if the selection helper should not support adaptive tracks.
      */
-    public TrackSelectionUtils(DefaultTrackSelector selector,
-                               TrackSelection.Factory adaptiveTrackSelectionFactory) {
+    public TrackSelectionUtils(DefaultTrackSelector selector) {
         this.selector = selector;
-        this.adaptiveTrackSelectionFactory = adaptiveTrackSelectionFactory;
     }
 
     /**
@@ -78,8 +69,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
         trackGroups = trackInfo.getTrackGroups(rendererIndex);
         trackGroupsAdaptive = new boolean[trackGroups.length];
         for (int i = 0; i < trackGroups.length; i++) {
-            trackGroupsAdaptive[i] = adaptiveTrackSelectionFactory != null
-                    && trackInfo.getAdaptiveSupport(rendererIndex, i, false)
+            trackGroupsAdaptive[i] = trackInfo.getAdaptiveSupport(rendererIndex, i, false)
                     != RendererCapabilities.ADAPTIVE_NOT_SUPPORTED
                     && trackGroups.get(i).length > 1;
         }
@@ -98,7 +88,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
     @SuppressLint("InflateParams")
     private View buildView(Context context) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.dialog_track_selection, null);
+        View view = inflater.inflate(R.layout.dialog_tv_track_selection, null);
         ViewGroup root = (ViewGroup) view.findViewById(R.id.root);
 
         TypedArray attributeArray = context.getTheme().obtainStyledAttributes(
@@ -127,12 +117,10 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
 
         // Per-track views.
         boolean haveSupportedTracks = false;
-        boolean haveAdaptiveTracks = false;
         trackViews = new CheckedTextView[trackGroups.length][];
         for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
             TrackGroup group = trackGroups.get(groupIndex);
             boolean groupIsAdaptive = trackGroupsAdaptive[groupIndex];
-            haveAdaptiveTracks |= groupIsAdaptive;
             trackViews[groupIndex] = new CheckedTextView[group.length];
             for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
                 if (trackIndex == 0) {
@@ -234,7 +222,6 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
     }
 
     private void setOverride(int group, int[] tracks) {
-        TrackSelection.Factory factory = tracks.length == 1 ? FIXED_FACTORY : adaptiveTrackSelectionFactory;
         override = new SelectionOverride(group, tracks);
     }
 
@@ -265,7 +252,7 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
      * @param format {@link Format} of the track.
      * @return a generated name specific to the track.
      */
-    public static String buildTrackName(Format format) {
+    private static String buildTrackName(Format format) {
         String trackName;
 
         if (MimeTypes.isVideo(format.sampleMimeType)) {

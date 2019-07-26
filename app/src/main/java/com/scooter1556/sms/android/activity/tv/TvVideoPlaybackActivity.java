@@ -1,6 +1,7 @@
 package com.scooter1556.sms.android.activity.tv;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
 import android.widget.Toast;
@@ -12,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.leanback.app.PlaybackFragment;
 
-public class TvVideoPlaybackActivity extends FragmentActivity {
+public class TvVideoPlaybackActivity extends TvBaseActivity {
     private static final String TAG = "TvVideoPlaybackActivity";
 
     private static final String PLAYER_FRAGMENT_TAG = "TV_VIDEO_PLAYER_FRAGMENT";
@@ -24,6 +25,8 @@ public class TvVideoPlaybackActivity extends FragmentActivity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_tv_video_player);
@@ -32,13 +35,6 @@ public class TvVideoPlaybackActivity extends FragmentActivity {
         if (fragment instanceof TvVideoPlayerFragment) {
             playerFragment = (TvVideoPlayerFragment) fragment;
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        finish();
     }
 
     @Override

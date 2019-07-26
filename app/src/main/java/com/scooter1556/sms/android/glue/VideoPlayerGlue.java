@@ -1,11 +1,19 @@
 package com.scooter1556.sms.android.glue;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.scooter1556.sms.android.action.AudioTrackAction;
+import com.scooter1556.sms.android.action.TextTrackAction;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import androidx.leanback.media.PlaybackTransportControlGlue;
 import androidx.leanback.widget.Action;
 import androidx.leanback.widget.ArrayObjectAdapter;
@@ -13,27 +21,54 @@ import androidx.leanback.widget.PlaybackControlsRow;
 
 public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayerAdapter> {
 
+    private static final String TAG = "VideoPlayerGlue";
+
     private static final long TEN_SECONDS = TimeUnit.SECONDS.toMillis(10);
+
+    public static final int ACTION_PREVIOUS = 0;
+    public static final int ACTION_NEXT = 1;
+    public static final int ACTION_AUDIO_TRACK = 2;
+    public static final int ACTION_TEXT_TRACK = 3;
 
     private PlaybackControlsRow.SkipPreviousAction skipPreviousAction;
     private PlaybackControlsRow.SkipNextAction skipNextAction;
     private PlaybackControlsRow.FastForwardAction fastForwardAction;
     private PlaybackControlsRow.RewindAction rewindAction;
+    public AudioTrackAction audioTrackAction;
+    public TextTrackAction textTrackAction;
 
-    public VideoPlayerGlue(
-            Context context,
-            LeanbackPlayerAdapter playerAdapter) {
+    private ActionListener listener;
+
+    /**
+     * Listener for actions.
+     */
+    public interface ActionListener {
+
+        /**
+         * Called when an unhandled action is clicked
+         */
+        void onActionClicked(int action);
+
+    }
+
+    public VideoPlayerGlue(Context context, LeanbackPlayerAdapter playerAdapter, ActionListener listener) {
         super(context, playerAdapter);
 
         skipPreviousAction = new PlaybackControlsRow.SkipPreviousAction(context);
         skipNextAction = new PlaybackControlsRow.SkipNextAction(context);
         fastForwardAction = new PlaybackControlsRow.FastForwardAction(context);
         rewindAction = new PlaybackControlsRow.RewindAction(context);
+
+        audioTrackAction = new AudioTrackAction(context, C.INDEX_UNSET);
+        textTrackAction = new TextTrackAction(context, C.INDEX_UNSET);
+
+        this.listener = listener;
     }
 
     @Override
     protected void onCreatePrimaryActions(ArrayObjectAdapter adapter) {
         super.onCreatePrimaryActions(adapter);
+
         adapter.add(skipPreviousAction);
         adapter.add(rewindAction);
         adapter.add(fastForwardAction);
@@ -44,7 +79,8 @@ public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayer
     protected void onCreateSecondaryActions(ArrayObjectAdapter adapter) {
         super.onCreateSecondaryActions(adapter);
 
-        // Nothing for now...
+        adapter.add(audioTrackAction);
+        adapter.add(textTrackAction);
     }
 
     @Override
@@ -60,44 +96,28 @@ public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayer
 
     // Should dispatch actions that the super class does not supply callbacks for.
     private boolean shouldDispatchAction(Action action) {
-        return action == rewindAction
-                || action == fastForwardAction;
+        return action == skipPreviousAction
+                || action == skipNextAction
+                || action == rewindAction
+                || action == fastForwardAction
+                || action == audioTrackAction
+                || action == textTrackAction;
     }
 
     private void dispatchAction(Action action) {
-        // Primary actions are handled manually.
         if (action == rewindAction) {
             rewind();
         } else if (action == fastForwardAction) {
             fastForward();
-        } else if (action instanceof PlaybackControlsRow.MultiAction) {
-            PlaybackControlsRow.MultiAction multiAction = (PlaybackControlsRow.MultiAction) action;
-            multiAction.nextIndex();
-            // Notify adapter of action changes to handle secondary actions, such as, thumbs up/down
-            // and repeat.
-            notifyActionChanged(
-                    multiAction,
-                    (ArrayObjectAdapter) getControlsRow().getSecondaryActionsAdapter());
+        } else if (action == skipNextAction) {
+            listener.onActionClicked(ACTION_NEXT);
+        } else if (action == skipPreviousAction) {
+            listener.onActionClicked(ACTION_PREVIOUS);
+        } else if (action == audioTrackAction) {
+            listener.onActionClicked(ACTION_AUDIO_TRACK);
+        } else if (action == textTrackAction) {
+            listener.onActionClicked(ACTION_TEXT_TRACK);
         }
-    }
-
-    private void notifyActionChanged(PlaybackControlsRow.MultiAction action, ArrayObjectAdapter adapter) {
-        if (adapter != null) {
-            int index = adapter.indexOf(action);
-            if (index >= 0) {
-                adapter.notifyArrayItemRangeChanged(index, 1);
-            }
-        }
-    }
-
-    @Override
-    public void next() {
-        getPlayerAdapter().next();
-    }
-
-    @Override
-    public void previous() {
-        getPlayerAdapter().previous();
     }
 
     /** Skips backwards 10 seconds. */
@@ -114,5 +134,17 @@ public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayer
             newPosition = (newPosition > getDuration()) ? getDuration() : newPosition;
             getPlayerAdapter().seekTo(newPosition);
         }
+    }
+
+    //
+    // Listener
+    //
+
+    public void setListener(@NonNull ActionListener listener) {
+        this.listener = listener;
+    }
+
+    public void removeListener(){
+        this.listener=null;
     }
 }

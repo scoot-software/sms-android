@@ -24,38 +24,67 @@
 package com.scooter1556.sms.android.fragment.tv;
 
 import android.annotation.TargetApi;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
 import androidx.leanback.app.PlaybackFragment;
 import androidx.leanback.app.VideoSupportFragment;
 import androidx.leanback.app.VideoSupportFragmentGlueHost;
+import androidx.leanback.widget.Action;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.ClassPresenterSelector;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter;
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.text.Cue;
 import com.google.android.exoplayer2.text.TextRenderer;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
 import com.scooter1556.sms.android.R;
+import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.glue.VideoPlayerGlue;
 import com.scooter1556.sms.android.playback.PlaybackManager;
+import com.scooter1556.sms.android.service.RESTService;
+import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import java.util.List;
 
-public class TvVideoPlayerFragment extends VideoSupportFragment implements TextRenderer.Output {
-    private static final String TAG = "TvVideoPlaybackFragment";
+public class TvVideoPlayerFragment extends VideoSupportFragment implements TextRenderer.Output, Player.EventListener, VideoPlayerGlue.ActionListener {
+    private static final String TAG = "TvVideoPlayerFragment";
+
+    // Saved instance state keys.
+    private static final String KEY_TRACK_SELECTOR_PARAMETERS = "track_selector_parameters";
 
     private static final int UPDATE_DELAY = 16;
     private static final int BACKGROUND_TYPE = PlaybackFragment.BG_LIGHT;
 
-    public static final int ACTION_VIDEO_QUALITY_ID = 0x7f0f0014;
-    public static final int ACTION_AUDIO_TRACK_ID = 0x7f0f0015;
-    public static final int ACTION_SUBTITLE_TRACK_ID = 0x7f0f0016;
+    private static final int CARD_SIZE = 240;
+
+    public static final int ACTION_TRACK_SELECTION_ID = 0x7f0f0014;
 
     private Player player;
     private VideoPlayerGlue playerGlue;
     private LeanbackPlayerAdapter playerAdapter;
+    private boolean isInitialised = false;
+
+    private DefaultTrackSelector trackSelector;
+    private DefaultTrackSelector.Parameters trackSelectorParameters;
+    private TrackSelectionUtils trackSelectionUtils;
+    private TrackGroupArray lastSeenTrackGroupArray;
+    private boolean isShowingTrackSelectionDialog;
 
     private ArrayObjectAdapter rowsAdapter;
 
@@ -63,6 +92,8 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        Log.d(TAG, "onActivityCreated()");
+
         super.onActivityCreated(savedInstanceState);
 
         subtitleView = (SubtitleView) getActivity().findViewById(R.id.subtitle_view);
@@ -71,66 +102,90 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
             subtitleView.setUserDefaultTextSize();
         }
 
+        if (savedInstanceState != null) {
+            trackSelectorParameters = savedInstanceState.getParcelable(KEY_TRACK_SELECTOR_PARAMETERS);
+        } else {
+            trackSelectorParameters = new DefaultTrackSelector.ParametersBuilder().build();
+        }
+
         setBackgroundType(BACKGROUND_TYPE);
-        setFadingEnabled(false);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        initialise();
+        setControlsOverlayAutoHideEnabled(true);
     }
 
     @Override
     public void onResume() {
+        Log.d(TAG, "onResume()");
+
         super.onResume();
 
-        initialise();
+        if(isInitialised) {
+            playerGlue.playWhenPrepared();
+        } else {
+            initialise();
+        }
     }
 
     /** Pauses the player. */
     @TargetApi(Build.VERSION_CODES.N)
     @Override
     public void onPause() {
+        Log.d(TAG, "onPause()");
+
         super.onPause();
 
         if (playerGlue != null && playerGlue.isPlaying()) {
             playerGlue.pause();
         }
-
-        release();
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy()");
 
-        release();
-    }
-
-    private void initialise() {
-        player = PlaybackManager.getInstance().getCurrentPlayer();
-        playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
-        playerGlue = new VideoPlayerGlue(getActivity(), playerAdapter);
-        playerGlue.setHost(new VideoSupportFragmentGlueHost(this));
-        playerGlue.playWhenPrepared();
-
-        setupRows();
-
-        //playerGlue.setTitle(video.title);
-        //playerGlue.setSubtitle(video.description);
-    }
-
-    private void release() {
-        playerGlue = null;
-        playerAdapter = null;
+        super.onDestroy();
 
         // Stop and reset player
         player.stop(true);
+
+        // Remove listener
+        player.removeListener(this);
+
+        playerGlue = null;
+        playerAdapter = null;
+        trackSelector = null;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        updateTrackSelectorParameters();
+        outState.putParcelable(KEY_TRACK_SELECTOR_PARAMETERS, trackSelectorParameters);
+    }
+
+    private void initialise() {
+        Log.d(TAG, "initialise()");
+
+        player = PlaybackManager.getInstance().getCurrentPlayer();
+        player.addListener(this);
+        playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
+        playerGlue = new VideoPlayerGlue(getActivity(), playerAdapter, this);
+        playerGlue.setHost(new VideoSupportFragmentGlueHost(this));
+
+        trackSelector = PlaybackManager.getInstance().getCurrentTrackSelector();
+        trackSelectionUtils = new TrackSelectionUtils(trackSelector);
+
+        isInitialised = true;
+
+        setupRows();
+        updateMetadata();
+
+        playerGlue.playWhenPrepared();
     }
 
     private void setupRows() {
+        Log.d(TAG, "setupRows()");
+
         ClassPresenterSelector presenter = new ClassPresenterSelector();
         presenter.addClassPresenter(playerGlue.getControlsRow().getClass(), playerGlue.getPlaybackRowPresenter());
 
@@ -140,11 +195,11 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
     }
 
     public void skipToNext() {
-        playerGlue.next();
+        player.next();
     }
 
     public void skipToPrevious() {
-        playerGlue.previous();
+        player.previous();
     }
 
     public void rewind() {
@@ -155,9 +210,87 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
         playerGlue.fastForward();
     }
 
+    private void updateMetadata() {
+        Log.d(TAG, "updateMetadata()");
+
+        MediaDescriptionCompat mediaDescription = PlaybackManager.getInstance().getMediaDescription();
+
+        if(mediaDescription == null) {
+            return;
+        }
+
+        playerGlue.setTitle(mediaDescription.getTitle());
+        playerGlue.setSubtitle(mediaDescription.getSubtitle());
+
+        if(playerGlue.getControlsRow() != null) {
+            Glide.with(this)
+                    .asBitmap()
+                    .load(mediaDescription.getIconUri())
+                    .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {
+                        @Override
+                        public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                            playerGlue.getControlsRow().setImageBitmap(getActivity(), resource);
+                            rowsAdapter.notifyArrayItemRangeChanged(0, rowsAdapter.size());
+                        }
+                    });
+        }
+    }
+
     @Override
     public void onCues(List<Cue> cues) {
         if (subtitleView != null)
             subtitleView.onCues(cues);
+    }
+
+    private void updateTrackSelectorParameters() {
+        if(trackSelector != null) {
+            trackSelectorParameters = trackSelector.getParameters();
+        }
+    }
+
+    @Override
+    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+        Log.d(TAG, "onTracksChanged()");
+
+        if (trackGroups != lastSeenTrackGroupArray) {
+            lastSeenTrackGroupArray = trackGroups;
+
+            // Update glue actions
+            for (int i = 0; i < trackSelections.length; i++) {
+                switch(player.getRendererType(i)) {
+                    case C.TRACK_TYPE_AUDIO:
+                        playerGlue.audioTrackAction.setIndex(i);
+                        break;
+
+                    case C.TRACK_TYPE_TEXT:
+                        playerGlue.textTrackAction.setIndex(i);
+                        break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onActionClicked(int action) {
+        Log.d(TAG, "onActionClicked() -> " + action);
+
+        if (action == VideoPlayerGlue.ACTION_NEXT) {
+            skipToNext();
+        } else if (action == VideoPlayerGlue.ACTION_PREVIOUS) {
+            skipToPrevious();
+        } else if (action == VideoPlayerGlue.ACTION_AUDIO_TRACK) {
+            MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+
+            if (mappedTrackInfo != null) {
+                trackSelectionUtils.showSelectionDialog(getActivity(), trackSelector.getCurrentMappedTrackInfo(), playerGlue.audioTrackAction.getIndex());
+            }
+        } else if (action == VideoPlayerGlue.ACTION_TEXT_TRACK) {
+             MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+
+            if (mappedTrackInfo != null) {
+                trackSelectionUtils.showSelectionDialog(getActivity(), trackSelector.getCurrentMappedTrackInfo(), playerGlue.textTrackAction.getIndex());
+            }
+        }
+
     }
 }

@@ -122,6 +122,15 @@ public class TvHomeFragment extends BrowseSupportFragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        Log.d(TAG, "onPause()");
+
+        mediaBrowser.disconnect();
+    }
+
+    @Override
     public void onStart() {
         Log.d(TAG, "onStart()");
 

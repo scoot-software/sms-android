@@ -30,20 +30,21 @@ import android.os.Bundle;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.leanback.app.PlaybackSupportFragment;
 import androidx.leanback.app.VideoSupportFragment;
 import androidx.leanback.app.VideoSupportFragmentGlueHost;
-import androidx.leanback.widget.ArrayObjectAdapter;
-import androidx.leanback.widget.ClassPresenterSelector;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.text.Cue;
+import com.google.android.exoplayer2.text.TextOutput;
 import com.google.android.exoplayer2.text.TextRenderer;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
@@ -56,7 +57,7 @@ import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import java.util.List;
 
-public class TvVideoPlayerFragment extends VideoSupportFragment implements TextRenderer.Output, Player.EventListener, PlaybackManager.PlaybackListener, VideoPlayerGlue.ActionListener {
+public class TvVideoPlayerFragment extends VideoSupportFragment implements TextOutput, Player.EventListener, PlaybackManager.PlaybackListener, VideoPlayerGlue.ActionListener {
     private static final String TAG = "TvVideoPlayerFragment";
 
     // Saved instance state keys.
@@ -67,7 +68,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
 
     private static final int CARD_SIZE = 240;
 
-    private Player player;
+    private SimpleExoPlayer player;
     private VideoPlayerGlue playerGlue;
     private LeanbackPlayerAdapter playerAdapter;
     private boolean isInitialised = false;
@@ -148,7 +149,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
         updateTrackSelectorParameters();
@@ -161,21 +162,26 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
         // Add listener for playback manager
         PlaybackManager.getInstance().addListener(this);
 
-        // Setup player, adapter and glue
-        player = PlaybackManager.getInstance().getCurrentPlayer();
+        // Setup player
+        player = (SimpleExoPlayer) PlaybackManager.getInstance().getCurrentPlayer();
         player.addListener(this);
+        player.addTextOutput(this);
+
+        // Setup player adapter
         playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
+
+        // Setup player glue
         playerGlue = new VideoPlayerGlue(getActivity(), playerAdapter, this);
         playerGlue.setHost(new VideoSupportFragmentGlueHost(this));
+        playerGlue.playWhenPrepared();
 
+        // Setup track selectors
         trackSelector = PlaybackManager.getInstance().getCurrentTrackSelector();
         trackSelectionUtils = new TrackSelectionUtils(trackSelector);
 
         isInitialised = true;
 
         updateMetadata();
-
-        playerGlue.playWhenPrepared();
     }
 
     public void skipToNext() {

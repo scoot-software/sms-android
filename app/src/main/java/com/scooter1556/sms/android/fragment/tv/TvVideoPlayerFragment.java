@@ -29,14 +29,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
-import androidx.leanback.app.PlaybackFragment;
+import androidx.leanback.app.PlaybackSupportFragment;
 import androidx.leanback.app.VideoSupportFragment;
 import androidx.leanback.app.VideoSupportFragmentGlueHost;
-import androidx.leanback.widget.Action;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.ClassPresenterSelector;
 
@@ -54,26 +50,22 @@ import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.glue.VideoPlayerGlue;
 import com.scooter1556.sms.android.playback.PlaybackManager;
-import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import java.util.List;
 
-public class TvVideoPlayerFragment extends VideoSupportFragment implements TextRenderer.Output, Player.EventListener, VideoPlayerGlue.ActionListener {
+public class TvVideoPlayerFragment extends VideoSupportFragment implements TextRenderer.Output, Player.EventListener, PlaybackManager.PlaybackListener, VideoPlayerGlue.ActionListener {
     private static final String TAG = "TvVideoPlayerFragment";
 
     // Saved instance state keys.
     private static final String KEY_TRACK_SELECTOR_PARAMETERS = "track_selector_parameters";
 
     private static final int UPDATE_DELAY = 16;
-    private static final int BACKGROUND_TYPE = PlaybackFragment.BG_LIGHT;
+    private static final int BACKGROUND_TYPE = PlaybackSupportFragment.BG_LIGHT;
 
     private static final int CARD_SIZE = 240;
-
-    public static final int ACTION_TRACK_SELECTION_ID = 0x7f0f0014;
 
     private Player player;
     private VideoPlayerGlue playerGlue;
@@ -84,9 +76,6 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
     private DefaultTrackSelector.Parameters trackSelectorParameters;
     private TrackSelectionUtils trackSelectionUtils;
     private TrackGroupArray lastSeenTrackGroupArray;
-    private boolean isShowingTrackSelectionDialog;
-
-    private ArrayObjectAdapter rowsAdapter;
 
     private SubtitleView subtitleView;
 
@@ -96,7 +85,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
 
         super.onActivityCreated(savedInstanceState);
 
-        subtitleView = (SubtitleView) getActivity().findViewById(R.id.subtitle_view);
+        subtitleView = getActivity().findViewById(R.id.subtitle_view);
         if (subtitleView != null) {
             subtitleView.setUserDefaultStyle();
             subtitleView.setUserDefaultTextSize();
@@ -144,6 +133,9 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
 
         super.onDestroy();
 
+        // Remove playback manager listener
+        PlaybackManager.getInstance().removeListener(this);
+
         // Stop and reset player
         player.stop(true);
 
@@ -166,6 +158,10 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
     private void initialise() {
         Log.d(TAG, "initialise()");
 
+        // Add listener for playback manager
+        PlaybackManager.getInstance().addListener(this);
+
+        // Setup player, adapter and glue
         player = PlaybackManager.getInstance().getCurrentPlayer();
         player.addListener(this);
         playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
@@ -177,21 +173,9 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
 
         isInitialised = true;
 
-        setupRows();
         updateMetadata();
 
         playerGlue.playWhenPrepared();
-    }
-
-    private void setupRows() {
-        Log.d(TAG, "setupRows()");
-
-        ClassPresenterSelector presenter = new ClassPresenterSelector();
-        presenter.addClassPresenter(playerGlue.getControlsRow().getClass(), playerGlue.getPlaybackRowPresenter());
-
-        rowsAdapter = new ArrayObjectAdapter(presenter);
-
-        setAdapter(rowsAdapter);
     }
 
     public void skipToNext() {
@@ -222,18 +206,19 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
         playerGlue.setTitle(mediaDescription.getTitle());
         playerGlue.setSubtitle(mediaDescription.getSubtitle());
 
-        if(playerGlue.getControlsRow() != null) {
-            Glide.with(this)
-                    .asBitmap()
-                    .load(mediaDescription.getIconUri())
-                    .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {
-                        @Override
-                        public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                            playerGlue.getControlsRow().setImageBitmap(getActivity(), resource);
-                            rowsAdapter.notifyArrayItemRangeChanged(0, rowsAdapter.size());
+
+        Glide.with(this)
+                .asBitmap()
+                .load(mediaDescription.getIconUri())
+                .into(new SimpleTarget<Bitmap>(CARD_SIZE, CARD_SIZE) {
+                    @Override
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                        if(playerGlue.getControlsRow() != null) {
+                            playerGlue.getControlsRow().setImageBitmap(requireContext(), resource);
+                            notifyPlaybackRowChanged();
                         }
-                    });
-        }
+                    }
+                });
     }
 
     @Override
@@ -292,5 +277,10 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextR
             }
         }
 
+    }
+
+    @Override
+    public void onQueuePositionChanged(int previousIndex, int newIndex) {
+        updateMetadata();
     }
 }

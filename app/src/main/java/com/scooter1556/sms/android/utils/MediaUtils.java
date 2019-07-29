@@ -421,4 +421,14 @@ public class MediaUtils {
 
         return null;
     }
+
+    public static MediaQueueItem[] getMediaQueue(List<MediaElement> queue) {
+        MediaQueueItem[] items = new MediaQueueItem[queue.size()];
+
+        for (int i = 0; i < items.length; i++) {
+            items[i] = getMediaQueueItem(queue.get(i));
+        }
+
+        return items;
+    }
 }

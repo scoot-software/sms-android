@@ -77,7 +77,7 @@ import java.util.UUID;
 /**
  * Manage the interactions among the container service, the queue manager and the actual playback.
  */
-public class PlaybackManager implements Player.EventListener, SessionAvailabilityListener {
+public class PlaybackManager implements Player.EventListener {
 
     private static final String TAG = "PlaybackManager";
 
@@ -85,6 +85,8 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
     private static final String USER_AGENT = "SMSAndroidPlayer";
     private static final DefaultHttpDataSourceFactory DATA_SOURCE_FACTORY = new DefaultHttpDataSourceFactory(USER_AGENT);
+
+    private static final int CAST_QUEUE_SIZE = 250;
 
     private static final String CHANNEL_ID = "com.scooter1556.sms.android.CHANNEL_ID";
     private static final int NOTIFICATION_ID = 412;
@@ -98,7 +100,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
     private CastSession castSession;
     private SessionManager castSessionManager;
     private SessionManagerListener<CastSession> castSessionManagerListener;
-    private boolean isCastEnabled = false;
 
     private List<MediaElement> queue;
     private SimpleExoPlayer localPlayer;
@@ -182,13 +183,10 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
     public void initialiseCast(CastContext ctx) {
         castPlayer = new CastPlayer(ctx);
         castPlayer.addListener(this);
-        castPlayer.setSessionAvailabilityListener(this);
 
         castSessionManager = ctx.getSessionManager();
         castSessionManagerListener = new CastSessionManagerListener();
         castSessionManager.addSessionManagerListener(castSessionManagerListener, CastSession.class);
-
-        isCastEnabled = true;
 
         if(castPlayer.isCastSessionAvailable()) {
             setCurrentPlayer(castPlayer);
@@ -394,23 +392,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         }
     }
 
-    // CastPlayer.SessionAvailabilityListener implementation.
-
-    @Override
-    public void onCastSessionAvailable() {
-        Log.d(TAG, "onCastSessionAvailable()");
-
-        setCurrentPlayer(castPlayer);
-    }
-
-    @Override
-    public void onCastSessionUnavailable() {
-        Log.d(TAG, "onCastSessionUnavailable()");
-
-        setCurrentPlayer(localPlayer);
-        castSession = null;
-    }
-
     /**
      * Session Manager Listener responsible for switching the Playback instances
      * depending on whether it is connected to a remote player.
@@ -419,7 +400,10 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
         @Override
         public void onSessionEnded(CastSession session, int error) {
-            Log.d(TAG, "Cast: onSessionEnded()");
+            Log.d(TAG, "Cast: onSessionEnded() > " + error);
+
+            setCurrentPlayer(localPlayer);
+            castSession = null;
         }
 
         @Override
@@ -438,7 +422,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
             RESTService.getInstance().addSession(ctx, UUID.fromString(sessionId), null, new TextHttpResponseHandler() {
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    Log.d(TAG, "Failed to register session for Chromecast.");
+                    Log.d(TAG, "Failed to register session for Chromecast: Status Code = " + statusCode + " Response = " + responseString);
                 }
 
                 @Override
@@ -458,9 +442,16 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                         message.put("audioQuality", audioQuality);
                         message.put("sessionId", sessionId);
                         session.sendMessage(MediaService.CC_CONFIG_CHANNEL, message.toString());
+
+                        setCurrentPlayer(castPlayer);
                     } catch (JSONException e) {
                         Log.d(TAG, "Failed to send setup information to Chromecast receiver.", e);
                     }
+                }
+
+                @Override
+                public void onRetry(int retryNo) {
+                    Log.d(TAG, "Cast: Attempt No." + retryNo + " to register session...");
                 }
             });
 
@@ -470,7 +461,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
 
         @Override
         public void onSessionStarting(CastSession session) {
-            Log.d(TAG, "Cast: onSessionStarting() > " + session.toString());
+            Log.d(TAG, "Cast: onSessionStarting()");
         }
 
         @Override
@@ -481,9 +472,6 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         @Override
         public void onSessionEnding(CastSession session) {
             Log.d(TAG, "Cast: onSessionEnding()");
-
-            // Cleanup cast session
-            castSession = null;
         }
 
         @Override
@@ -597,11 +585,49 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
         maybeSetCurrentItemAndNotify(itemIndex);
 
         if (currentPlayer == castPlayer && castPlayer.getCurrentTimeline().isEmpty()) {
-            MediaQueueItem[] items = new MediaQueueItem[queue.size()];
-            for (int i = 0; i < items.length; i++) {
-                items[i] = MediaUtils.getMediaQueueItem(queue.get(i));
+            // Ensure we don't exceed max packet size for media queue
+            if (queue.size() < CAST_QUEUE_SIZE) {
+                Log.d(TAG, "Cast: Process entire queue");
+
+                MediaQueueItem[] items = MediaUtils.getMediaQueue(queue);
+                castPlayer.loadItems(items, itemIndex, positionMs, Player.REPEAT_MODE_OFF);
+            } else {
+                Log.d(TAG, "Cast: Process queue in chunks");
+
+                if(itemIndex < CAST_QUEUE_SIZE) {
+                    for (int i = 0; i < queue.size(); i += CAST_QUEUE_SIZE) {
+                        List<MediaElement> subQueue = queue.subList(i, Math.min(queue.size(), i + CAST_QUEUE_SIZE));
+                        MediaQueueItem[] items = MediaUtils.getMediaQueue(subQueue);
+
+                        if (i == 0) {
+                            castPlayer.loadItems(items, itemIndex, positionMs, Player.REPEAT_MODE_OFF);
+                        } else {
+                            castPlayer.addItems(items);
+                        }
+                    }
+                } else {
+                    // Process queue from item index
+                    for (int i = itemIndex; i < queue.size(); i += CAST_QUEUE_SIZE) {
+                        List<MediaElement> subQueue = queue.subList(i, Math.min(queue.size(), i + CAST_QUEUE_SIZE));
+                        MediaQueueItem[] items = MediaUtils.getMediaQueue(subQueue);
+
+                        if (i == itemIndex) {
+                            castPlayer.loadItems(items, 0, positionMs, Player.REPEAT_MODE_OFF);
+                        } else {
+                            castPlayer.addItems(items);
+                        }
+                    }
+
+                    // Process queue prior to item index
+                    for (int i = 0; i < itemIndex; i += CAST_QUEUE_SIZE) {
+                        List<MediaElement> subQueue = queue.subList(i, Math.min(itemIndex--, i + CAST_QUEUE_SIZE));
+                        MediaQueueItem[] items = MediaUtils.getMediaQueue(subQueue);
+
+                        castPlayer.addItems(i, items);
+
+                    }
+                }
             }
-            castPlayer.loadItems(items, itemIndex, positionMs, Player.REPEAT_MODE_OFF);
         } else {
             currentPlayer.seekTo(itemIndex, positionMs);
             currentPlayer.setPlayWhenReady(playWhenReady);
@@ -629,6 +655,7 @@ public class PlaybackManager implements Player.EventListener, SessionAvailabilit
                 String tag = (String) oldWindow.tag;
 
                 if (tag != null) {
+                    Log.d(TAG, "End job: " + tag + ")");
                     RESTService.getInstance().endJob(SessionService.getInstance().getSessionId(), UUID.fromString(tag));
                 }
             }

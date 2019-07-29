@@ -46,7 +46,7 @@ public class RESTService {
 
     public static final int MIN_SUPPORTED_SERVER_VERSION = 38;
 
-    private static final int TIMEOUT = 20000;
+    private static final int TIMEOUT = 10000;
     private static final RESTService instance = new RESTService();
     private static AsyncHttpClient client = new AsyncHttpClient();
     private Connection connection;
@@ -60,7 +60,7 @@ public class RESTService {
 
         if(connection != null) {
             client.setBasicAuth(connection.getUsername(), connection.getPassword());
-            client.setMaxRetriesAndTimeout(2, TIMEOUT);
+            client.setMaxRetriesAndTimeout(3, TIMEOUT);
         }
     }
 

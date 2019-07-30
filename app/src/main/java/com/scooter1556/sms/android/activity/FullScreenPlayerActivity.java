@@ -89,14 +89,13 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
 
         Log.d(TAG, "onStart()");
 
-        PlaybackManager playbackManager = PlaybackManager.getInstance();
-        Player player = playbackManager.getCurrentPlayer();
+        Player player = PlaybackManager.getInstance().getCurrentPlayer();
 
         if(player == null) {
             finish();
         } else {
             // Add listener
-            playbackManager.addListener(this);
+            PlaybackManager.getInstance().addListener(this);
 
             playerView.setPlayer(player);
             updateMetadata();
@@ -120,16 +119,25 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
         updateMetadata();
     }
 
+    @Override
+    public void onPlayerChanged(Player player) {
+        Log.d(TAG, "onPlayerChanged()");
+
+        playerView.setPlayer(player);
+    }
+
     private void updateMetadata() {
         Log.d(TAG, "updateMetadata()");
 
-        int index = PlaybackManager.getInstance().getCurrentItemIndex();
+        PlaybackManager playbackManager = PlaybackManager.getInstance();
+
+        int index = playbackManager.getCurrentItemIndex();
 
         if(index == C.INDEX_UNSET) {
             return;
         }
 
-        MediaDescriptionCompat mediaDescription = PlaybackManager.getInstance().getMediaDescription();
+        MediaDescriptionCompat mediaDescription = playbackManager.getMediaDescription();
 
         if(mediaDescription == null) {
             finish();
@@ -142,5 +150,12 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
 
         title.setText(mediaDescription.getTitle());
         subtitle.setText(mediaDescription.getSubtitle());
+
+        if(playbackManager.isCasting()) {
+            String castDevice = playbackManager.getCastSession().getCastDevice().getFriendlyName();
+            extra.setText(getString(R.string.cast_to_device, castDevice));
+        } else {
+            extra.setText("");
+        }
     }
 }

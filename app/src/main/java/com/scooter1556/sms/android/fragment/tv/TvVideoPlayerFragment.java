@@ -289,4 +289,9 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
     public void onQueuePositionChanged(int previousIndex, int newIndex) {
         updateMetadata();
     }
+
+    @Override
+    public void onPlayerChanged(Player player) {
+        // TODO: Close activity if the user starts casting
+    }
 }

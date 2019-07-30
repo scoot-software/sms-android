@@ -36,7 +36,6 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ext.cast.CastPlayer;
-import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider;
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator;
@@ -122,6 +121,10 @@ public class PlaybackManager implements Player.EventListener {
          */
         void onQueuePositionChanged(int previousIndex, int newIndex);
 
+        /**
+         * Called when the current player changes.
+         */
+        void onPlayerChanged(Player player);
     }
 
     private PlaybackManager() {}
@@ -402,7 +405,6 @@ public class PlaybackManager implements Player.EventListener {
         public void onSessionEnded(CastSession session, int error) {
             Log.d(TAG, "Cast: onSessionEnded() > " + error);
 
-            setCurrentPlayer(localPlayer);
             castSession = null;
         }
 
@@ -472,6 +474,8 @@ public class PlaybackManager implements Player.EventListener {
         @Override
         public void onSessionEnding(CastSession session) {
             Log.d(TAG, "Cast: onSessionEnding()");
+
+            setCurrentPlayer(localPlayer);
         }
 
         @Override
@@ -496,6 +500,10 @@ public class PlaybackManager implements Player.EventListener {
 
     public boolean isCastSessionAvailable() {
         return castSession != null;
+    }
+
+    public boolean isCasting() {
+        return currentPlayer == castPlayer;
     }
 
     private void updateCurrentItemIndex() {
@@ -562,6 +570,9 @@ public class PlaybackManager implements Player.EventListener {
         if (windowIndex != C.INDEX_UNSET) {
             setCurrentItem(windowIndex, playbackPositionMs, playWhenReady);
         }
+
+        // Update listeners
+        onPlayerChanged();
     }
 
     public Player getCurrentPlayer() {
@@ -1069,6 +1080,12 @@ public class PlaybackManager implements Player.EventListener {
     private void onQueuePositionChanged(int previousIndex, int newIndex) {
         for (PlaybackListener listener : listeners) {
             listener.onQueuePositionChanged(previousIndex, newIndex);
+        }
+    }
+
+    private void onPlayerChanged() {
+        for (PlaybackListener listener : listeners) {
+            listener.onPlayerChanged(currentPlayer);
         }
     }
 

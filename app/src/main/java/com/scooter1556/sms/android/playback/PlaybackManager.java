@@ -389,9 +389,6 @@ public class PlaybackManager implements Player.EventListener {
         if(reason == Player.TIMELINE_CHANGE_REASON_RESET) {
             // Cancel notification
             playerNotificationManager.setPlayer(null);
-
-            // End all jobs for the current session
-            RESTService.getInstance().endJobs(SessionService.getInstance().getSessionId());
         }
     }
 
@@ -656,19 +653,11 @@ public class PlaybackManager implements Player.EventListener {
             onQueuePositionChanged(oldIndex, currentItemIndex);
 
             // End job
-            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET) {
-                if(currentPlayer.getCurrentTimeline().isEmpty() || currentPlayer.getCurrentTimeline().getWindowCount() < oldIndex) {
-                    return;
-                }
+            if(oldIndex != C.INDEX_UNSET && queue.size() > oldIndex) {
+                UUID id = queue.get(oldIndex).getID();
 
-                Timeline.Window oldWindow = new Timeline.Window();
-                this.currentPlayer.getCurrentTimeline().getWindow(oldIndex, oldWindow, true);
-                String tag = (String) oldWindow.tag;
-
-                if (tag != null) {
-                    Log.d(TAG, "End job: " + tag + ")");
-                    RESTService.getInstance().endJob(SessionService.getInstance().getSessionId(), UUID.fromString(tag));
-                }
+                Log.d(TAG, "End job: " + id + ")");
+                RESTService.getInstance().endJob(SessionService.getInstance().getSessionId(), id);
             }
         }
     }
@@ -883,9 +872,21 @@ public class PlaybackManager implements Player.EventListener {
             return;
         }
 
-        //  Reset player
+        //  Reset player & end current job
         if(currentPlayer != null) {
+            // Store current queue index so we can end the job
+            int oldIndex = currentItemIndex;
+
+            // Stop and reset the current player
             currentPlayer.stop(true);
+
+            // End job
+            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET && queue.size() > oldIndex) {
+                UUID id = queue.get(oldIndex).getID();
+
+                Log.d(TAG, "End job: " + id + ")");
+                RESTService.getInstance().endJob(SessionService.getInstance().getSessionId(), id);
+            }
         }
 
         // Reset queue and create media source array

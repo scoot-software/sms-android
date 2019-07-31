@@ -97,7 +97,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         controlsFragment = (PlaybackControlsFragment) getFragmentManager().findFragmentById(R.id.fragment_playback_controls);
 
         if (controlsFragment == null) {
-            throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
+            throw new IllegalStateException("Missing playback controls fragment!");
         }
 
         if(mediaBrowser.isConnected()) {
@@ -113,9 +113,9 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
     @Override
     protected void onStop() {
-        super.onStop();
-
         Log.d(TAG, "onStop()");
+
+        super.onStop();
 
         if (MediaControllerCompat.getMediaController(this) != null) {
             MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
@@ -129,8 +129,38 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         return mediaBrowser;
     }
 
+    // Callback that ensures that we are showing the controls
+    private final MediaControllerCompat.Callback mediaControllerCallback =
+            new MediaControllerCompat.Callback() {
+                @Override
+                public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
+                    updateControls();
+                }
+
+                @Override
+                public void onMetadataChanged(MediaMetadataCompat metadata) {
+                    updateControls();
+                }
+            };
+
+    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected()");
+
+                    try {
+                        connectToSession(mediaBrowser.getSessionToken());
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "could not connect media controller", e);
+
+                        hidePlaybackControls();
+                    }
+                }
+            };
+
     protected void onMediaControllerConnected() {
-        // Empty implementation, Can be overridden by clients.
+        // Empty implementation to be overriden by child classes.
     }
 
     protected void showPlaybackControls() {
@@ -160,9 +190,10 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         if (mediaController == null || mediaController.getMetadata() == null || mediaController.getPlaybackState() == null) {
             hidePlaybackControls();
+            return;
         }
 
-        Log.d(TAG, "shouldShowControls() -> PlaybackState: " + mediaController.getPlaybackState().getState());
+        Log.d(TAG, "updateControls() -> PlaybackState: " + mediaController.getPlaybackState().getState());
 
         switch(mediaController.getPlaybackState().getState()) {
             case PlaybackStateCompat.STATE_ERROR:
@@ -190,39 +221,4 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         onMediaControllerConnected();
     }
-
-    // Callback that ensures that we are showing the controls
-    private final MediaControllerCompat.Callback mediaControllerCallback =
-            new MediaControllerCompat.Callback() {
-                @Override
-                public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
-                    Log.d(TAG, "onPlaybackStateChanged() -> State: " + state);
-
-                    updateControls();
-                }
-
-                @Override
-                public void onMetadataChanged(MediaMetadataCompat metadata) {
-                    Log.d(TAG, "onMetadataChanged()");
-
-                    updateControls();
-                }
-            };
-
-    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
-            new MediaBrowserCompat.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected()");
-
-                    try {
-                        connectToSession(mediaBrowser.getSessionToken());
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "Could not connect media controller", e);
-
-                        hidePlaybackControls();
-                    }
-                }
-            };
-
 }

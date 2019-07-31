@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.leanback.widget.PlaybackControlsRow;
+
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -33,12 +35,10 @@ public class PlaybackControlsFragment extends Fragment {
     private ImageButton playPause;
     private TextView title;
     private TextView subtitle;
-    private TextView extraInfo;
     private ImageView coverArt;
     private String coverArtUrl;
 
-    // Receive callbacks from the Media Controller. Here we update our state such as which item
-    // is being shown, the current title, description and the Playback State.
+    // Receive callbacks from the Media Controller.
     private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback() {
         @Override
         public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
@@ -59,27 +59,19 @@ public class PlaybackControlsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_playback_controls, container, false);
 
-        playPause = (ImageButton) rootView.findViewById(R.id.play_pause);
+        playPause = rootView.findViewById(R.id.play_pause);
         playPause.setEnabled(true);
         playPause.setOnClickListener(buttonListener);
 
-        title = (TextView) rootView.findViewById(R.id.title);
-        subtitle = (TextView) rootView.findViewById(R.id.subtitle);
-        extraInfo = (TextView) rootView.findViewById(R.id.extra_info);
-        coverArt = (ImageView) rootView.findViewById(R.id.cover_art);
+        title = rootView.findViewById(R.id.title);
+        subtitle = rootView.findViewById(R.id.subtitle);
+        coverArt = rootView.findViewById(R.id.cover_art);
 
         rootView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), FullScreenPlayerActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
-                MediaMetadataCompat metadata = controller.getMetadata();
-
-                if (metadata != null) {
-                    intent.putExtra(HomeActivity.EXTRA_CURRENT_MEDIA_DESCRIPTION, metadata.getDescription());
-                }
-
                 startActivity(intent);
             }
         });
@@ -142,15 +134,6 @@ public class PlaybackControlsFragment extends Fragment {
         }
     }
 
-    public void setExtraInfo(String extra) {
-        if (extra == null) {
-            extraInfo.setVisibility(View.GONE);
-        } else {
-            extraInfo.setText(extra);
-            extraInfo.setVisibility(View.VISIBLE);
-        }
-    }
-
     private void onPlaybackStateChanged(PlaybackStateCompat state) {
         if (getActivity() == null || state == null) {
             return;
@@ -160,7 +143,6 @@ public class PlaybackControlsFragment extends Fragment {
 
         switch (state.getState()) {
             case PlaybackStateCompat.STATE_PAUSED:
-
             case PlaybackStateCompat.STATE_STOPPED:
                 enablePlay = true;
                 break;
@@ -175,40 +157,25 @@ public class PlaybackControlsFragment extends Fragment {
         } else {
             playPause.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.ic_pause_black_36dp));
         }
-
-        MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
-        String extraInfo = null;
-
-        if (controller != null && controller.getExtras() != null) {
-            String castName = controller.getExtras().getString(MediaService.EXTRA_CONNECTED_CAST);
-
-            if (castName != null) {
-                extraInfo = getResources().getString(R.string.cast_to_device, castName);
-            }
-        }
-        setExtraInfo(extraInfo);
     }
 
     private final View.OnClickListener buttonListener = new View.OnClickListener() {
         @Override
-        public void onClick(View v) {
+        public void onClick(View view) {
             MediaControllerCompat controller = MediaControllerCompat.getMediaController(getActivity());
             PlaybackStateCompat stateObj = controller.getPlaybackState();
             final int state = stateObj == null ? PlaybackStateCompat.STATE_NONE : stateObj.getState();
 
-            switch (v.getId()) {
-                case R.id.play_pause:
-                    if (state == PlaybackStateCompat.STATE_PAUSED ||
-                            state == PlaybackStateCompat.STATE_STOPPED ||
-                            state == PlaybackStateCompat.STATE_NONE) {
-                        playMedia();
-                    } else if (state == PlaybackStateCompat.STATE_PLAYING ||
-                            state == PlaybackStateCompat.STATE_BUFFERING ||
-                            state == PlaybackStateCompat.STATE_CONNECTING) {
-                        pauseMedia();
-                    }
-
-                    break;
+            if (view.getId() == R.id.play_pause) {
+                if (state == PlaybackStateCompat.STATE_PAUSED ||
+                        state == PlaybackStateCompat.STATE_STOPPED ||
+                        state == PlaybackStateCompat.STATE_NONE) {
+                    playMedia();
+                } else if (state == PlaybackStateCompat.STATE_PLAYING ||
+                        state == PlaybackStateCompat.STATE_BUFFERING ||
+                        state == PlaybackStateCompat.STATE_CONNECTING) {
+                    pauseMedia();
+                }
             }
         }
     };

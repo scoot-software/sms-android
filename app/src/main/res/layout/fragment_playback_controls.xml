@@ -61,15 +61,6 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/description_currently_playing_subtitle"
             android:textAppearance="?android:attr/textAppearanceSmall"/>
-        <TextView
-            android:id="@+id/extra_info"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:contentDescription="@string/description_currently_playing_extra_info"
-            android:textAppearance="?android:attr/textAppearanceSmall"/>
     </LinearLayout>
     <ImageButton
         android:id="@+id/play_pause"

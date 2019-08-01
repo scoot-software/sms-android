@@ -1,9 +1,7 @@
 package com.scooter1556.sms.android.activity;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -46,8 +44,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     private DefaultTrackSelector.Parameters trackSelectorParameters;
     private TrackGroupArray lastSeenTrackGroupArray;
 
-    private PowerManager.WakeLock wakeLock;
-
     private MediaBrowserCompat mediaBrowser;
 
     @Override
@@ -65,10 +61,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         playerView = findViewById(R.id.player);
         playerView.setControllerVisibilityListener(this);
-
-        // Create Wake lock
-        PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-        this.wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.scooter1556.sms.android: video_playback_wake_lock");
 
         mediaBrowser = new MediaBrowserCompat(this,
                 new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);

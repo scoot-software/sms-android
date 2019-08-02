@@ -822,7 +822,7 @@ public class PlaybackManager implements Player.EventListener {
 
                             @Override
                             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                                boolean initQueue = false;
+                                boolean initQueue = (mediaType.equals(MediaUtils.MEDIA_ID_DIRECTORY_AUDIO) || mediaType.equals(MediaUtils.MEDIA_ID_DIRECTORY_VIDEO));
                                 Gson parser = new Gson();
 
                                 for (int i = 0; i < response.length(); i++) {

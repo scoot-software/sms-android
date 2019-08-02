@@ -45,19 +45,18 @@ import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.text.Cue;
 import com.google.android.exoplayer2.text.TextOutput;
-import com.google.android.exoplayer2.text.TextRenderer;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
 import com.scooter1556.sms.android.R;
-import com.scooter1556.sms.android.glue.VideoPlayerGlue;
+import com.scooter1556.sms.android.glue.LeanbackPlayerGlue;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import java.util.List;
 
-public class TvVideoPlayerFragment extends VideoSupportFragment implements TextOutput, Player.EventListener, PlaybackManager.PlaybackListener, VideoPlayerGlue.ActionListener {
+public class TvVideoPlayerFragment extends VideoSupportFragment implements TextOutput, Player.EventListener, PlaybackManager.PlaybackListener, LeanbackPlayerGlue.ActionListener {
     private static final String TAG = "TvVideoPlayerFragment";
 
     // Saved instance state keys.
@@ -69,7 +68,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
     private static final int CARD_SIZE = 240;
 
     private SimpleExoPlayer player;
-    private VideoPlayerGlue playerGlue;
+    private LeanbackPlayerGlue playerGlue;
     private LeanbackPlayerAdapter playerAdapter;
     private boolean isInitialised = false;
 
@@ -171,7 +170,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
 
         // Setup player glue
-        playerGlue = new VideoPlayerGlue(getActivity(), playerAdapter, this);
+        playerGlue = new LeanbackPlayerGlue(getActivity(), playerAdapter, this);
         playerGlue.setHost(new VideoSupportFragmentGlueHost(this));
         playerGlue.playWhenPrepared();
 
@@ -265,24 +264,23 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
     public void onActionClicked(int action) {
         Log.d(TAG, "onActionClicked() -> " + action);
 
-        if (action == VideoPlayerGlue.ACTION_NEXT) {
+        if (action == LeanbackPlayerGlue.ACTION_NEXT) {
             skipToNext();
-        } else if (action == VideoPlayerGlue.ACTION_PREVIOUS) {
+        } else if (action == LeanbackPlayerGlue.ACTION_PREVIOUS) {
             skipToPrevious();
-        } else if (action == VideoPlayerGlue.ACTION_AUDIO_TRACK) {
+        } else if (action == LeanbackPlayerGlue.ACTION_AUDIO_TRACK) {
             MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
 
             if (mappedTrackInfo != null) {
                 trackSelectionUtils.showSelectionDialog(getActivity(), trackSelector.getCurrentMappedTrackInfo(), playerGlue.audioTrackAction.getIndex());
             }
-        } else if (action == VideoPlayerGlue.ACTION_TEXT_TRACK) {
+        } else if (action == LeanbackPlayerGlue.ACTION_TEXT_TRACK) {
              MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
 
             if (mappedTrackInfo != null) {
                 trackSelectionUtils.showSelectionDialog(getActivity(), trackSelector.getCurrentMappedTrackInfo(), playerGlue.textTrackAction.getIndex());
             }
         }
-
     }
 
     @Override
@@ -292,6 +290,6 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
 
     @Override
     public void onPlayerChanged(Player player) {
-        // TODO: Close activity if the user starts casting
+        // Nothing to do here...
     }
 }

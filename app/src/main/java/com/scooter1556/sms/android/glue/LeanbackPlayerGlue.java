@@ -19,9 +19,9 @@ import androidx.leanback.widget.Action;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.PlaybackControlsRow;
 
-public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayerAdapter> {
+public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayerAdapter> {
 
-    private static final String TAG = "VideoPlayerGlue";
+    private static final String TAG = "LeanbackPlayerGlue";
 
     private static final long TEN_SECONDS = TimeUnit.SECONDS.toMillis(10);
 
@@ -51,7 +51,7 @@ public class VideoPlayerGlue extends PlaybackTransportControlGlue<LeanbackPlayer
 
     }
 
-    public VideoPlayerGlue(Context context, LeanbackPlayerAdapter playerAdapter, ActionListener listener) {
+    public LeanbackPlayerGlue(Context context, LeanbackPlayerAdapter playerAdapter, ActionListener listener) {
         super(context, playerAdapter);
 
         skipPreviousAction = new PlaybackControlsRow.SkipPreviousAction(context);

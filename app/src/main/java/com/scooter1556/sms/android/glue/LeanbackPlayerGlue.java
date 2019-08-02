@@ -1,13 +1,9 @@
 package com.scooter1556.sms.android.glue;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.scooter1556.sms.android.action.AudioTrackAction;
 import com.scooter1556.sms.android.action.TextTrackAction;
 
@@ -39,6 +35,8 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
 
     private ActionListener listener;
 
+    private int mode;
+
     /**
      * Listener for actions.
      */
@@ -51,16 +49,20 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
 
     }
 
-    public LeanbackPlayerGlue(Context context, LeanbackPlayerAdapter playerAdapter, ActionListener listener) {
+    public LeanbackPlayerGlue(Context context, int mode, LeanbackPlayerAdapter playerAdapter, ActionListener listener) {
         super(context, playerAdapter);
+
+        this.mode = mode;
 
         skipPreviousAction = new PlaybackControlsRow.SkipPreviousAction(context);
         skipNextAction = new PlaybackControlsRow.SkipNextAction(context);
         fastForwardAction = new PlaybackControlsRow.FastForwardAction(context);
         rewindAction = new PlaybackControlsRow.RewindAction(context);
 
-        audioTrackAction = new AudioTrackAction(context, C.INDEX_UNSET);
-        textTrackAction = new TextTrackAction(context, C.INDEX_UNSET);
+        if(mode == Mode.VIDEO) {
+            audioTrackAction = new AudioTrackAction(context, C.INDEX_UNSET);
+            textTrackAction = new TextTrackAction(context, C.INDEX_UNSET);
+        }
 
         this.listener = listener;
     }
@@ -79,8 +81,10 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
     protected void onCreateSecondaryActions(ArrayObjectAdapter adapter) {
         super.onCreateSecondaryActions(adapter);
 
-        adapter.add(audioTrackAction);
-        adapter.add(textTrackAction);
+        if(mode == Mode.VIDEO) {
+            adapter.add(audioTrackAction);
+            adapter.add(textTrackAction);
+        }
     }
 
     @Override
@@ -146,5 +150,10 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
 
     public void removeListener(){
         this.listener=null;
+    }
+
+    public static class Mode {
+        public static final int AUDIO = 0;
+        public static final int VIDEO = 1;
     }
 }

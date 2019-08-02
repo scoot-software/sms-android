@@ -170,7 +170,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         playerAdapter = new LeanbackPlayerAdapter(getActivity(), player, UPDATE_DELAY);
 
         // Setup player glue
-        playerGlue = new LeanbackPlayerGlue(getActivity(), playerAdapter, this);
+        playerGlue = new LeanbackPlayerGlue(getActivity(), LeanbackPlayerGlue.Mode.VIDEO, playerAdapter, this);
         playerGlue.setHost(new VideoSupportFragmentGlueHost(this));
         playerGlue.playWhenPrepared();
 

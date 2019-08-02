@@ -37,6 +37,7 @@ import com.scooter1556.sms.android.activity.tv.TvMediaBrowserActivity;
 import com.scooter1556.sms.android.activity.tv.TvMusicActivity;
 import com.scooter1556.sms.android.activity.tv.TvSettingsActivity;
 import com.scooter1556.sms.android.activity.tv.TvVideoActivity;
+import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.MenuItem;
 import com.scooter1556.sms.android.presenter.MediaMetadataPresenter;
 import com.scooter1556.sms.android.presenter.MenuItemPresenter;
@@ -65,7 +66,7 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
-            Log.d(TAG, "onMetadataChanged()");
+            Log.d(TAG, "onMetadataChanged() > " + metadata.getDescription().getMediaId());
 
             updateNowPlayingRow(metadata);
         }
@@ -90,7 +91,6 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
         MediaControllerCompat.setMediaController(getActivity(), mediaController);
         mediaController.registerCallback(callback);
-        PlaybackStateCompat state = mediaController.getPlaybackState();
         MediaMetadataCompat metadata = mediaController.getMetadata();
 
         updateNowPlayingRow(metadata);
@@ -127,6 +127,10 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
         Log.d(TAG, "onPause()");
 
+        if(mediaController != null) {
+            mediaController.unregisterCallback(callback);
+        }
+
         mediaBrowser.disconnect();
     }
 
@@ -145,9 +149,13 @@ public class TvHomeFragment extends BrowseSupportFragment {
 
         super.onStop();
 
-        BackgroundManager.getInstance(getActivity()).release();
+        if(mediaController != null) {
+            mediaController.unregisterCallback(callback);
+        }
 
         mediaBrowser.disconnect();
+
+        BackgroundManager.getInstance(getActivity()).release();
     }
 
     private void setupRowAdapter() {
@@ -157,10 +165,12 @@ public class TvHomeFragment extends BrowseSupportFragment {
     }
 
     private void updateNowPlayingRow(MediaMetadataCompat metadata) {
+        Log.d(TAG, "updateNowPlayingRow()");
+
         if(metadata == null
                 || metadata.getDescription() == null
                 || metadata.getDescription().getMediaId() == null
-                || MediaUtils.getMediaTypeFromID(metadata.getDescription().getMediaId()) == SMS.MediaType.VIDEO) {
+                || MediaUtils.getMediaTypeFromID(metadata.getDescription().getMediaId()) == MediaElement.MediaElementType.VIDEO) {
             // Remove now playing
             if(rowsAdapter.size() > 1) {
                 rowsAdapter.removeItems(0, 1);

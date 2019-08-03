@@ -110,6 +110,7 @@ public class PlaybackManager implements Player.EventListener {
     private Player currentPlayer;
 
     private boolean videoMode = false;
+    private boolean castQueuePending = false;
 
     /**
      * Listener for playback changes.
@@ -555,7 +556,7 @@ public class PlaybackManager implements Player.EventListener {
 
         playerNotificationManager.setPlayer(currentPlayer);
 
-        // Media queue management.
+        // Initialise local player
         if (currentPlayer == localPlayer && concatenatingMediaSource.getSize() > 0) {
             // Set audio attributes so audio focus can be handled correctly
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -565,6 +566,11 @@ public class PlaybackManager implements Player.EventListener {
 
             localPlayer.setAudioAttributes(audioAttributes, true);
             localPlayer.prepare(concatenatingMediaSource);
+        }
+
+        // Initialise cast player
+        if(currentPlayer == castPlayer) {
+            castQueuePending = true;
         }
 
         // Playback transition.
@@ -596,7 +602,7 @@ public class PlaybackManager implements Player.EventListener {
 
         maybeSetCurrentItemAndNotify(itemIndex);
 
-        if (currentPlayer == castPlayer && castPlayer.getCurrentTimeline().isEmpty()) {
+        if (currentPlayer == castPlayer && castQueuePending) {
             // Ensure we don't exceed max packet size for media queue
             if (queue.size() < CAST_QUEUE_SIZE) {
                 Log.d(TAG, "Cast: Process entire queue");
@@ -640,6 +646,9 @@ public class PlaybackManager implements Player.EventListener {
                     }
                 }
             }
+
+            // Cast queue is up to date
+            castQueuePending = false;
         } else {
             currentPlayer.seekTo(itemIndex, positionMs);
             currentPlayer.setPlayWhenReady(playWhenReady);
@@ -657,7 +666,7 @@ public class PlaybackManager implements Player.EventListener {
             onQueuePositionChanged(oldIndex, currentItemIndex);
 
             // End job
-            if(oldIndex != C.INDEX_UNSET && queue.size() > oldIndex) {
+            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET && queue.size() > oldIndex) {
                 UUID id = queue.get(oldIndex).getID();
 
                 Log.d(TAG, "End job: " + id + ")");
@@ -930,7 +939,7 @@ public class PlaybackManager implements Player.EventListener {
 
          playerNotificationManager.setPlayer(currentPlayer);
 
-        // Media queue management.
+        // Initialise local player
         if (currentPlayer == localPlayer) {
             // Set audio attributes so audio focus can be handled correctly
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -940,6 +949,11 @@ public class PlaybackManager implements Player.EventListener {
 
             localPlayer.setAudioAttributes(audioAttributes, true);
             localPlayer.prepare(concatenatingMediaSource, true, true);
+        }
+
+        // Initialise cast player
+        if(currentPlayer == castPlayer) {
+            castQueuePending = true;
         }
 
         setCurrentItem(0, 0L, true);

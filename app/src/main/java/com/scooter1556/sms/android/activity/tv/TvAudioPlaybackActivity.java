@@ -24,20 +24,45 @@
 package com.scooter1556.sms.android.activity.tv;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
+
+import androidx.fragment.app.Fragment;
 
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.fragment.tv.TvAudioPlayerFragment;
 
 public class TvAudioPlaybackActivity extends TvBaseActivity {
 
-    private TvAudioPlayerFragment audioPlayerFragment;
+    private static final String PLAYER_FRAGMENT_TAG = "TV_AUDIO_PLAYER_FRAGMENT";
+
+    private TvAudioPlayerFragment playerFragment;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_audio_player);
+        setContentView(R.layout.activity_tv_audio_player);
 
-        audioPlayerFragment = (TvAudioPlayerFragment) getFragmentManager().findFragmentById(R.id.audio_player_fragment);
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(PLAYER_FRAGMENT_TAG);
+        if (fragment instanceof TvAudioPlayerFragment) {
+            playerFragment = (TvAudioPlayerFragment) fragment;
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_R1) {
+            playerFragment.skipToNext();
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_L1) {
+            playerFragment.skipToPrevious();
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_L2) {
+            playerFragment.rewind();
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_R2) {
+            playerFragment.fastForward();
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 }

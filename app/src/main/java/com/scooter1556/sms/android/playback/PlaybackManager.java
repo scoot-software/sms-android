@@ -231,7 +231,11 @@ public class PlaybackManager implements Player.EventListener {
      * @param itemIndex The index of the item to play.
      */
     public void selectQueueItem(int itemIndex) {
-        setCurrentItem(itemIndex, C.TIME_UNSET, true);
+        Log.d(TAG, "SelectQueueItem() -> " + itemIndex);
+
+        if(itemIndex < queue.size()) {
+            setCurrentItem(itemIndex, C.TIME_UNSET, true);
+        }
     }
 
     /**
@@ -258,10 +262,10 @@ public class PlaybackManager implements Player.EventListener {
     }
 
     /**
-     * Returns the size of the media queue.
+     * Returns the media queue.
      */
-    public int getMediaQueueSize() {
-        return queue.size();
+    public List<MediaElement> getQueue() {
+        return this.queue;
     }
 
     /**

@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        android:name="com.scooter1556.sms.android.fragment.tv.TvAudioPlayerFragment"
+    <fragment
         android:id="@+id/audio_player_fragment"
+        android:name="com.scooter1556.sms.android.fragment.tv.TvAudioPlayerFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

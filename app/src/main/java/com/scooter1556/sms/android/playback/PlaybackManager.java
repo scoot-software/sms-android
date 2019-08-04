@@ -111,6 +111,7 @@ public class PlaybackManager implements Player.EventListener {
 
     private boolean videoMode = false;
     private boolean castQueuePending = false;
+    private boolean playerChanged = false;
 
     /**
      * Listener for playback changes.
@@ -374,6 +375,10 @@ public class PlaybackManager implements Player.EventListener {
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         Log.d(TAG, "onPlayerStateChanged(" + playWhenReady + ", " + playbackState +  ")");
 
+        if(playbackState == Player.STATE_IDLE || playbackState == Player.STATE_READY) {
+            playerChanged = false;
+        }
+
         updateCurrentItemIndex();
     }
 
@@ -546,6 +551,7 @@ public class PlaybackManager implements Player.EventListener {
         }
 
         this.currentPlayer = currentPlayer;
+        playerChanged = true;
 
         // Setup media session connector
         RepeatModeActionProvider repeatProvider = new RepeatModeActionProvider(ctx, RepeatModeActionProvider.DEFAULT_REPEAT_TOGGLE_MODES);
@@ -666,7 +672,7 @@ public class PlaybackManager implements Player.EventListener {
             onQueuePositionChanged(oldIndex, currentItemIndex);
 
             // End job
-            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET && queue.size() > oldIndex) {
+            if(currentPlayer == localPlayer && oldIndex != C.INDEX_UNSET && queue.size() > oldIndex && !playerChanged) {
                 UUID id = queue.get(oldIndex).getID();
 
                 Log.d(TAG, "End job: " + id + ")");

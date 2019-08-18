@@ -33,6 +33,7 @@ import android.util.Log;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.fragment.SimpleMediaFragment;
+import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
 public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.MediaFragmentListener  {
@@ -91,7 +92,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
             MediaControllerCompat.getMediaController(this).getTransportControls().prepareFromMediaId(item.getMediaId(), null);
 
             // Start video viewer activity
-            if(MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+            if(!PlaybackManager.getInstance().isCasting() && MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
                 Intent intent = new Intent(BrowseActivity.this, VideoPlaybackActivity.class);
                 startActivity(intent);
             }

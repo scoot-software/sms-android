@@ -49,7 +49,7 @@ public class HomeActivity extends BaseActivity implements HomeFragment.MediaFrag
     private static final String TAG = "HomeActivity";
 
     public static final String EXTRA_START_FULLSCREEN = "com.scooter1556.sms.android.activity.EXTRA_START_FULLSCREEN";
-    public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "com.scooter1556.sms.android.activity.CURRENT_MEDIA_DESCRIPTION";
+    public static final String EXTRA_START_VIDEO_FULLSCREEN = "com.scooter1556.sms.android.activity.EXTRA_START_VIDEO_FULLSCREEN";
 
     public static final String TAG_FRAGMENT = "fragment_home";
 
@@ -117,11 +117,17 @@ public class HomeActivity extends BaseActivity implements HomeFragment.MediaFrag
     }
 
     private void startFullScreenActivityIfNeeded(Intent intent) {
-        if (intent != null && intent.getBooleanExtra(EXTRA_START_FULLSCREEN, false)) {
-            Intent fullScreenIntent = new Intent(this, FullScreenPlayerActivity.class)
-                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        if (intent != null) {
+            if(intent.getBooleanExtra(EXTRA_START_FULLSCREEN, false)) {
+                Intent fullScreenIntent = new Intent(this, FullScreenPlayerActivity.class)
+                        .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(fullScreenIntent);
+            }
 
-            startActivity(fullScreenIntent);
+            if(intent.getBooleanExtra(EXTRA_START_VIDEO_FULLSCREEN, false)) {
+                Intent fullScreenVideoIntent = new Intent(this, VideoPlaybackActivity.class);
+                startActivity(fullScreenVideoIntent);
+            }
         }
     }
 

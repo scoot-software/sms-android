@@ -1,11 +1,8 @@
 package com.scooter1556.sms.android.activity;
 
-import android.content.ComponentName;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
-import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -22,11 +19,8 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.playback.PlaybackManager;
-import com.scooter1556.sms.android.service.MediaService;
 
-import static com.google.android.exoplayer2.trackselection.MappingTrackSelector.*;
-
-public class VideoPlaybackActivity extends AppCompatActivity implements View.OnClickListener, PlayerControlView.VisibilityListener, Player.EventListener {
+public class VideoPlaybackActivity extends ActionBarCastActivity implements View.OnClickListener, PlayerControlView.VisibilityListener, Player.EventListener {
     private static final String TAG = "VideoPlaybackActivity";
 
     // Saved instance state keys.
@@ -44,8 +38,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     private DefaultTrackSelector.Parameters trackSelectorParameters;
     private TrackGroupArray lastSeenTrackGroupArray;
 
-    private MediaBrowserCompat mediaBrowser;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
@@ -54,16 +46,20 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
         setContentView(R.layout.activity_video_player);
 
-        controlsRootView = (LinearLayout) findViewById(R.id.controls_root);
+        initialiseToolbar();
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("");
+        }
+
+        controlsRootView = findViewById(R.id.controls_root);
 
         trackSelectionButton = findViewById(R.id.select_tracks_button);
         trackSelectionButton.setOnClickListener(this);
 
         playerView = findViewById(R.id.player);
         playerView.setControllerVisibilityListener(this);
-
-        mediaBrowser = new MediaBrowserCompat(this,
-                new ComponentName(getApplicationContext(), MediaService.class), connectionCallback, null);
 
         if (savedInstanceState != null) {
             trackSelectorParameters = savedInstanceState.getParcelable(KEY_TRACK_SELECTOR_PARAMETERS);
@@ -75,11 +71,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(TAG, "onStart()");
 
-        if(!mediaBrowser.isConnected()) {
-            mediaBrowser.connect();
-        }
+        Log.d(TAG, "onStart()");
 
         player = PlaybackManager.getInstance().getCurrentPlayer();
         trackSelector = PlaybackManager.getInstance().getCurrentTrackSelector();
@@ -91,7 +84,12 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onPause() {
         super.onPause();
+
         Log.d(TAG, "onPause()");
+
+        if(player != null && player.getPlayWhenReady()) {
+            player.setPlayWhenReady(false);
+        }
     }
 
     @Override
@@ -100,13 +98,14 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
         Log.d(TAG, "onDestroy()");
 
         if(player != null) {
-            player.stop(true);
+            if(!PlaybackManager.getInstance().isCasting()) {
+                player.stop(true);
+            }
+
             player.removeListener(this);
             player = null;
             trackSelector = null;
         }
-
-        mediaBrowser.disconnect();
     }
 
     @Override
@@ -140,7 +139,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if (playbackState == Player.STATE_ENDED) {
+        Log.d(TAG, "onPlaybackStateChanged() -> " + playbackState);
+
+        if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
             finish();
         }
 
@@ -157,7 +158,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
         updateButtonVisibility();
         if (trackGroups != lastSeenTrackGroupArray) {
-            MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
             lastSeenTrackGroupArray = trackGroups;
         }
     }
@@ -175,17 +175,21 @@ public class VideoPlaybackActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onVisibilityChange(int visibility) {
         controlsRootView.setVisibility(visibility);
+
+        if(getSupportActionBar() != null) {
+            if(visibility == View.VISIBLE) {
+                getSupportActionBar().show();
+            } else {
+                getSupportActionBar().hide();
+            }
+        }
     }
 
     private void showControls() {
         controlsRootView.setVisibility(View.VISIBLE);
-    }
 
-    private final MediaBrowserCompat.ConnectionCallback connectionCallback =
-            new MediaBrowserCompat.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected()");
-                }
-            };
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().show();
+        }
+    }
 }

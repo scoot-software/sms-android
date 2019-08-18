@@ -537,7 +537,7 @@ public class PlaybackManager implements Player.EventListener {
         if (this.currentPlayer != null) {
             int playbackState = this.currentPlayer.getPlaybackState();
 
-            if (!videoMode && playbackState != Player.STATE_ENDED) {
+            if (playbackState != Player.STATE_ENDED) {
                 playbackPositionMs = this.currentPlayer.getCurrentPosition();
                 playWhenReady = this.currentPlayer.getPlayWhenReady();
                 windowIndex = this.currentPlayer.getCurrentWindowIndex();
@@ -548,6 +548,13 @@ public class PlaybackManager implements Player.EventListener {
             }
 
             this.currentPlayer.stop(true);
+        }
+
+        // Don't continue playback if casting video ends
+        if(videoMode && this.currentPlayer == castPlayer && currentPlayer == localPlayer) {
+            concatenatingMediaSource.clear();
+            queue.clear();
+            windowIndex = C.INDEX_UNSET;
         }
 
         this.currentPlayer = currentPlayer;
@@ -1084,7 +1091,12 @@ public class PlaybackManager implements Player.EventListener {
         public PendingIntent createCurrentContentIntent(Player player) {
             Intent intent = new Intent(ctx, HomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            intent.putExtra(HomeActivity.EXTRA_START_FULLSCREEN, true);
+
+            if(player == localPlayer && videoMode) {
+                intent.putExtra(HomeActivity.EXTRA_START_VIDEO_FULLSCREEN, true);
+            } else {
+                intent.putExtra(HomeActivity.EXTRA_START_FULLSCREEN, true);
+            }
 
             return PendingIntent.getActivity(ctx, REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         }

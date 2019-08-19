@@ -54,6 +54,7 @@
     <string name="action_bar_video_quality">Video Quality</string>
     <string name="action_bar_audio_track">Audio</string>
     <string name="action_bar_subtitle_track">Subtitles</string>
+    <string name="action_bar_track_selection">Track Selection</string>
 
     <string name="button_more">More</string>
 

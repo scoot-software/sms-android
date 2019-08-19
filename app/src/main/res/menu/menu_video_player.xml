@@ -1,11 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" >
+xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/track_selection_menu_item"
+        android:title="@string/action_bar_track_selection"
+        android:icon="@drawable/ic_settings_white_36dp"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/media_route_menu_item"
         android:title="@string/action_bar_media_route"
         app:actionProviderClass="androidx.mediarouter.app.MediaRouteActionProvider"
-        android:orderInCategory="101"
         app:showAsAction="always" />
 
 </menu>

@@ -198,9 +198,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        Log.d(TAG, "onPlaybackStateChanged() -> " + playbackState);
+        Log.d(TAG, "onPlaybackStateChanged() -> " + playWhenReady + ", " + playbackState);
 
-        if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
+        if (!playWhenReady && playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
             finish();
         }
     }

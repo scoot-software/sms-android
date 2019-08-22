@@ -225,13 +225,22 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
 
     @Override
     public void onVisibilityChange(int visibility) {
-        if(getSupportActionBar() != null) {
-            if(visibility == View.VISIBLE) {
+        if(visibility == View.VISIBLE) {
+            if(getSupportActionBar() != null) {
                 getSupportActionBar().show();
-            } else {
+            }
+        } else {
+            if(getSupportActionBar() != null) {
                 getSupportActionBar().hide();
             }
+
+            // Remove navigation buttons and status bar
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
         }
+
+
     }
 
     private void showControls() {

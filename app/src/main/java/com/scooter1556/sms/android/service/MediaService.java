@@ -93,34 +93,7 @@ public class MediaService extends MediaBrowserServiceCompat
 
     // Chromecast channels
     public static final String CC_CONFIG_CHANNEL = "urn:x-cast:com.scooter1556.sms.config";
-
-    // Extra on MediaSession that contains the Cast device name currently connected to
-    public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
-    // The action of the incoming Intent indicating that it contains a command
-    // to be executed (see {@link #onStartCommand})
-    public static final String ACTION_CMD = "com.example.android.uamp.ACTION_CMD";
-    // The key in the extras of the incoming Intent indicating the command that
-    // should be executed (see {@link #onStartCommand})
-    public static final String CMD_NAME = "CMD_NAME";
-    // A value of a CMD_NAME key in the extras of the incoming Intent that
-    // indicates that the music playback should be paused (see {@link #onStartCommand})
-    public static final String CMD_PAUSE = "CMD_PAUSE";
-    // A value of a CMD_NAME key that indicates that the music playback should switch
-    // to local playback from cast playback.
-    public static final String CMD_STOP_CASTING = "CMD_STOP_CASTING";
-
-    // Shuffle
-    public static final String STATE_SHUFFLE_ON = "state_shuffle_on";
-    public static final String STATE_SHUFFLE_OFF = "state_shuffle_off";
-
-    // Repeat
-    public static final String STATE_REPEAT_NONE = "state_repeat_none";
-    public static final String STATE_REPEAT_ALL = "state_repeat_all";
-    public static final String STATE_REPEAT_ONE = "state_repeat_one";
-
-    // Actions
-    public static final String ACTION_CLEAR_PLAYLIST = "action_clear_playlist";
-
+    
     // Number of media elements to fetch when populating lists
     public static final int FETCH_LIMIT = 50;
 
@@ -226,9 +199,6 @@ public class MediaService extends MediaBrowserServiceCompat
         Log.d(TAG, "onStartCommand()");
 
         if (startIntent != null) {
-            String action = startIntent.getAction();
-            String command = startIntent.getStringExtra(CMD_NAME);
-
             // Try to handle the intent as a media button event wrapped by MediaButtonReceiver
             MediaButtonReceiver.handleIntent(mediaSession, startIntent);
         }

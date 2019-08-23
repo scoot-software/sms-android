@@ -89,11 +89,12 @@ public class MediaService extends MediaBrowserServiceCompat
     // Android
     static final int FORMAT = SMS.Format.HLS;
     static final Integer[] SUPPORTED_FORMATS = {SMS.Format.HLS};
+    static final int MAX_BITRATE = 15000;
     static final int MAX_SAMPLE_RATE = 48000;
 
     // Chromecast channels
     public static final String CC_CONFIG_CHANNEL = "urn:x-cast:com.scooter1556.sms.config";
-    
+
     // Number of media elements to fetch when populating lists
     public static final int FETCH_LIMIT = 50;
 
@@ -1508,6 +1509,7 @@ public class MediaService extends MediaBrowserServiceCompat
         clientProfile.setVideoQuality(videoQuality);
         clientProfile.setFormat(FORMAT);
         clientProfile.setMaxSampleRate(MAX_SAMPLE_RATE);
+        clientProfile.setMaxBitrate(MAX_BITRATE);
         clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
     }
 

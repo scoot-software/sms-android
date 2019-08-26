@@ -112,6 +112,9 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         } else {
             initialise();
         }
+
+        // Keep screen on and prevent screensaver
+        getSurfaceView().setKeepScreenOn(true);
     }
 
     /** Pauses the player. */
@@ -125,6 +128,8 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         if (playerGlue != null && playerGlue.isPlaying()) {
             playerGlue.pause();
         }
+
+        getSurfaceView().setKeepScreenOn(false);
     }
 
     @Override
@@ -141,6 +146,8 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
 
         // Remove listener
         player.removeListener(this);
+
+        getSurfaceView().setKeepScreenOn(false);
 
         playerGlue = null;
         playerAdapter = null;

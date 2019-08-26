@@ -203,6 +203,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         if (!playWhenReady && playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
             finish();
         }
+
+        // Set screen state
+        if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED || !playWhenReady) {
+            playerView.setKeepScreenOn(false);
+        } else {
+            playerView.setKeepScreenOn(true);
+        }
     }
 
     @Override

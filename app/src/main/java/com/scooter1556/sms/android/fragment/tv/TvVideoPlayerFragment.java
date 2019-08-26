@@ -147,8 +147,6 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         // Remove listener
         player.removeListener(this);
 
-        getSurfaceView().setKeepScreenOn(false);
-
         playerGlue = null;
         playerAdapter = null;
         trackSelector = null;

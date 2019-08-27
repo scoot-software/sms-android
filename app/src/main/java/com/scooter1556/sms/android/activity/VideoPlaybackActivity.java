@@ -29,7 +29,7 @@ import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 
-public class VideoPlaybackActivity extends AppCompatActivity implements PlayerControlView.VisibilityListener, Player.EventListener {
+public class VideoPlaybackActivity extends AppCompatActivity implements PlayerControlView.VisibilityListener, Player.EventListener, PlaybackManager.PlaybackListener {
     private static final String TAG = "VideoPlaybackActivity";
 
     private static final int CAST_DELAY = 1000;
@@ -105,6 +105,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
 
         Log.d(TAG, "onResume()");
 
+        PlaybackManager.getInstance().addListener(this);
         castContext.addCastStateListener(castStateListener);
     }
 
@@ -131,6 +132,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
             player.setPlayWhenReady(false);
         }
 
+        PlaybackManager.getInstance().removeListener(this);
         castContext.removeCastStateListener(castStateListener);
     }
 
@@ -200,10 +202,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         Log.d(TAG, "onPlaybackStateChanged() -> " + playWhenReady + ", " + playbackState);
 
-        if (!playWhenReady && playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
-            finish();
-        }
-
         // Set screen state
         if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED || !playWhenReady) {
             playerView.setKeepScreenOn(false);
@@ -270,5 +268,17 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
                     .build();
             overlay.show();
         }
+    }
+
+    @Override
+    public void onQueuePositionChanged(int previousIndex, int newIndex) {
+        // Do nothing...
+    }
+
+    @Override
+    public void onPlayerChanged(Player player) {
+        Log.d(TAG, "onPlayerChanged()");
+
+        finish();
     }
 }

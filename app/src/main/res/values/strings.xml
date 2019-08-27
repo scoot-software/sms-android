@@ -194,6 +194,7 @@
     <string name="error_fetching_media_folders">Failed to fetch list of media folders</string>
     <string name="error_fetching_recently_added">Failed to fetch recently added media</string>
     <string name="error_fetching_recently_played">Failed to fetch recently played media</string>
+    <string name="error_unable_to_cast_video">Cast device does not support video</string>
 
     <string name="notification_please_wait">Please Wait&#8230;</string>
     <string name="notification_audio_directory_play_next">Album added next in play queue</string>

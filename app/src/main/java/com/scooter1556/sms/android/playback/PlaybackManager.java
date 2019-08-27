@@ -25,6 +25,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ControlDispatcher;
@@ -47,6 +48,7 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
+import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
@@ -109,6 +111,7 @@ public class PlaybackManager implements Player.EventListener {
     private int currentItemIndex;
     private Player currentPlayer;
 
+    private boolean castAudioOnly = false;
     private boolean videoMode = false;
     private boolean castQueuePending = false;
     private boolean playerChanged = false;
@@ -427,6 +430,11 @@ public class PlaybackManager implements Player.EventListener {
         public void onSessionStarted(final CastSession session, final String sessionId) {
             Log.d(TAG, "Cast: onSessionStarted() > sessionId = " + sessionId);
 
+            // Check cast device capabilities
+            if(session.getCastDevice() != null) {
+                castAudioOnly = !session.getCastDevice().hasCapability(CastDevice.CAPABILITY_VIDEO_OUT);
+            }
+
             // Register session
             RESTService.getInstance().addSession(ctx, UUID.fromString(sessionId), null, new TextHttpResponseHandler() {
                 @Override
@@ -550,11 +558,16 @@ public class PlaybackManager implements Player.EventListener {
             this.currentPlayer.stop(true);
         }
 
-        // Don't continue playback if casting video ends
-        if(videoMode && this.currentPlayer == castPlayer && currentPlayer == localPlayer) {
+        // Check some scenarios
+        boolean castVideoEnded = videoMode && this.currentPlayer == castPlayer && currentPlayer == localPlayer;
+        boolean videoOnAudioOnlyCast = videoMode && castAudioOnly;
+
+        // Check if playback should continue
+        if(castVideoEnded || videoOnAudioOnlyCast) {
             concatenatingMediaSource.clear();
             queue.clear();
             windowIndex = C.INDEX_UNSET;
+            videoMode = false;
         }
 
         this.currentPlayer = currentPlayer;
@@ -898,6 +911,15 @@ public class PlaybackManager implements Player.EventListener {
             return;
         }
 
+        // Determine type from first element
+        byte type = elements.get(0).getType();
+
+        // Check current player support media type
+        if(currentPlayer == castPlayer && type == MediaElement.MediaElementType.VIDEO && castAudioOnly) {
+            Toast.makeText(ctx, R.string.error_unable_to_cast_video, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         //  Reset player & end current job
         if(currentPlayer != null) {
             // Store current queue index so we can end the job
@@ -916,17 +938,12 @@ public class PlaybackManager implements Player.EventListener {
         }
 
         // Reset queue and create media source array
-        byte type = MediaElement.MediaElementType.NONE;
         List<MediaSource> mediaSources = new ArrayList<>();
         queue = new ArrayList<>();
 
         // Process each media element
         for(MediaElement element : elements) {
-            // Make sure all elements are of the same type
-            if(type == MediaElement.MediaElementType.NONE) {
-                type = element.getType();
-            }
-
+            // Ensure all elements are of the same type
             if(type == element.getType()) {
                 queue.add(element);
                 mediaSources.add(buildMediaSource(element));

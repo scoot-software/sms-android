@@ -92,7 +92,7 @@ public class BrowseActivity extends BaseActivity implements SimpleMediaFragment.
             MediaControllerCompat.getMediaController(this).getTransportControls().prepareFromMediaId(item.getMediaId(), null);
 
             // Start video viewer activity
-            if(!PlaybackManager.getInstance().isCasting() && MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
+            if(MediaUtils.getMediaTypeFromID(item.getMediaId()) == MediaElement.MediaElementType.VIDEO) {
                 Intent intent = new Intent(BrowseActivity.this, VideoPlaybackActivity.class);
                 startActivity(intent);
             }

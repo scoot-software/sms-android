@@ -26,7 +26,6 @@ package com.scooter1556.sms.android.activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
 import androidx.annotation.NonNull;
 
 import com.google.android.material.navigation.NavigationView;
@@ -34,18 +33,11 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.mediarouter.app.MediaRouteButton;
 import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.android.gms.cast.framework.CastButtonFactory;
-import com.google.android.gms.cast.framework.CastContext;
-import com.google.android.gms.cast.framework.CastState;
-import com.google.android.gms.cast.framework.CastStateListener;
-import com.google.android.gms.cast.framework.IntroductoryOverlay;
 import com.scooter1556.sms.android.R;
 
 /**
@@ -61,8 +53,6 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
 
     private static final int DELAY_MILLIS = 1000;
 
-    private CastContext castContext;
-    private MenuItem mediaRouteMenuItem;
     private Toolbar toolbar;
     private ActionBarDrawerToggle drawerToggle;
     private DrawerLayout drawerLayout;
@@ -71,24 +61,6 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
 
     private int selectedDrawerItem = -1;
     private int lastSelectedDrawerItem = -1;
-
-    private CastStateListener castStateListener = new CastStateListener() {
-        @Override
-        public void onCastStateChanged(int newState) {
-            Log.d(TAG, "onCastStateChanged()");
-            if (newState != CastState.NO_DEVICES_AVAILABLE) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mediaRouteMenuItem.isVisible()) {
-                            Log.d(TAG, "Cast Icon is visible");
-                            showFirstTimeUserExperience();
-                        }
-                    }
-                }, DELAY_MILLIS);
-            }
-        }
-    };
 
     private final DrawerLayout.DrawerListener drawerListener = new DrawerLayout.DrawerListener() {
         @Override
@@ -143,15 +115,6 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
     };
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        Log.d(TAG, "onCreate()");
-
-        castContext = CastContext.getSharedInstance(this);
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
 
@@ -174,38 +137,11 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-        Log.d(TAG, "onResume()");
-
-        castContext.addCastStateListener(castStateListener);
-    }
-
-    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (drawerToggle != null) {
             drawerToggle.onConfigurationChanged(newConfig);
         }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        Log.d(TAG, "onPause()");
-
-        castContext.removeCastStateListener(castStateListener);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-
-        getMenuInflater().inflate(R.menu.main, menu);
-        mediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu, R.id.media_route_menu_item);
-        return true;
     }
 
     @Override
@@ -315,21 +251,5 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
                         return true;
                     }
                 });
-    }
-
-    /**
-     * Shows the Cast First Time User experience to the user
-     */
-    private void showFirstTimeUserExperience() {
-        Menu menu = toolbar.getMenu();
-        View view = menu.findItem(R.id.media_route_menu_item).getActionView();
-
-        if (view instanceof MediaRouteButton) {
-            IntroductoryOverlay overlay = new IntroductoryOverlay.Builder(this, mediaRouteMenuItem)
-                    .setTitleText(R.string.cast_first_time_ux)
-                    .setSingleTime()
-                    .build();
-            overlay.show();
-        }
     }
 }

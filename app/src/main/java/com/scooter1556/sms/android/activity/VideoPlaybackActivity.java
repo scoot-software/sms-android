@@ -1,5 +1,6 @@
 package com.scooter1556.sms.android.activity;
 
+import android.content.ComponentName;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.mediarouter.app.MediaRouteButton;
 
 import android.os.Handler;
+import android.os.RemoteException;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -20,19 +23,13 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.gms.cast.framework.CastButtonFactory;
-import com.google.android.gms.cast.framework.CastContext;
-import com.google.android.gms.cast.framework.CastState;
-import com.google.android.gms.cast.framework.CastStateListener;
-import com.google.android.gms.cast.framework.IntroductoryOverlay;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.playback.PlaybackManager;
+import com.scooter1556.sms.android.service.MediaService;
 
 public class VideoPlaybackActivity extends AppCompatActivity implements PlayerControlView.VisibilityListener, Player.EventListener, PlaybackManager.PlaybackListener {
     private static final String TAG = "VideoPlaybackActivity";
-
-    private static final int CAST_DELAY = 1000;
 
     // Saved instance state keys.
     private static final String KEY_TRACK_SELECTOR_PARAMETERS = "track_selector_parameters";
@@ -47,27 +44,9 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
     private DefaultTrackSelector.Parameters trackSelectorParameters;
     private TrackGroupArray lastSeenTrackGroupArray;
 
-    private CastContext castContext;
-    private MenuItem mediaRouteMenuItem;
     private Toolbar toolbar;
 
-    private CastStateListener castStateListener = new CastStateListener() {
-        @Override
-        public void onCastStateChanged(int newState) {
-            Log.d(TAG, "onCastStateChanged()");
-            if (newState != CastState.NO_DEVICES_AVAILABLE) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mediaRouteMenuItem.isVisible()) {
-                            Log.d(TAG, "Cast Icon is visible");
-                            showFirstTimeUserExperience();
-                        }
-                    }
-                }, CAST_DELAY);
-            }
-        }
-    };
+    private MediaBrowserCompat mediaBrowser;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,8 +55,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_video_player);
-
-        castContext = CastContext.getSharedInstance(this);
 
         toolbar = findViewById(R.id.toolbar);
         toolbar.inflateMenu(R.menu.menu_video_player);
@@ -97,6 +74,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         } else {
             trackSelectorParameters = new DefaultTrackSelector.ParametersBuilder().build();
         }
+
+        // Connect a media browser to keep media service alive
+        mediaBrowser = new MediaBrowserCompat(this,
+                new ComponentName(getApplicationContext(), MediaService.class), new MediaBrowserCompat.ConnectionCallback(), null);
     }
 
     @Override
@@ -106,7 +87,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         Log.d(TAG, "onResume()");
 
         PlaybackManager.getInstance().addListener(this);
-        castContext.addCastStateListener(castStateListener);
     }
 
     @Override
@@ -120,6 +100,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
 
         playerView.setPlayer(player);
         player.addListener(this);
+
+        if(!mediaBrowser.isConnected()) {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
@@ -133,7 +117,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         }
 
         PlaybackManager.getInstance().removeListener(this);
-        castContext.removeCastStateListener(castStateListener);
     }
 
     @Override
@@ -142,14 +125,13 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         Log.d(TAG, "onDestroy()");
 
         if(player != null) {
-            if(!PlaybackManager.getInstance().isCasting()) {
-                player.stop(true);
-            }
-
+            player.stop(true);
             player.removeListener(this);
             player = null;
             trackSelector = null;
         }
+
+        mediaBrowser.disconnect();
     }
 
     @Override
@@ -165,7 +147,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         super.onCreateOptionsMenu(menu);
 
         getMenuInflater().inflate(R.menu.menu_video_player, menu);
-        mediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu, R.id.media_route_menu_item);
         return true;
     }
 
@@ -251,22 +232,6 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
     private void showControls() {
         if(getSupportActionBar() != null) {
             getSupportActionBar().show();
-        }
-    }
-
-    /**
-     * Shows the Cast First Time User experience to the user
-     */
-    private void showFirstTimeUserExperience() {
-        Menu menu = toolbar.getMenu();
-        View view = menu.findItem(R.id.media_route_menu_item).getActionView();
-
-        if (view instanceof MediaRouteButton) {
-            IntroductoryOverlay overlay = new IntroductoryOverlay.Builder(this, mediaRouteMenuItem)
-                    .setTitleText(R.string.cast_first_time_ux)
-                    .setSingleTime()
-                    .build();
-            overlay.show();
         }
     }
 

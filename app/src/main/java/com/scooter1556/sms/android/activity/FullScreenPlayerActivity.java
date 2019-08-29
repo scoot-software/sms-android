@@ -150,12 +150,5 @@ public class FullScreenPlayerActivity extends ActionBarCastActivity implements P
 
         title.setText(mediaDescription.getTitle());
         subtitle.setText(mediaDescription.getSubtitle());
-
-        if(playbackManager.isCasting()) {
-            String castDevice = playbackManager.getCastSession().getCastDevice().getFriendlyName();
-            extra.setText(getString(R.string.cast_to_device, castDevice));
-        } else {
-            extra.setText("");
-        }
     }
 }

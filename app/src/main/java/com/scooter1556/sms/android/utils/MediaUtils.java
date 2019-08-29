@@ -29,13 +29,6 @@ import androidx.annotation.NonNull;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaQueueItem;
-import com.google.android.gms.common.images.WebImage;
-import com.scooter1556.sms.android.SMS;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.domain.MediaElement;
 
@@ -102,63 +95,6 @@ public class MediaUtils {
      */
     private MediaUtils() {}
 
-    public static MediaQueueItem getMediaQueueItem(MediaElement mediaElement) {
-        MediaMetadata metadata = getMediaMetadataFromMediaElement(mediaElement);
-        MediaInfo mediaInfo = new MediaInfo.Builder(mediaElement.getID().toString())
-                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setMetadata(metadata).build();
-        return new MediaQueueItem.Builder(mediaInfo).build();
-    }
-
-    public static MediaElement getMediaElement(@NonNull MediaQueueItem item) {
-        if(item.getMedia() == null) {
-            return null;
-        }
-
-        MediaMetadata metadata = item.getMedia().getMetadata();
-
-        // Populate media element
-        MediaElement element = new MediaElement();
-        element.setID(UUID.fromString(item.getMedia().getContentId()));
-
-        if(metadata != null) {
-            // Type
-            element.setType(Integer.valueOf(metadata.getMediaType()).byteValue());
-
-            // Artist
-            if(metadata.containsKey(MediaMetadata.KEY_ARTIST)) {
-                element.setArtist(metadata.getString(MediaMetadata.KEY_ARTIST));
-            }
-
-            // Album
-            if(metadata.containsKey(MediaMetadata.KEY_ALBUM_TITLE)) {
-                element.setAlbum(metadata.getString(MediaMetadata.KEY_ALBUM_TITLE));
-            }
-
-            // Title
-            if(metadata.containsKey(MediaMetadata.KEY_TITLE)) {
-                element.setTitle(metadata.getString(MediaMetadata.KEY_TITLE));
-            }
-
-            // Track Number
-            if(metadata.containsKey(MediaMetadata.KEY_TRACK_NUMBER)) {
-                element.setTrackNumber(Integer.valueOf(metadata.getInt(MediaMetadata.KEY_TRACK_NUMBER)).shortValue());
-            }
-
-            // Disc Number
-            if(metadata.containsKey(MediaMetadata.KEY_DISC_NUMBER)) {
-                element.setDiscNumber(Integer.valueOf(metadata.getInt(MediaMetadata.KEY_DISC_NUMBER)).shortValue());
-            }
-
-            // Album Artist
-            if(metadata.containsKey(MediaMetadata.KEY_ALBUM_ARTIST)) {
-                element.setAlbumArtist(metadata.getString(MediaMetadata.KEY_ALBUM_ARTIST));
-            }
-        }
-
-        return element;
-    }
-
     /*
      * Retrieve MediaMetadata for a MediaElement
      */
@@ -217,74 +153,6 @@ public class MediaUtils {
         }
 
         return metadata.build();
-    }
-
-    public static MediaMetadata getMediaMetadataFromMediaElement(MediaElement mediaElement) {
-        MediaMetadata metadata = new MediaMetadata(mediaElement.getType());
-
-        if(mediaElement.getArtist() != null) {
-            metadata.putString(MediaMetadata.KEY_ARTIST, mediaElement.getArtist());
-            metadata.putString(MediaMetadata.KEY_SUBTITLE, mediaElement.getArtist());
-            metadata.putString(MediaMetadata.KEY_SUBTITLE, mediaElement.getArtist());
-        }
-
-        if(mediaElement.getAlbum() != null) {
-            metadata.putString(MediaMetadata.KEY_ALBUM_TITLE, mediaElement.getAlbum());
-        }
-
-        if(mediaElement.getTitle() != null) {
-            metadata.putString(MediaMetadata.KEY_TITLE, mediaElement.getTitle());
-        }
-
-        if(mediaElement.getTrackNumber() != null) {
-            metadata.putInt(MediaMetadata.KEY_TRACK_NUMBER, mediaElement.getTrackNumber());
-        }
-
-        if(mediaElement.getDiscNumber() != null) {
-            metadata.putInt(MediaMetadata.KEY_DISC_NUMBER, mediaElement.getDiscNumber());
-        }
-
-        if(mediaElement.getAlbumArtist() != null) {
-            metadata.putString(MediaMetadata.KEY_ALBUM_ARTIST, mediaElement.getAlbumArtist());
-        }
-
-        if(RESTService.getInstance().getAddress() != null) {
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/cover")));
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + mediaElement.getID() + "/fanart")));
-        }
-
-        return metadata;
-    }
-
-    public static MediaMetadata getMediaMetadataFromMediaDescription(MediaDescriptionCompat description) {
-        MediaMetadata metadata = new MediaMetadata(getMediaTypeFromID(description.getMediaId()));
-
-        // Get Media Element ID from Media ID
-        List<String> mediaID = parseMediaId(description.getMediaId());
-
-        if(mediaID.size() <= 1) {
-            return null;
-        }
-
-        UUID id = UUID.fromString(mediaID.get(1));
-
-        if(description.getTitle() != null) {
-            metadata.putString(MediaMetadata.KEY_TITLE, description.getTitle().toString());
-        }
-
-        if(description.getSubtitle() != null) {
-            metadata.putString(MediaMetadata.KEY_SUBTITLE, description.getSubtitle().toString());
-        }
-
-        metadata.putInt(MediaMetadata.KEY_TRACK_NUMBER, description.getExtras().getShort("TrackNumber"));
-        metadata.putInt(MediaMetadata.KEY_DISC_NUMBER, description.getExtras().getShort("DiscNumber"));
-
-        if(RESTService.getInstance().getAddress() != null) {
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/cover")));
-            metadata.addImage(new WebImage(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + id + "/fanart")));
-        }
-
-        return metadata;
     }
 
     public static List<String> parseMediaId(@NonNull String mediaId) {
@@ -420,15 +288,5 @@ public class MediaUtils {
         }
 
         return null;
-    }
-
-    public static MediaQueueItem[] getMediaQueue(List<MediaElement> queue) {
-        MediaQueueItem[] items = new MediaQueueItem[queue.size()];
-
-        for (int i = 0; i < items.length; i++) {
-            items[i] = getMediaQueueItem(queue.get(i));
-        }
-
-        return items;
     }
 }

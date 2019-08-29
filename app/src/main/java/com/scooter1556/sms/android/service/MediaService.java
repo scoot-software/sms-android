@@ -50,8 +50,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
-import com.google.android.gms.cast.framework.CastContext;
-import com.google.android.gms.cast.framework.CastSession;
 import com.google.gson.Gson;
 import com.loopj.android.http.BlackholeHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -61,7 +59,6 @@ import com.scooter1556.sms.android.activity.NowPlayingActivity;
 import com.scooter1556.sms.android.domain.ClientProfile;
 import com.scooter1556.sms.android.domain.Playlist;
 import com.scooter1556.sms.android.playback.PlaybackManager;
-import com.scooter1556.sms.android.utils.AutoUtils;
 import com.scooter1556.sms.android.utils.CodecUtils;
 import com.scooter1556.sms.android.utils.NetworkUtils;
 import com.scooter1556.sms.android.utils.ResourceUtils;
@@ -170,12 +167,9 @@ public class MediaService extends MediaBrowserServiceCompat
         mediaSession.setSessionActivity(pendingIntent);
 
         mediaSessionExtras = new Bundle();
-        AutoUtils.setSlotReservationFlags(mediaSessionExtras, true, true, true);
         mediaSession.setExtras(mediaSessionExtras);
 
         setSessionToken(mediaSession.getSessionToken());
-
-        registerCarConnectionReceiver();
 
         // Register connectivity receiver
         IntentFilter intentFilter = new IntentFilter();
@@ -188,11 +182,6 @@ public class MediaService extends MediaBrowserServiceCompat
         // Initialise playback manager
         playbackManager = PlaybackManager.getInstance();
         playbackManager.initialise(getApplicationContext(), mediaSession, this);
-
-        // Enable Cast
-        if(!TVUtils.isTvUiMode(context)) {
-            playbackManager.initialiseCast(CastContext.getSharedInstance(this));
-        }
     }
 
     @Override
@@ -222,8 +211,6 @@ public class MediaService extends MediaBrowserServiceCompat
     public void onDestroy() {
         Log.d(TAG, "onDestroy()");
 
-        unregisterCarConnectionReceiver();
-
         // Release PlaybackManager
         if(playbackManager != null) {
             playbackManager.release();
@@ -242,25 +229,6 @@ public class MediaService extends MediaBrowserServiceCompat
         this.unregisterReceiver(connectivityChangeReceiver);
     }
 
-    private void registerCarConnectionReceiver() {
-        IntentFilter filter = new IntentFilter(AutoUtils.ACTION_MEDIA_STATUS);
-
-        carConnectionReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String connectionEvent = intent.getStringExtra(AutoUtils.MEDIA_CONNECTION_STATUS);
-                isConnectedToCar = AutoUtils.MEDIA_CONNECTED.equals(connectionEvent);
-                Log.i(TAG, "Connection event to Android Auto: " + connectionEvent + " isConnectedToCar=" + isConnectedToCar);
-            }
-        };
-
-        registerReceiver(carConnectionReceiver, filter);
-    }
-
-    private void unregisterCarConnectionReceiver() {
-        unregisterReceiver(carConnectionReceiver);
-    }
-
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.d(TAG, "Preference Changed: " + key);
@@ -273,12 +241,6 @@ public class MediaService extends MediaBrowserServiceCompat
         switch(key) {
             case "pref_video_quality": case "pref_audio_quality": case "pref_audio_multichannel": case "pref_direct_play":
                 updateClientProfile();
-                break;
-
-            case "pref_cast_video_quality": case "pref_cast_audio_quality":
-                if(playbackManager.isCastSessionAvailable()) {
-                    updateCastProfile(playbackManager.getCastSession(), playbackManager.getCastSession().getSessionId());
-                }
                 break;
 
             default:
@@ -1511,26 +1473,5 @@ public class MediaService extends MediaBrowserServiceCompat
         clientProfile.setMaxSampleRate(MAX_SAMPLE_RATE);
         clientProfile.setMaxBitrate(MAX_BITRATE);
         clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
-    }
-
-    private void updateCastProfile(CastSession session, String sessionId) {
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Get quality
-        String audioQuality = settings.getString("pref_cast_audio_quality", "0");
-        String videoQuality = settings.getString("pref_cast_video_quality", "0");
-
-        // Generate and send JSON message containing settings
-        JSONObject message = new JSONObject();
-        try {
-            message.put("videoQuality", videoQuality);
-            message.put("audioQuality", audioQuality);
-            message.put("sessionId", sessionId);
-            session.sendMessage(CC_CONFIG_CHANNEL, message.toString());
-        } catch (JSONException e) {
-            Log.d(TAG, "Failed to send settings to Chromecast receiver.", e);
-        }
-
     }
 }

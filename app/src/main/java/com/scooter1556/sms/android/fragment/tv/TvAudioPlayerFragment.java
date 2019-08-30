@@ -23,6 +23,7 @@
  */
 package com.scooter1556.sms.android.fragment.tv;
 
+import android.content.ComponentName;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -35,6 +36,8 @@ import androidx.leanback.widget.ClassPresenterSelector;
 import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.RowPresenter;
 import androidx.core.content.ContextCompat;
+
+import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -50,6 +53,7 @@ import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.glue.LeanbackPlayerGlue;
 import com.scooter1556.sms.android.playback.PlaybackManager;
 import com.scooter1556.sms.android.presenter.QueueItemPresenter;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.service.RESTService;
 import com.scooter1556.sms.android.utils.MediaUtils;
 
@@ -74,6 +78,8 @@ public class TvAudioPlayerFragment extends androidx.leanback.app.PlaybackSupport
     private Drawable defaultBackground;
     private DisplayMetrics displayMetrics;
 
+    private MediaBrowserCompat mediaBrowser;
+
     private boolean isInitialised = false;
 
     @Override
@@ -84,6 +90,10 @@ public class TvAudioPlayerFragment extends androidx.leanback.app.PlaybackSupport
 
         setControlsOverlayAutoHideEnabled(false);
         setupRows();
+
+        // Connect a media browser to keep media service alive
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class), new MediaBrowserCompat.ConnectionCallback(), null);
     }
 
     @Override
@@ -106,6 +116,10 @@ public class TvAudioPlayerFragment extends androidx.leanback.app.PlaybackSupport
         if(!BackgroundManager.getInstance(getActivity()).isAttached()) {
             prepareBackgroundManager();
         }
+
+        if (mediaBrowser != null) {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
@@ -115,6 +129,10 @@ public class TvAudioPlayerFragment extends androidx.leanback.app.PlaybackSupport
         Log.d(TAG, "onStop()");
 
         BackgroundManager.getInstance(getActivity()).release();
+
+        if (mediaBrowser != null) {
+            mediaBrowser.disconnect();
+        }
     }
 
     @Override

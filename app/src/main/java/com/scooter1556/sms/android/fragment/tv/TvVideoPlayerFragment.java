@@ -24,13 +24,16 @@
 package com.scooter1556.sms.android.fragment.tv;
 
 import android.annotation.TargetApi;
+import android.content.ComponentName;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.app.PlaybackSupportFragment;
 import androidx.leanback.app.VideoSupportFragment;
 import androidx.leanback.app.VideoSupportFragmentGlueHost;
@@ -52,6 +55,7 @@ import com.google.android.exoplayer2.ui.SubtitleView;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.glue.LeanbackPlayerGlue;
 import com.scooter1556.sms.android.playback.PlaybackManager;
+import com.scooter1556.sms.android.service.MediaService;
 import com.scooter1556.sms.android.utils.TrackSelectionUtils;
 
 import java.util.List;
@@ -79,6 +83,8 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
 
     private SubtitleView subtitleView;
 
+    private MediaBrowserCompat mediaBrowser;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         Log.d(TAG, "onActivityCreated()");
@@ -99,6 +105,10 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
 
         setBackgroundType(BACKGROUND_TYPE);
         setControlsOverlayAutoHideEnabled(true);
+
+        // Connect a media browser to keep media service alive
+        mediaBrowser = new MediaBrowserCompat(getActivity(),
+                new ComponentName(getActivity(), MediaService.class), new MediaBrowserCompat.ConnectionCallback(), null);
     }
 
     @Override
@@ -150,6 +160,28 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         playerGlue = null;
         playerAdapter = null;
         trackSelector = null;
+    }
+
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart()");
+
+        super.onStart();
+
+        if (mediaBrowser != null) {
+            mediaBrowser.connect();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "onStop()");
+
+        super.onStop();
+
+        if (mediaBrowser != null) {
+            mediaBrowser.disconnect();
+        }
     }
 
     @Override

@@ -22,8 +22,6 @@ public class TvBaseActivity extends FragmentActivity {
 
     private static final String TAG = "TVBaseActivity";
 
-    private MediaBrowserCompat mediaBrowser;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

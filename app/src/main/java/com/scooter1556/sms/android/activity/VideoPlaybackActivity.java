@@ -101,7 +101,7 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         playerView.setPlayer(player);
         player.addListener(this);
 
-        if(!mediaBrowser.isConnected()) {
+        if(mediaBrowser != null) {
             mediaBrowser.connect();
         }
     }
@@ -130,8 +130,17 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
             player = null;
             trackSelector = null;
         }
+    }
 
-        mediaBrowser.disconnect();
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        Log.d(TAG, "onStop()");
+
+        if(mediaBrowser != null) {
+            mediaBrowser.disconnect();
+        }
     }
 
     @Override

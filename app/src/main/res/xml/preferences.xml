@@ -56,6 +56,14 @@
             android:entryValues="@array/preferences_audio_quality_values"
             android:defaultValue="@string/preferences_default_audio_quality_value" />
 
+        <ListPreference
+            android:key="pref_replaygain"
+            android:title="@string/preferences_title_replaygain"
+            android:summary="@string/preferences_summary_replaygain"
+            android:entries="@array/preferences_replaygain_names"
+            android:entryValues="@array/preferences_replaygain_values"
+            android:defaultValue="@string/preferences_default_replaygain_value" />
+
         <CheckBoxPreference
             android:key="pref_direct_play"
             android:title="@string/preferences_title_direct_play"
@@ -79,6 +87,14 @@
             android:entries="@array/preferences_audio_quality_names"
             android:entryValues="@array/preferences_audio_quality_values"
             android:defaultValue="@string/preferences_default_cast_audio_quality_value" />
+
+        <ListPreference
+            android:key="pref_cast_replaygain"
+            android:title="@string/preferences_title_replaygain"
+            android:summary="@string/preferences_summary_cast_replaygain"
+            android:entries="@array/preferences_replaygain_names"
+            android:entryValues="@array/preferences_replaygain_values"
+            android:defaultValue="@string/preferences_default_replaygain_value" />
     </PreferenceCategory>
 
 </PreferenceScreen>

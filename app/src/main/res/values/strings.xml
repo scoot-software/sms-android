@@ -112,13 +112,16 @@
     <string name="preferences_title_transcode">Transcode Settings</string>
     <string name="preferences_title_audio_quality">Audio Quality</string>
     <string name="preferences_title_video_quality">Video Quality</string>
+    <string name="preferences_title_replaygain">ReplayGain</string>
     <string name="preferences_title_audio_multichannel">Enable Audio Passthrough</string>
     <string name="preferences_title_direct_play">Enable Direct Play</string>
     <string name="preferences_summary_audio_quality">Select the audio quality to use during audio playback.</string>
     <string name="preferences_summary_video_quality">Select the video quality to use during video playback.</string>
+    <string name="preferences_summary_replaygain">Select ReplayGain volume normalisation operating mode.</string>
     <string name="preferences_summary_direct_play">Enable direct streaming of media on the local network.</string>
     <string name="preferences_summary_cast_audio_quality">Select the audio quality to use when casting.</string>
     <string name="preferences_summary_cast_video_quality">Select the video quality to use when casting.</string>
+    <string name="preferences_summary_cast_replaygain">Select ReplayGain volume normalisation operating mode when casting.</string>
     <string name="preferences_title_connections">Connections</string>
     <string name="preferences_title_manage_connections">Manage Connections</string>
     <string name="preferences_title_streaming_setting">Streaming</string>
@@ -129,6 +132,7 @@
     <string name="preferences_default_video_quality_value">1</string>
     <string name="preferences_default_cast_audio_quality_value">2</string>
     <string name="preferences_default_cast_video_quality_value">5</string>
+    <string name="preferences_default_replaygain_value">0</string>
 
     <string name="play_error_message">Impossible to play the video.</string>
     <string name="play_progressive_error_message">Impossible to play the progressive video.</string>
@@ -264,6 +268,20 @@
         <item>3</item>
         <item>4</item>
         <item>5</item>
+    </string-array>
+
+    <string-array
+        name="preferences_replaygain_names">
+        <item>Off</item>
+        <item>Track</item>
+        <item>Album</item>
+    </string-array>
+
+    <string-array
+        name="preferences_replaygain_values">
+        <item>0</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
 </resources>

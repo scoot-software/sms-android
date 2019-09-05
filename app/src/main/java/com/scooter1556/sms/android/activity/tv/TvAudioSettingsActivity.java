@@ -24,8 +24,10 @@ public class TvAudioSettingsActivity extends FragmentActivity {
 
     private static final int AUDIO_QUALITY = 0;
     private static final int AUDIO_MULTICHANNEL = 1;
+    private static final int REPLAYGAIN_MODE = 2;
 
     private static final int AUDIO_QUALITY_CHECK_SET_ID = 10;
+    private static final int REPLAYGAIN_CHECK_SET_ID = 11;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +78,8 @@ public class TvAudioSettingsActivity extends FragmentActivity {
             } else if (action.getId() == AUDIO_MULTICHANNEL) {
                 boolean enabled = sharedPreferences.getBoolean("pref_audio_multichannel", false);
                 sharedPreferences.edit().putBoolean("pref_audio_multichannel", !enabled).apply();
+            } else if (action.getId() == REPLAYGAIN_MODE) {
+                GuidedStepSupportFragment.add(getFragmentManager(), new ReplaygainSettingsFragment());
             }
         }
 
@@ -89,6 +93,7 @@ public class TvAudioSettingsActivity extends FragmentActivity {
         public void populateActions(List<GuidedAction> actions) {
             Log.d(TAG, "populateActions()");
 
+            // Audio Quality
             String[] audioQualityNames = getResources().getStringArray(R.array.preferences_audio_quality_names);
             int quality = Integer.parseInt(sharedPreferences.getString("pref_audio_quality", getString(R.string.preferences_default_audio_quality_value)));
 
@@ -97,12 +102,33 @@ public class TvAudioSettingsActivity extends FragmentActivity {
                 quality = Integer.parseInt(getString(R.string.preferences_default_audio_quality_value));
             }
 
+            // Replaygain
+            String[] replaygainModeNames = getResources().getStringArray(R.array.preferences_replaygain_names);
+            String[] replaygainModeValues = getResources().getStringArray(R.array.preferences_replaygain_values);
+            String replaygainMode = sharedPreferences.getString("pref_replaygain", getString(R.string.preferences_default_replaygain_value));
+
+            // Get replaygain mode name
+            String replaygainModeName = "";
+
+            for(int i=0; i<replaygainModeValues.length; i++) {
+                if(replaygainModeValues[i].equals(replaygainMode)) {
+                    replaygainModeName = replaygainModeNames[i];
+                    break;
+                }
+            }
+
             actions.clear();
 
             actions.add(new GuidedAction.Builder(getActivity())
                     .id(AUDIO_QUALITY)
                     .title(getString(R.string.preferences_title_audio_quality))
                     .description(audioQualityNames[quality])
+                    .build());
+
+            actions.add(new GuidedAction.Builder(getActivity())
+                    .id(REPLAYGAIN_MODE)
+                    .title(getString(R.string.preferences_title_replaygain))
+                    .description(replaygainModeName)
                     .build());
 
             actions.add(new GuidedAction.Builder(getActivity())
@@ -151,6 +177,46 @@ public class TvAudioSettingsActivity extends FragmentActivity {
             sharedPreferences.edit()
                     .putString("pref_audio_quality", String.format("%d", action.getId()))
                     .putString("pref_audio_quality_name", action.getTitle().toString())
+                    .apply();
+        }
+    }
+
+    public static class ReplaygainSettingsFragment extends GuidedStepSupportFragment {
+        @Override
+        @NonNull
+        public GuidanceStylist.Guidance onCreateGuidance(Bundle savedInstanceState) {
+            String title = getString(R.string.preferences_title_replaygain);
+            String breadcrumb = getString(R.string.preferences_title_audio);
+            String description = getString(R.string.preferences_summary_replaygain);
+            Drawable icon = ContextCompat.getDrawable(getActivity(), R.drawable.ic_audio_settings);
+            return new GuidanceStylist.Guidance(title, description, breadcrumb, icon);
+        }
+
+        @Override
+        public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
+            // Get saved preference
+            String replaygainMode = sharedPreferences.getString("pref_replaygain", getString(R.string.preferences_default_replaygain_value));
+            String[] replaygainModeValues = getResources().getStringArray(R.array.preferences_replaygain_values);
+            String[] replaygainModeNames = getResources().getStringArray(R.array.preferences_replaygain_names);
+
+            // Add action for each replaygain option
+            for (int i = 0; i < replaygainModeValues.length; i++) {
+                GuidedAction guidedAction = new GuidedAction.Builder(getActivity())
+                        .id(Long.parseLong(replaygainModeValues[i]))
+                        .title(replaygainModeNames[i])
+                        .checkSetId(REPLAYGAIN_CHECK_SET_ID)
+                        .build();
+                guidedAction.setChecked(replaygainModeValues[i].equals(replaygainMode));
+                actions.add(guidedAction);
+            }
+        }
+
+        @Override
+        public void onGuidedActionClicked(GuidedAction action) {
+            // Update replaygain preference
+            sharedPreferences.edit()
+                    .putString("pref_replaygain", String.format("%d", action.getId()))
+                    .putString("pref_replaygain_name", action.getTitle().toString())
                     .apply();
         }
     }

@@ -23,20 +23,22 @@
  */
 package com.scooter1556.sms.android.domain;
 
+import com.scooter1556.sms.android.SMS;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
 public class ClientProfile implements Serializable {
     private Integer[] formats, codecs, mchCodecs;
     private String url;
-    private Integer client, format, videoQuality, audioQuality, maxBitrate, maxSampleRate = 48000;
+    private Integer client, format, videoQuality, audioQuality, maxBitrate, maxSampleRate = 48000, replaygain = SMS.ReplaygainMode.OFF;
     private Boolean directPlay = false, local = false;
 
     public void ClientProfile() {} ;
 
     @Override
     public String toString() {
-        return String.format("{Client=%s, URL=%s, Format=%s, Supported Formats=%s, Supported Codecs=%s, Supported Multichannel Codecs=%s, Video Quality=%s, Audio Quality=%s, Max Bitrate=%s, Max Sample Rate=%s, Local=%s}",
+        return String.format("{Client=%s, URL=%s, Format=%s, Supported Formats=%s, Supported Codecs=%s, Supported Multichannel Codecs=%s, Video Quality=%s, Audio Quality=%s, Max Bitrate=%s, Max Sample Rate=%s, Replaygain Mode=%s, Local=%s}",
                 client == null ? "null" : client.toString(),
                 url == null ? "null" : url,
                 format == null ? "null" : format.toString(),
@@ -47,6 +49,7 @@ public class ClientProfile implements Serializable {
                 audioQuality == null ? "null" : audioQuality.toString(),
                 maxBitrate == null ? "null" : maxBitrate.toString(),
                 maxSampleRate == null ? "null" : maxSampleRate.toString(),
+                replaygain == null ? "null" : replaygain.toString(),
                 directPlay == null ? "null" : directPlay.toString(),
                 local == null ? "null" : local.toString()
         );
@@ -130,6 +133,14 @@ public class ClientProfile implements Serializable {
 
     public void setMaxBitrate(int maxBitrate) {
         this.maxBitrate = maxBitrate;
+    }
+
+    public Integer getReplaygainMode() {
+        return replaygain;
+    }
+
+    public void setReplaygainMode(int replaygain) {
+        this.replaygain = replaygain;
     }
 
     public boolean getDirectPlay() {

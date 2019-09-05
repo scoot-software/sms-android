@@ -74,4 +74,12 @@ public class SMS {
         public static final int ANDROID_TV = 2;
         public static final int CHROMECAST = 3;
     }
+
+    public static class ReplaygainMode {
+        public static final int OFF = 0;
+        public static final int NATIVE_TRACK = 1;
+        public static final int NATIVE_ALBUM = 2;
+        public static final int TRACK = 3;
+        public static final int ALBUM = 4;
+    }
 }

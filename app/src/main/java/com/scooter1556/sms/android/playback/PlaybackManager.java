@@ -453,10 +453,14 @@ public class PlaybackManager implements Player.EventListener {
                         String audioQuality = settings.getString("pref_cast_audio_quality", "0");
                         String videoQuality = settings.getString("pref_cast_video_quality", "0");
 
+                        // Get replaygain
+                        String replaygain = settings.getString("pref_cast_replaygain", "0");
+
                         JSONObject message = new JSONObject();
                         message.put("serverUrl", RESTService.getInstance().getAddress());
                         message.put("videoQuality", videoQuality);
                         message.put("audioQuality", audioQuality);
+                        message.put("replaygain", replaygain);
                         message.put("sessionId", sessionId);
                         session.sendMessage(MediaService.CC_CONFIG_CHANNEL, message.toString());
 

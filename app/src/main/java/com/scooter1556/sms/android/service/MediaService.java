@@ -273,20 +273,20 @@ public class MediaService extends MediaBrowserServiceCompat
         switch(key) {
             case "pref_video_quality": case "pref_audio_quality": case "pref_replaygain": case "pref_audio_multichannel": case "pref_direct_play":
                 updateClientProfile(sharedPreferences);
+
+                // Update client profile
+                RESTService.getInstance().updateClientProfile(getApplicationContext(), SessionService.getInstance().getSessionId(), clientProfile, new BlackholeHttpResponseHandler());
                 break;
 
             case "pref_cast_video_quality": case "pref_cast_audio_quality": case "pref_cast_replaygain":
-                if(playbackManager.isCastSessionAvailable()) {
-                    updateCastProfile(playbackManager.getCastSession(), playbackManager.getCastSession().getSessionId());
+                if(playbackManager.isCasting()) {
+                    updateCastProfile(playbackManager.getCastSession(), playbackManager.getCastSession().getSessionId(), sharedPreferences);
                 }
                 break;
 
             default:
                 return;
         }
-
-        // Update client profile
-        RESTService.getInstance().updateClientProfile(getApplicationContext(), SessionService.getInstance().getSessionId(), clientProfile, new BlackholeHttpResponseHandler());
     }
 
     @Override
@@ -1514,10 +1514,7 @@ public class MediaService extends MediaBrowserServiceCompat
         clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
     }
 
-    private void updateCastProfile(CastSession session, String sessionId) {
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-
+    private void updateCastProfile(CastSession session, String sessionId, SharedPreferences settings) {
         // Get quality
         String audioQuality = settings.getString("pref_cast_audio_quality", "0");
         String videoQuality = settings.getString("pref_cast_video_quality", "0");

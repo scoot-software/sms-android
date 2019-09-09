@@ -30,10 +30,10 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.media:media:1.0.1'
+    implementation 'androidx.media:media:1.1.0'
     implementation 'androidx.leanback:leanback:1.0.0'
-    implementation 'androidx.preference:preference:1.0.0'
-    implementation 'androidx.mediarouter:mediarouter:1.0.0'
+    implementation 'androidx.preference:preference:1.1.0'
+    implementation 'androidx.mediarouter:mediarouter:1.1.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'com.google.android.gms:play-services-cast-framework:17.0.0'

@@ -31,7 +31,7 @@ import java.util.Arrays;
 public class ClientProfile implements Serializable {
     private Integer[] formats, codecs, mchCodecs;
     private String url;
-    private Integer client, format, videoQuality, audioQuality, maxBitrate, maxSampleRate = 48000, replaygain = SMS.ReplaygainMode.OFF;
+    private Integer client, format, videoQuality, audioQuality, maxBitrate, maxSampleRate, replaygain;
     private Boolean directPlay = false, local = false;
 
     public void ClientProfile() {} ;
@@ -135,11 +135,11 @@ public class ClientProfile implements Serializable {
         this.maxBitrate = maxBitrate;
     }
 
-    public Integer getReplaygainMode() {
+    public Integer getReplaygain() {
         return replaygain;
     }
 
-    public void setReplaygainMode(int replaygain) {
+    public void setReplaygain(int replaygain) {
         this.replaygain = replaygain;
     }
 

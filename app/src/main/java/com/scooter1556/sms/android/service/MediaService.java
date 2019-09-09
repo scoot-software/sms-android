@@ -67,7 +67,6 @@ import com.scooter1556.sms.android.domain.Connection;
 import com.scooter1556.sms.android.domain.MediaElement;
 import com.scooter1556.sms.android.domain.MediaFolder;
 import com.scooter1556.sms.android.utils.MediaUtils;
-import com.scooter1556.sms.android.utils.TVUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -152,7 +151,7 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         // Populate default client profile
-        updateClientProfile();
+        updateClientProfile(sharedPreferences);
 
         // Start a new SMS session
         SessionService.getInstance().newSession(getApplicationContext(), null, clientProfile);
@@ -239,8 +238,8 @@ public class MediaService extends MediaBrowserServiceCompat
         }
 
         switch(key) {
-            case "pref_video_quality": case "pref_audio_quality": case "pref_audio_multichannel": case "pref_direct_play":
-                updateClientProfile();
+            case "pref_video_quality": case "pref_audio_quality": case "pref_replaygain": case "pref_audio_multichannel": case "pref_direct_play":
+                updateClientProfile(sharedPreferences);
                 break;
 
             default:
@@ -1442,16 +1441,16 @@ public class MediaService extends MediaBrowserServiceCompat
         return items;
     }
 
-    private void updateClientProfile() {
+    private void updateClientProfile(SharedPreferences settings) {
         // Initialise new client profile instance
         clientProfile = new ClientProfile();
-
-        // Get settings
-        final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Get quality
         int audioQuality = Integer.parseInt(settings.getString("pref_audio_quality", "0"));
         int videoQuality = Integer.parseInt(settings.getString("pref_video_quality", "0"));
+
+        // Get replaygain
+        int replaygain = Integer.parseInt(settings.getString("pref_replaygain", "0"));
 
         // Passthrough
         boolean audioPassthrough = settings.getBoolean("pref_audio_multichannel", false);
@@ -1472,6 +1471,7 @@ public class MediaService extends MediaBrowserServiceCompat
         clientProfile.setFormat(FORMAT);
         clientProfile.setMaxSampleRate(MAX_SAMPLE_RATE);
         clientProfile.setMaxBitrate(MAX_BITRATE);
+        clientProfile.setReplaygain(replaygain);
         clientProfile.setDirectPlay(settings.getBoolean("pref_direct_play", false));
     }
 }

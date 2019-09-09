@@ -5,10 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.mediarouter.app.MediaRouteButton;
 
-import android.os.Handler;
-import android.os.RemoteException;
 import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;

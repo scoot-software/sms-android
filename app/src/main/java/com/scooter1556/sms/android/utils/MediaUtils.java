@@ -246,6 +246,46 @@ public class MediaUtils {
         }
     }
 
+    public static String getDescription(@NonNull MediaElement element) {
+        switch (element.getType()) {
+
+            case MediaElement.MediaElementType.AUDIO:
+                if (element.getAlbum() == null) {
+                    return "";
+                } else {
+                    return element.getAlbum();
+                }
+
+            case MediaElement.MediaElementType.VIDEO:
+                if (element.getDescription() == null) {
+                    return "";
+                } else {
+                    return element.getDescription();
+                }
+
+            case MediaElement.MediaElementType.DIRECTORY:
+                if (element.getType() == MediaElement.DirectoryMediaType.AUDIO) {
+                    if (element.getAlbum() == null) {
+                        return "";
+                    } else {
+                        return element.getAlbum();
+                    }
+                } else if (element.getDirectoryType() == MediaElement.DirectoryMediaType.VIDEO) {
+                    if (element.getDescription() == null) {
+                        return "";
+                    } else {
+                        return element.getDescription();
+                    }
+                } else {
+                    return "";
+                }
+
+            default:
+                return "";
+
+        }
+    }
+
     public static MediaDescriptionCompat getMediaDescription(@NonNull MediaElement element) {
         String mediaId = getMediaIDFromMediaElement(element);
 
@@ -266,7 +306,7 @@ public class MediaUtils {
                 .setMediaId(mediaId)
                 .setTitle(element.getTitle() == null ? "" : element.getTitle())
                 .setSubtitle(getSubtitle(element))
-                .setDescription(element.getDescription() == null ? "" : element.getDescription())
+                .setDescription(getDescription(element))
                 .setExtras(extras)
                 .setIconUri(Uri.parse(RESTService.getInstance().getAddress() + "/image/" + element.getID() + "/cover"))
                 .build();

@@ -1026,7 +1026,7 @@ public class PlaybackManager implements Player.EventListener {
             // Handle extra options
             int extra = MediaUtils.MEDIA_MENU_NONE;
 
-            if(extras.containsKey(MediaUtils.EXTRA_MEDIA_OPTION)) {
+            if(extras != null && extras.containsKey(MediaUtils.EXTRA_MEDIA_OPTION)) {
                 extra = extras.getInt(MediaUtils.EXTRA_MEDIA_OPTION);
             }
 

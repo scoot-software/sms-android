@@ -7,8 +7,8 @@ buildscript {
         releaseRepoName = 'sms-android'
         releaseUserOrg = 'scoot.software'
         releaseGroupId = 'com.scooter1556.sms'
-        releaseVersion = '1.0.3'
-        releaseCode = 16
+        releaseVersion = '1.0.4'
+        releaseCode = 17
         releaseWebsite = 'https://github.com/scoot-software/sms-android'
     }
 
@@ -18,7 +18,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.5.1'
         classpath 'com.novoda:bintray-release:0.8.1'
     }
 }

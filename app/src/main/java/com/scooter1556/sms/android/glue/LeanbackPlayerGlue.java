@@ -19,7 +19,7 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
 
     private static final String TAG = "LeanbackPlayerGlue";
 
-    private static final long TEN_SECONDS = TimeUnit.SECONDS.toMillis(10);
+    private static final long SKIP_DURATION = TimeUnit.SECONDS.toMillis(30);
 
     public static final int ACTION_PREVIOUS = 0;
     public static final int ACTION_NEXT = 1;
@@ -124,17 +124,17 @@ public class LeanbackPlayerGlue extends PlaybackTransportControlGlue<LeanbackPla
         }
     }
 
-    /** Skips backwards 10 seconds. */
+    /** Skips backwards */
     public void rewind() {
-        long newPosition = getCurrentPosition() - TEN_SECONDS;
+        long newPosition = getCurrentPosition() - SKIP_DURATION;
         newPosition = (newPosition < 0) ? 0 : newPosition;
         getPlayerAdapter().seekTo(newPosition);
     }
 
-    /** Skips forward 10 seconds. */
+    /** Skips forward */
     public void fastForward() {
         if (getDuration() > -1) {
-            long newPosition = getCurrentPosition() + TEN_SECONDS;
+            long newPosition = getCurrentPosition() + SKIP_DURATION;
             newPosition = (newPosition > getDuration()) ? getDuration() : newPosition;
             getPlayerAdapter().seekTo(newPosition);
         }

@@ -1,5 +1,6 @@
 package com.scooter1556.sms.android.activity;
 
+import android.content.ComponentName;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.mediarouter.app.MediaRouteButton;
 
 import android.os.Handler;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -28,6 +30,7 @@ import com.google.android.gms.cast.framework.IntroductoryOverlay;
 import com.scooter1556.sms.android.R;
 import com.scooter1556.sms.android.dialog.TrackSelectionDialog;
 import com.scooter1556.sms.android.playback.PlaybackManager;
+import com.scooter1556.sms.android.service.MediaService;
 
 public class VideoPlaybackActivity extends AppCompatActivity implements PlayerControlView.VisibilityListener, Player.EventListener, PlaybackManager.PlaybackListener {
     private static final String TAG = "VideoPlaybackActivity";
@@ -50,6 +53,8 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
     private CastContext castContext;
     private MenuItem mediaRouteMenuItem;
     private Toolbar toolbar;
+
+    private MediaBrowserCompat mediaBrowser;
 
     private CastStateListener castStateListener = new CastStateListener() {
         @Override
@@ -97,6 +102,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
         } else {
             trackSelectorParameters = new DefaultTrackSelector.ParametersBuilder().build();
         }
+
+        // Connect a media browser to keep media service alive
+        mediaBrowser = new MediaBrowserCompat(this,
+                new ComponentName(getApplicationContext(), MediaService.class), new MediaBrowserCompat.ConnectionCallback(), null);
     }
 
     @Override
@@ -120,6 +129,10 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
 
         playerView.setPlayer(player);
         player.addListener(this);
+
+        if(mediaBrowser != null) {
+            mediaBrowser.connect();
+        }
     }
 
     @Override
@@ -149,6 +162,17 @@ public class VideoPlaybackActivity extends AppCompatActivity implements PlayerCo
             player.removeListener(this);
             player = null;
             trackSelector = null;
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        Log.d(TAG, "onStop()");
+
+        if(mediaBrowser != null) {
+            mediaBrowser.disconnect();
         }
     }
 

@@ -739,12 +739,12 @@ public class PlaybackManager implements Player.EventListener {
         }
 
         @Override
-        public void onPrepare() {
+        public void onPrepare(boolean playWhenReady) {
             // Do nothing...
         }
 
         @Override
-        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+        public void onPrepareFromMediaId(String mediaId, boolean playWhenReady, Bundle extras) {
             Log.d(TAG, "onPrepareFromMediaId(" + mediaId + ")");
 
             // Handle extra options
@@ -758,7 +758,7 @@ public class PlaybackManager implements Player.EventListener {
         }
 
         @Override
-        public void onPrepareFromSearch(String query, Bundle extras) {
+        public void onPrepareFromSearch(String query, boolean playWhenReady, Bundle extras) {
             Log.d(TAG, "onPrepareFromSearch(" + query + ")");
 
             // Handle extra options
@@ -777,7 +777,7 @@ public class PlaybackManager implements Player.EventListener {
         }
 
         @Override
-        public void onPrepareFromUri(Uri uri, Bundle extras) {
+        public void onPrepareFromUri(Uri uri, boolean playWhenReady, Bundle extras) {
             // Do nothing...
         }
 

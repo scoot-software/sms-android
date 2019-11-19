@@ -41,8 +41,8 @@
             android:id="@+id/container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/toolbar_container"
-            android:layout_above="@+id/controls_container"/>
+            android:layout_above="@+id/controls_container"
+            android:layout_below="@+id/toolbar_container" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/controls_container"
@@ -64,10 +64,10 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:headerLayout="@layout/navigation_drawer_header"
-        app:menu="@menu/drawer"/>
+        app:menu="@menu/drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

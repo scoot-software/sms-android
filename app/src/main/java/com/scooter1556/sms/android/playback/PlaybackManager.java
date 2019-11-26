@@ -47,7 +47,6 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
-import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.framework.CastContext;
@@ -998,7 +997,7 @@ public class PlaybackManager implements Player.EventListener {
 
         return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
                 .setAllowChunklessPreparation(true)
-                .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy())
+                .setLoadErrorHandlingPolicy(new ErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));
     }

@@ -31,8 +31,10 @@ import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.app.PlaybackSupportFragment;
 import androidx.leanback.app.VideoSupportFragment;
@@ -109,6 +111,12 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
         // Connect a media browser to keep media service alive
         mediaBrowser = new MediaBrowserCompat(getActivity(),
                 new ComponentName(getActivity(), MediaService.class), new MediaBrowserCompat.ConnectionCallback(), null);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        view.setBackgroundResource(android.R.color.black);
     }
 
     @Override

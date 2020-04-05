@@ -40,6 +40,7 @@ import com.google.android.exoplayer2.ext.cast.CastPlayer;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider;
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ShuffleOrder;
@@ -996,7 +997,6 @@ public class PlaybackManager implements Player.EventListener {
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
         return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
-                .setAllowChunklessPreparation(true)
                 .setLoadErrorHandlingPolicy(new ErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));

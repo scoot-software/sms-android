@@ -87,8 +87,8 @@ public class MediaService extends MediaBrowserServiceCompat
     private static final String TAG = "MediaService";
 
     // Android
-    static final int FORMAT = SMS.Format.HLS;
-    static final Integer[] SUPPORTED_FORMATS = {SMS.Format.HLS};
+    static final int FORMAT = SMS.Format.HLS_FMP4;
+    static final Integer[] SUPPORTED_FORMATS = {};
     static final int MAX_BITRATE = 15000;
     static final int MAX_SAMPLE_RATE = 48000;
 

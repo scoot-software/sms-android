@@ -105,6 +105,7 @@ public class MediaUtils {
     public static MediaQueueItem getMediaQueueItem(MediaElement mediaElement) {
         MediaMetadata metadata = getMediaMetadataFromMediaElement(mediaElement);
         MediaInfo mediaInfo = new MediaInfo.Builder(mediaElement.getID().toString())
+                .setEntity(mediaElement.getID().toString())
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setMetadata(metadata).build();
         return new MediaQueueItem.Builder(mediaInfo).build();

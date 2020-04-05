@@ -301,7 +301,7 @@ public class RESTService {
                 return;
             }
 
-            client.get(context, url, entity, "application/json", responseHandler);
+            client.post(context, url, entity, "application/json", responseHandler);
         }
     }
 
@@ -332,14 +332,14 @@ public class RESTService {
         Log.d(TAG, "endSession() > " + id);
 
         if(connection != null) {
-            client.get(getAddress() + "/session/end/" + id.toString(), responseHandler);
+            client.delete(getAddress() + "/session/end/" + id.toString(), responseHandler);
         }
     }
 
     // End Job
     public void endJob(UUID sid, UUID meid) {
         if(connection != null) {
-            client.get(getAddress() + "/session/end/" + sid.toString() + "/" + meid.toString(), new TextHttpResponseHandler() {
+            client.delete(getAddress() + "/session/end/" + sid.toString() + "/" + meid.toString(), new TextHttpResponseHandler() {
 
                 @Override
                 public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
@@ -357,7 +357,7 @@ public class RESTService {
     // End Job
     public void endJobs(UUID sid) {
         if(connection != null) {
-            client.get(getAddress() + "/session/end/" + sid.toString() + "/all", new TextHttpResponseHandler() {
+            client.delete(getAddress() + "/session/end/" + sid.toString() + "/all", new TextHttpResponseHandler() {
 
                 @Override
                 public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {

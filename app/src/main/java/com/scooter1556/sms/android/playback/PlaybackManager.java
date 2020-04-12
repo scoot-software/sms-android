@@ -720,7 +720,6 @@ public class PlaybackManager implements Player.EventListener {
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
         return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
-                .setAllowChunklessPreparation(true)
                 .setLoadErrorHandlingPolicy(new ErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));

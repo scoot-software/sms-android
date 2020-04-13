@@ -92,7 +92,7 @@ public class SessionService {
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
                 Log.d(TAG, "Session ended with id: " + id);
 
-                if(sessionId.equals(id)) {
+                if(sessionId != null && sessionId.equals(id)) {
                     sessionId = null;
                 }
             }

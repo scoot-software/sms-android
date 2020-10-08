@@ -35,6 +35,7 @@ import java.util.Locale;
  */
 
 public final class TrackSelectionUtils implements View.OnClickListener, DialogInterface.OnClickListener {
+    private final Context ctx;
     private final DefaultTrackSelector selector;
 
     private MappedTrackInfo trackInfo;
@@ -51,7 +52,8 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
     /**
      * @param selector The track selector.
      */
-    public TrackSelectionUtils(DefaultTrackSelector selector) {
+    public TrackSelectionUtils(Context ctx, DefaultTrackSelector selector) {
+        this.ctx = ctx;
         this.selector = selector;
     }
 
@@ -73,8 +75,8 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
                     != RendererCapabilities.ADAPTIVE_NOT_SUPPORTED
                     && trackGroups.get(i).length > 1;
         }
-        isDisabled = selector.getRendererDisabled(rendererIndex);
-        override = selector.getSelectionOverride(rendererIndex, trackGroups);
+        isDisabled = selector.getParameters().getRendererDisabled(rendererIndex);
+        override = selector.getParameters().getSelectionOverride(rendererIndex, trackGroups);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder
@@ -171,12 +173,16 @@ public final class TrackSelectionUtils implements View.OnClickListener, DialogIn
 
     @Override
     public void onClick(DialogInterface dialog, int which) {
-        selector.setRendererDisabled(rendererIndex, isDisabled);
+        DefaultTrackSelector.ParametersBuilder paramsBuilder = new DefaultTrackSelector.ParametersBuilder(ctx);
+
+        paramsBuilder.setRendererDisabled(rendererIndex, isDisabled);
         if (override != null) {
-            selector.setSelectionOverride(rendererIndex, trackGroups, override);
+            paramsBuilder.setSelectionOverride(rendererIndex, trackGroups, override);
         } else {
-            selector.clearSelectionOverrides(rendererIndex);
+            paramsBuilder.clearSelectionOverrides(rendererIndex);
         }
+
+        selector.setParameters(paramsBuilder.build());
     }
 
     // View.OnClickListener

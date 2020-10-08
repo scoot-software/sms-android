@@ -136,13 +136,8 @@ public class TvVideoDirectoryFragment extends DetailsFragment implements OnItemV
 
                     // Subscribe to media browser event
                     mediaBrowser.subscribe(mediaItem.getMediaId(), subscriptionCallback);
-
-                    try {
-                        mediaController = new MediaControllerCompat(getActivity(), mediaBrowser.getSessionToken());
-                        MediaControllerCompat.setMediaController(getActivity(), mediaController);
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "Failed to connect media controller", e);
-                    }
+                    mediaController = new MediaControllerCompat(getActivity(), mediaBrowser.getSessionToken());
+                    MediaControllerCompat.setMediaController(getActivity(), mediaController);
                 }
 
                 @Override

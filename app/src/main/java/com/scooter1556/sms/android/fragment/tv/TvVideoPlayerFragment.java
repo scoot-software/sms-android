@@ -221,7 +221,7 @@ public class TvVideoPlayerFragment extends VideoSupportFragment implements TextO
 
         // Setup track selectors
         trackSelector = PlaybackManager.getInstance().getCurrentTrackSelector();
-        trackSelectionUtils = new TrackSelectionUtils(trackSelector);
+        trackSelectionUtils = new TrackSelectionUtils(getContext(), trackSelector);
 
         isInitialised = true;
 

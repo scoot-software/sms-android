@@ -44,6 +44,7 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ShuffleOrder;
+import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
@@ -393,13 +394,13 @@ public class PlaybackManager implements Player.EventListener {
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, @Player.TimelineChangeReason int reason) {
+    public void onTimelineChanged(Timeline timeline, @Player.TimelineChangeReason int reason) {
         Log.d(TAG, "onTimelineChanged(" + reason + ")");
 
         updateCurrentItemIndex();
 
         // Timeline reset
-        if(reason == Player.TIMELINE_CHANGE_REASON_RESET) {
+        if(timeline.isEmpty()) {
             // Cancel notification
             playerNotificationManager.setPlayer(null);
         }
@@ -996,7 +997,7 @@ public class PlaybackManager implements Player.EventListener {
     private static MediaSource buildMediaSource(MediaElement mediaElement) {
         String url = RESTService.getInstance().getConnection().getUrl() + "/stream/" + SessionService.getInstance().getSessionId() + "/" + mediaElement.getID();
 
-        return new HlsMediaSource.Factory(DATA_SOURCE_FACTORY)
+        return new DashMediaSource.Factory(DATA_SOURCE_FACTORY)
                 .setLoadErrorHandlingPolicy(new ErrorHandlingPolicy())
                 .setTag(mediaElement.getID().toString())
                 .createMediaSource(Uri.parse(url));

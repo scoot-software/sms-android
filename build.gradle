@@ -7,8 +7,8 @@ buildscript {
         releaseRepoName = 'sms-android'
         releaseUserOrg = 'scoot.software'
         releaseGroupId = 'com.scooter1556.sms'
-        releaseVersion = '1.1.0'
-        releaseCode = 21
+        releaseVersion = '1.1.1'
+        releaseCode = 22
         releaseWebsite = 'https://github.com/scoot-software/sms-android'
     }
 

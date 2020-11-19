@@ -81,12 +81,30 @@ public class RESTService {
             return null;
         }
 
-        // Strip 'http://'
-        if(connection.getUrl().startsWith("http://")) {
-            return connection.getUrl().replace("http://", "");
-        } else {
-            return connection.getUrl();
+        // Split protocol from host address
+        String[] url = connection.getUrl().split("://");
+
+        // Check if a protocol is found
+        if(url.length > 1) {
+            return url[1];
         }
+
+        return connection.getUrl();
+    }
+
+    public String getProtocol() {
+        if(connection == null) {
+            return null;
+        }
+
+        String[] url = connection.getUrl().split("://");
+
+        // Check if a protocol is found
+        if(url.length > 1) {
+            return url[0];
+        }
+
+        return "";
     }
 
     public AsyncHttpClient getClient() {
@@ -184,7 +202,7 @@ public class RESTService {
     public void getAlbumsByArtist(Context context, String artist, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/artist/" + artist + "/album");
 
@@ -196,7 +214,7 @@ public class RESTService {
     public void getAlbumsByAlbumArtist(Context context, String artist, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/albumartist/" + artist + "/album");
 
@@ -208,7 +226,7 @@ public class RESTService {
     public void getMediaElementsByArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/artist/" + artist + "/album/" + album);
 
@@ -220,7 +238,7 @@ public class RESTService {
     public void getMediaElementsByAlbumArtistAndAlbum(Context context, String artist, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/albumartist/" + artist + "/album/" + album);
 
@@ -232,7 +250,7 @@ public class RESTService {
     public void getMediaElementsByAlbum(Context context, String album, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/album/" + album);
 
@@ -251,7 +269,7 @@ public class RESTService {
     public void getMediaElementsByCollection(Context context, String collection, JsonHttpResponseHandler responseHandler) {
         if(connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/media/collection/" + collection);
 
@@ -274,7 +292,7 @@ public class RESTService {
     public void getPlaylistContents(Context context, UUID id, boolean random, JsonHttpResponseHandler responseHandler) {
         if (connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/playlist/" + id + "/contents?" + "random=" + random);
 
@@ -378,7 +396,7 @@ public class RESTService {
     public void getStream(Context context, UUID sid, UUID meid, TextHttpResponseHandler responseHandler) {
         if (connection != null) {
             URIBuilder uri = new URIBuilder();
-            uri.setScheme("http")
+            uri.setScheme(getProtocol())
                     .setHost(getBaseAddress())
                     .setPath("/stream/" + sid + "/" + meid);
 
